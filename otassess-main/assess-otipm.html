@@ -1,0 +1,1343 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>수행분석 — OTHub Assess</title>
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════
+   TOKENS — hub.html 동일 시스템
+═══════════════════════════════════════════ */
+:root {
+  --bg:          #F0F2FA;
+  --surface:     #FFFFFF;
+  --surface-2:   #F7F8FD;
+  --border:      #E4E7F4;
+  --border-2:    #CDD2EC;
+
+  --accent:      #6C5CE7;
+  --accent-2:    #8B7FF0;
+  --accent-dim:  #EDEAFD;
+  --accent-ring: rgba(108,92,231,.15);
+
+  --teal:        #00B894;
+  --teal-dim:    #E0F8F3;
+  --coral:       #E17055;
+  --coral-dim:   #FDF0EC;
+  --amber:       #F0A500;
+  --amber-dim:   #FEF4DC;
+
+  --green:       #00A86B;
+  --green-dim:   #E0F5EE;
+  --red:         #D63031;
+  --red-dim:     #FDF0F0;
+  --orange:      #D06020;
+  --orange-dim:  #FDF0E6;
+
+  --t1: #1E1B3A;
+  --t2: #4A4770;
+  --t3: #9896B8;
+
+  --r-xs: 6px;
+  --r-sm: 10px;
+  --r:    14px;
+  --r-lg: 20px;
+  --r-xl: 28px;
+
+  --font: 'Pretendard', -apple-system, sans-serif;
+  --touch: 52px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--t1);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ═══════════════════════════════════════════
+   TOP BAR
+═══════════════════════════════════════════ */
+.topbar {
+  height: 60px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 24px;
+  gap: 12px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.topbar-back {
+  width: 40px; height: 40px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--border);
+  background: transparent;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  color: var(--t2);
+  transition: all .15s;
+  flex-shrink: 0;
+}
+.topbar-back:hover { background: var(--bg); color: var(--t1); }
+.topbar-back svg { width: 18px; height: 18px; }
+
+.topbar-info { flex: 1; min-width: 0; }
+.topbar-title { font-size: 15px; font-weight: 800; color: var(--t1); }
+.topbar-sub   { font-size: 11px; color: var(--t3); margin-top: 1px; }
+
+.topbar-right { display: flex; align-items: center; gap: 8px; margin-left: auto; flex-shrink: 0; }
+.dev-badge {
+  font-size: 11px; font-weight: 700;
+  color: var(--accent); background: var(--accent-dim);
+  padding: 4px 10px; border-radius: 20px;
+}
+
+/* ═══════════════════════════════════════════
+   진행률 스트립
+═══════════════════════════════════════════ */
+.progress-strip { height: 3px; background: var(--border); }
+.progress-fill {
+  height: 100%;
+  background: var(--accent);
+  transition: width .4s cubic-bezier(.4,0,.2,1);
+  border-radius: 0 2px 2px 0;
+}
+
+/* ═══════════════════════════════════════════
+   STEP BAR
+═══════════════════════════════════════════ */
+.step-wrap {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  gap: 0;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.step-wrap::-webkit-scrollbar { display: none; }
+
+.step-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 14px 16px;
+  white-space: nowrap;
+  cursor: pointer;
+  color: var(--t3);
+  font-size: 13px;
+  font-weight: 500;
+  border-bottom: 2px solid transparent;
+  transition: all .15s;
+  flex-shrink: 0;
+}
+.step-item.active { color: var(--accent); border-bottom-color: var(--accent); }
+.step-item.done   { color: var(--green); border-bottom-color: transparent; }
+
+.step-num {
+  width: 22px; height: 22px; border-radius: 50%;
+  background: var(--border);
+  color: var(--t3);
+  font-size: 11px; font-weight: 800;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  transition: all .15s;
+}
+.step-item.active .step-num { background: var(--accent); color: #fff; }
+.step-item.done   .step-num { background: var(--green);  color: #fff; }
+
+.step-sep { width: 24px; height: 1px; background: var(--border); flex-shrink: 0; }
+
+/* ═══════════════════════════════════════════
+   페이지 레이아웃
+═══════════════════════════════════════════ */
+.page { max-width: 900px; margin: 0 auto; padding: 24px 20px 100px; }
+
+.section-label {
+  font-size: 11px; font-weight: 800;
+  letter-spacing: .1em; color: var(--t3);
+  text-transform: uppercase;
+  margin-bottom: 10px;
+  display: flex; align-items: center; gap: 8px;
+}
+.section-label::after { content:''; flex:1; height:1px; background:var(--border); }
+
+/* ═══════════════════════════════════════════
+   카드
+═══════════════════════════════════════════ */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 20px 22px;
+  margin-bottom: 14px;
+}
+.card-title {
+  font-size: 13px; font-weight: 700; color: var(--t2);
+  letter-spacing: .04em; text-transform: uppercase;
+  padding-bottom: 12px; margin-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 8px;
+}
+.card-title-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--accent); flex-shrink: 0;
+}
+
+/* ═══════════════════════════════════════════
+   폼 필드 (태블릿 터치 최적화)
+═══════════════════════════════════════════ */
+.form-grid   { display: grid; grid-template-columns: 1fr 1fr;     gap: 12px; }
+.form-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+.col-span-2  { grid-column: span 2; }
+.col-span-3  { grid-column: span 3; }
+
+.form-field { display: flex; flex-direction: column; gap: 6px; }
+.form-label {
+  font-size: 11px; font-weight: 700; color: var(--t3);
+  letter-spacing: .05em; text-transform: uppercase;
+}
+
+.form-input {
+  height: var(--touch);
+  padding: 0 14px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--r-sm);
+  font-family: var(--font); font-size: 15px; color: var(--t1);
+  background: var(--surface-2);
+  outline: none;
+  transition: border-color .15s, box-shadow .15s;
+  width: 100%;
+}
+.form-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px var(--accent-ring);
+  background: var(--surface);
+}
+.form-input::placeholder { color: var(--t3); }
+
+select.form-input {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2 4l4 4 4-4' stroke='%239896B8' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  padding-right: 36px; cursor: pointer;
+}
+
+textarea.form-input {
+  height: auto; min-height: 80px; padding: 12px 14px;
+  resize: vertical; line-height: 1.6;
+}
+
+.form-divider { border: none; border-top: 1px solid var(--border); margin: 18px 0; }
+
+/* ═══════════════════════════════════════════
+   수행의 질 — 칩 선택 (태블릿 최적화)
+═══════════════════════════════════════════ */
+.quality-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+.quality-item { display: flex; flex-direction: column; gap: 8px; }
+.quality-label { font-size: 12px; font-weight: 700; color: var(--t2); }
+
+.quality-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.quality-chip {
+  padding: 10px 16px;
+  border-radius: var(--r-sm);
+  border: 1.5px solid var(--border-2);
+  background: var(--surface);
+  color: var(--t2);
+  font-family: var(--font); font-size: 13px; font-weight: 500;
+  cursor: pointer;
+  transition: all .15s;
+  min-height: 44px;
+  display: flex; align-items: center;
+}
+.quality-chip:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+.quality-chip.selected {
+  background: var(--accent-dim);
+  border-color: var(--accent);
+  color: var(--accent);
+  font-weight: 700;
+}
+
+/* ═══════════════════════════════════════════
+   스킬 탭
+═══════════════════════════════════════════ */
+.skill-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 16px;
+  gap: 0;
+}
+.skill-tab {
+  padding: 12px 20px;
+  border: none; border-bottom: 2px solid transparent;
+  background: transparent;
+  font-family: var(--font); font-size: 14px; color: var(--t3);
+  cursor: pointer;
+  transition: all .15s;
+  display: flex; align-items: center; gap: 8px;
+  white-space: nowrap;
+}
+.skill-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+.skill-tab-badge {
+  font-size: 10px; font-weight: 800;
+  padding: 2px 7px; border-radius: 10px;
+  background: var(--bg); color: var(--t3);
+  transition: all .15s;
+}
+.skill-tab.active .skill-tab-badge { background: var(--accent-dim); color: var(--accent); }
+.skill-tab-badge.has-issues { background: var(--coral-dim); color: var(--coral); }
+.skill-tab.active .skill-tab-badge.has-issues { background: var(--coral-dim); color: var(--coral); }
+
+.skill-desc {
+  font-size: 12px; color: var(--t3); line-height: 1.6;
+  margin-bottom: 14px; padding: 10px 14px;
+  background: var(--surface-2); border-radius: var(--r-sm);
+  border-left: 3px solid var(--accent);
+}
+
+/* ═══════════════════════════════════════════
+   스킬 행 (핵심 — 태블릿 터치 크기)
+═══════════════════════════════════════════ */
+.skill-table { width: 100%; border-collapse: collapse; }
+.skill-table thead th {
+  padding: 8px 10px;
+  background: var(--surface-2);
+  font-size: 10px; font-weight: 800; letter-spacing: .08em;
+  color: var(--t3); text-transform: uppercase;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+}
+.skill-table thead th:nth-child(2) { text-align: center; width: 240px; }
+
+.skill-row { transition: background .12s; }
+.skill-row:hover { background: var(--surface-2); }
+.skill-row td { padding: 8px 10px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+.skill-row:last-child td { border-bottom: none; }
+
+.skill-name {
+  font-size: 13px; font-weight: 600; color: var(--t1);
+  min-width: 100px;
+}
+.skill-name-en { font-size: 11px; color: var(--t3); font-weight: 400; }
+
+/* No / Mi / Mo / Ma 버튼 그룹 */
+.rating-group { display: flex; gap: 5px; justify-content: center; }
+.rating-btn {
+  min-width: 52px; height: 42px;
+  padding: 0 8px;
+  border-radius: var(--r-sm);
+  border: 1.5px solid var(--border-2);
+  background: var(--surface);
+  font-family: var(--font); font-size: 12px; font-weight: 700;
+  cursor: pointer; color: var(--t3);
+  transition: all .15s;
+  display: flex; align-items: center; justify-content: center;
+}
+.rating-btn:hover { border-color: var(--accent-2); color: var(--accent); }
+
+/* 상태별 색상 */
+.rating-btn.active-No {
+  background: var(--green-dim); border-color: var(--green); color: var(--green);
+}
+.rating-btn.active-Mi {
+  background: var(--amber-dim); border-color: var(--amber); color: var(--amber);
+}
+.rating-btn.active-Mo {
+  background: var(--orange-dim); border-color: var(--orange); color: var(--orange);
+}
+.rating-btn.active-Ma {
+  background: var(--red-dim); border-color: var(--red); color: var(--red);
+}
+
+/* 관찰 내용 입력 */
+.obs-input {
+  width: 100%; height: 36px;
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-xs);
+  font-family: var(--font); font-size: 12px; color: var(--t1);
+  background: var(--surface-2); outline: none;
+  transition: border-color .15s;
+}
+.obs-input:focus { border-color: var(--accent); background: var(--surface); }
+.obs-input::placeholder { color: var(--t3); }
+
+/* ═══════════════════════════════════════════
+   Social Overall 영역
+═══════════════════════════════════════════ */
+.soc-overall {
+  background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: var(--r-sm); padding: 14px 16px; margin-bottom: 16px;
+}
+.soc-overall-title { font-size: 12px; font-weight: 700; color: var(--t2); margin-bottom: 10px; }
+.soc-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.soc-chip {
+  padding: 9px 16px; border-radius: var(--r-sm);
+  border: 1.5px solid var(--border-2);
+  background: var(--surface); color: var(--t2);
+  font-family: var(--font); font-size: 12px; font-weight: 500;
+  cursor: pointer; transition: all .15s; min-height: 42px;
+}
+.soc-chip:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+.soc-chip.selected { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); font-weight: 700; }
+
+/* ═══════════════════════════════════════════
+   목표 설정 — 중재 모델 카드 선택
+═══════════════════════════════════════════ */
+.model-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+.model-card {
+  border: 2px solid var(--border);
+  border-radius: var(--r);
+  padding: 14px 16px;
+  cursor: pointer; transition: all .18s;
+  background: var(--surface);
+}
+.model-card:hover { border-color: var(--accent-2); background: var(--accent-dim); }
+.model-card.selected { border-color: var(--accent); background: var(--accent-dim); }
+.model-card-name { font-size: 13px; font-weight: 700; color: var(--t1); margin-bottom: 3px; }
+.model-card.selected .model-card-name { color: var(--accent); }
+.model-card-desc { font-size: 11px; color: var(--t3); line-height: 1.4; }
+
+/* ═══════════════════════════════════════════
+   네비게이션 버튼
+═══════════════════════════════════════════ */
+.nav-bar {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  padding: 10px 24px;
+  display: flex; align-items: center; gap: 10px;
+  z-index: 200;
+}
+.btn-prev {
+  height: var(--touch); padding: 0 24px;
+  border-radius: var(--r-sm);
+  border: 1.5px solid var(--border-2);
+  background: transparent; color: var(--t2);
+  font-family: var(--font); font-size: 14px; font-weight: 600;
+  cursor: pointer; transition: all .15s;
+  display: flex; align-items: center; gap: 6px;
+}
+.btn-prev:hover { background: var(--bg); color: var(--t1); }
+.btn-prev svg { width: 16px; height: 16px; }
+
+.nav-step-info {
+  flex: 1; text-align: center;
+  font-size: 12px; color: var(--t3); font-weight: 600;
+}
+.nav-step-info span { color: var(--accent); font-weight: 800; }
+
+.btn-next {
+  height: var(--touch); padding: 0 32px;
+  border-radius: var(--r-sm);
+  border: none;
+  background: var(--accent); color: #fff;
+  font-family: var(--font); font-size: 15px; font-weight: 700;
+  cursor: pointer; transition: all .15s;
+  display: flex; align-items: center; gap: 8px;
+}
+.btn-next:hover { opacity: .9; }
+.btn-next:active { transform: scale(.97); }
+.btn-next svg { width: 16px; height: 16px; }
+
+.btn-pdf {
+  height: var(--touch); padding: 0 28px;
+  border-radius: var(--r-sm);
+  border: none;
+  background: var(--t1); color: #fff;
+  font-family: var(--font); font-size: 15px; font-weight: 700;
+  cursor: pointer; transition: all .15s;
+  display: flex; align-items: center; gap: 8px;
+}
+.btn-pdf:hover { background: var(--t2); }
+.btn-pdf svg { width: 16px; height: 16px; }
+
+/* ═══════════════════════════════════════════
+   TOAST
+═══════════════════════════════════════════ */
+.toast {
+  position: fixed; top: 76px; left: 50%;
+  transform: translateX(-50%) translateY(-8px);
+  background: var(--t1); color: #fff;
+  padding: 10px 20px; border-radius: 20px;
+  font-size: 13px; font-weight: 600;
+  opacity: 0; pointer-events: none;
+  transition: all .22s; z-index: 600;
+  white-space: nowrap;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ═══════════════════════════════════════════
+   반응형
+═══════════════════════════════════════════ */
+@media (max-width: 768px) {
+  .page { padding: 16px 14px 90px; }
+  .form-grid   { grid-template-columns: 1fr; }
+  .form-grid-3 { grid-template-columns: 1fr 1fr; }
+  .col-span-2, .col-span-3 { grid-column: span 1; }
+  .quality-grid { grid-template-columns: 1fr; }
+  .model-grid { grid-template-columns: 1fr; }
+  .topbar { padding: 0 14px; }
+  .nav-bar { padding: 10px 14px; }
+  .rating-btn { min-width: 44px; font-size: 11px; }
+}
+
+/* ═══════════════════════════════════════════
+   PDF / PRINT
+═══════════════════════════════════════════ */
+@media print {
+  @page { size: A4; margin: 14mm 17mm; }
+
+  .topbar, .progress-strip, .step-wrap,
+  .nav-bar, .toast { display: none !important; }
+
+  body { background: #fff !important; }
+  .page { max-width: 100%; padding: 0; }
+  .card { border: 1px solid #ddd; border-radius: 6px; page-break-inside: avoid; margin-bottom: 10px; }
+
+  #step-0, #step-1, #step-2, #step-3 { display: block !important; }
+
+  .skill-row { page-break-inside: avoid; }
+
+  .pdf-header {
+    display: flex !important;
+    justify-content: space-between;
+    align-items: flex-start;
+    border-bottom: 2px solid #1E1B3A;
+    padding-bottom: 12px;
+    margin-bottom: 18px;
+  }
+  .pdf-header-title { font-size: 16px; font-weight: 800; }
+  .pdf-header-sub   { font-size: 10px; color: #666; margin-top: 3px; }
+  .pdf-header-right { text-align: right; font-size: 10px; color: #666; line-height: 1.8; }
+
+  .rating-btn { border: 1px solid #ccc !important; background: #fff !important; }
+  .rating-btn.active-No { background: #e8f7f0 !important; color: #1a7a4a !important; border-color: #1a7a4a !important; }
+  .rating-btn.active-Mi { background: #fff8e6 !important; color: #b07a00 !important; border-color: #b07a00 !important; }
+  .rating-btn.active-Mo { background: #fff0e6 !important; color: #b05000 !important; border-color: #b05000 !important; }
+  .rating-btn.active-Ma { background: #fdf0f0 !important; color: #c03030 !important; border-color: #c03030 !important; }
+
+  .sign-area { margin-top: 24px; padding-top: 16px; border-top: 1px solid #ddd; display: flex; justify-content: flex-end; }
+  .sign-box { text-align: center; min-width: 180px; }
+  .sign-label { font-size: 9px; color: #999; margin-bottom: 22px; }
+  .sign-line { border-top: 1px solid #1E1B3A; padding-top: 4px; font-size: 9px; color: #555; }
+}
+
+.pdf-header { display: none; }
+</style>
+</head>
+<body>
+
+<!-- ── PDF 헤더 (인쇄 시만 표시) ── -->
+<div class="pdf-header" id="pdf-header">
+  <div>
+    <div class="pdf-header-title">작업치료 수행분석 종합보고서</div>
+    <div class="pdf-header-sub">Motor · Process · Social Interaction Skills</div>
+  </div>
+  <div class="pdf-header-right" id="pdf-header-right"></div>
+</div>
+
+<!-- ── Top Bar ── -->
+<header class="topbar">
+  <button class="topbar-back" onclick="goBack()">
+    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path d="M19 12H5M12 5l-7 7 7 7" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </button>
+  <div class="topbar-info">
+    <div class="topbar-title">수행기술 분석</div>
+    <div class="topbar-sub">OTIPM · Motor · Process · Social Interaction</div>
+  </div>
+  <div class="topbar-right">
+    <span class="dev-badge">OTDev · 함선생</span>
+  </div>
+</header>
+
+<div class="progress-strip">
+  <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+</div>
+
+<!-- ── Step Bar ── -->
+<div class="step-wrap">
+  <div class="step-item active" id="step-nav-0" onclick="goStep(0)">
+    <div class="step-num" id="step-num-0">1</div>
+    <span>클라이언트 · 과제</span>
+  </div>
+  <div class="step-sep"></div>
+  <div class="step-item" id="step-nav-1" onclick="goStep(1)">
+    <div class="step-num" id="step-num-1">2</div>
+    <span>수행의 질</span>
+  </div>
+  <div class="step-sep"></div>
+  <div class="step-item" id="step-nav-2" onclick="goStep(2)">
+    <div class="step-num" id="step-num-2">3</div>
+    <span>Performance Rating</span>
+  </div>
+  <div class="step-sep"></div>
+  <div class="step-item" id="step-nav-3" onclick="goStep(3)">
+    <div class="step-num" id="step-num-3">4</div>
+    <span>목표 · 중재계획</span>
+  </div>
+</div>
+
+<!-- ── 메인 페이지 ── -->
+<main class="page">
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  STEP 0: 클라이언트 정보 + 평가 정보
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<div id="step-0">
+
+  <!-- 클라이언트 정보 -->
+  <div class="card">
+    <div class="card-title">
+      <div class="card-title-dot"></div>
+      클라이언트 정보
+    </div>
+    <div class="form-grid">
+      <div class="form-field">
+        <label class="form-label">이름 / 등록번호</label>
+        <input class="form-input" id="f-name" type="text" placeholder="예: 홍OO / 24-001">
+      </div>
+      <div class="form-field">
+        <label class="form-label">생년월일</label>
+        <input class="form-input" id="f-birth" type="date">
+      </div>
+      <div class="form-field">
+        <label class="form-label">성별</label>
+        <select class="form-input" id="f-gender">
+          <option value="">선택</option>
+          <option value="남">남</option>
+          <option value="여">여</option>
+        </select>
+      </div>
+      <div class="form-field">
+        <label class="form-label">진단명</label>
+        <input class="form-input" id="f-diagnosis" type="text" placeholder="예: 뇌성마비, ASD">
+      </div>
+      <div class="form-field">
+        <label class="form-label">학년 / 학급</label>
+        <input class="form-input" id="f-grade" type="text" placeholder="예: 초2, 유치원">
+      </div>
+      <div class="form-field">
+        <label class="form-label">담당 치료사</label>
+        <input class="form-input" id="f-therapist" type="text" placeholder="이름 (OT)">
+      </div>
+    </div>
+  </div>
+
+  <!-- 평가 정보 -->
+  <div class="card">
+    <div class="card-title">
+      <div class="card-title-dot" style="background:var(--coral)"></div>
+      평가 정보 · 과제 맥락
+    </div>
+    <div class="form-grid">
+      <div class="form-field">
+        <label class="form-label">평가일</label>
+        <input class="form-input" id="f-date" type="date">
+      </div>
+      <div class="form-field">
+        <label class="form-label">과제 (작업)명</label>
+        <input class="form-input" id="f-task" type="text" placeholder="예: 시리얼과 오렌지 주스 만들기">
+      </div>
+      <div class="form-field">
+        <label class="form-label">작업 유형</label>
+        <select class="form-input" id="f-tasktype">
+          <option value="">선택</option>
+          <option value="자조기술">자조기술</option>
+          <option value="생산적 기술">생산적 기술</option>
+          <option value="여가">여가</option>
+        </select>
+      </div>
+      <div class="form-field">
+        <label class="form-label">응답자</label>
+        <select class="form-input" id="f-reporter">
+          <option value="">선택</option>
+          <option value="아동 본인">아동 본인</option>
+          <option value="보호자">보호자</option>
+          <option value="교사">교사</option>
+        </select>
+      </div>
+      <div class="form-field col-span-2">
+        <label class="form-label">수행 맥락</label>
+        <textarea class="form-input" id="f-context" placeholder="예: 가정 주방에서 아침 준비 상황, 학교 급식 시간 등"></textarea>
+      </div>
+      <div class="form-field col-span-2">
+        <label class="form-label">보고된 관점 (응답자 진술)</label>
+        <textarea class="form-input" id="f-perspective" placeholder="클라이언트 / 보호자 / 교사의 수행 인식을 기록하세요."></textarea>
+      </div>
+    </div>
+
+    <hr class="form-divider">
+
+    <div class="form-grid-3">
+      <div class="form-field">
+        <label class="form-label">관찰된 수행의 질</label>
+        <select class="form-input" id="f-obsq">
+          <option value="1">1 — No (문제없음)</option>
+          <option value="2">2 — Mi (경미)</option>
+          <option value="3">3 — Mo (중등도)</option>
+          <option value="4">4 — Ma (심각)</option>
+        </select>
+      </div>
+      <div class="form-field">
+        <label class="form-label">보고된 수행의 질</label>
+        <select class="form-input" id="f-repq">
+          <option value="1">1 — No</option>
+          <option value="2">2 — Mi</option>
+          <option value="3">3 — Mo</option>
+          <option value="4">4 — Ma</option>
+        </select>
+      </div>
+      <div class="form-field">
+        <label class="form-label">불일치 원인 추론</label>
+        <input class="form-input" id="f-cause" type="text" placeholder="예: 수행 인식 부족">
+      </div>
+    </div>
+
+    <div class="form-grid" style="margin-top:12px;">
+      <div class="form-field">
+        <label class="form-label">우선 수행 과제 여부</label>
+        <select class="form-input" id="f-pri">
+          <option value="Y">예 — 우선 과제</option>
+          <option value="N">아니오</option>
+        </select>
+      </div>
+      <div class="form-field">
+        <label class="form-label">메모</label>
+        <input class="form-input" id="f-memo" type="text" placeholder="">
+      </div>
+    </div>
+  </div>
+
+</div><!-- /step-0 -->
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  STEP 1: Overall Quality of Performance
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<div id="step-1" style="display:none;">
+
+  <div class="card">
+    <div class="card-title">
+      <div class="card-title-dot" style="background:var(--teal)"></div>
+      Overall Quality of Performance
+    </div>
+    <p style="font-size:13px;color:var(--t3);margin-bottom:18px;line-height:1.6;">
+      클라이언트의 전반적 수행의 질을 가장 잘 나타내는 항목을 각 영역별로 선택하세요.
+    </p>
+    <div class="quality-grid" id="quality-grid"></div>
+  </div>
+
+</div><!-- /step-1 -->
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  STEP 2: Performance Rating
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<div id="step-2" style="display:none;">
+
+  <div class="card">
+    <div class="card-title">
+      <div class="card-title-dot" style="background:var(--coral)"></div>
+      Performance Rating Form
+      <span style="font-size:11px;color:var(--t3);font-weight:500;text-transform:none;letter-spacing:0;">
+        No=없음 · Mi=경미 · Mo=중등도 · Ma=심각
+      </span>
+    </div>
+
+    <div class="skill-tabs">
+      <button class="skill-tab active" id="tab-motor"   onclick="switchTab('motor')">
+        Motor
+        <span class="skill-tab-badge" id="badge-motor">0/16</span>
+      </button>
+      <button class="skill-tab" id="tab-process" onclick="switchTab('process')">
+        Process
+        <span class="skill-tab-badge" id="badge-process">0/19</span>
+      </button>
+      <button class="skill-tab" id="tab-social"  onclick="switchTab('social')">
+        Social Interaction
+        <span class="skill-tab-badge" id="badge-social">0/27</span>
+      </button>
+    </div>
+
+    <!-- Motor -->
+    <div id="panel-motor">
+      <div class="skill-desc">
+        Motor skills — 선택된 과제 수행 중 자기 자신과 사물을 효과적으로 <strong>움직이는</strong> 것과 관련된 관찰 가능한 과제 행동
+      </div>
+      <table class="skill-table">
+        <thead>
+          <tr>
+            <th>기술명</th>
+            <th>평가</th>
+            <th>관찰 내용</th>
+          </tr>
+        </thead>
+        <tbody id="tb-motor"></tbody>
+      </table>
+    </div>
+
+    <!-- Process -->
+    <div id="panel-process" style="display:none;">
+      <div class="skill-desc">
+        Process skills — 사물을 효과적으로 선택·사용하고, 개별 동작과 단계를 <strong>적시에</strong> 수행하는 것과 관련된 관찰 가능한 과제 행동
+      </div>
+      <table class="skill-table">
+        <thead>
+          <tr>
+            <th>기술명</th>
+            <th>평가</th>
+            <th>관찰 내용</th>
+          </tr>
+        </thead>
+        <tbody id="tb-process"></tbody>
+      </table>
+    </div>
+
+    <!-- Social -->
+    <div id="panel-social" style="display:none;">
+      <div class="skill-desc">
+        Social interaction skills — 사회적 상호작용이 포함된 일상 과제 수행 맥락 안에서, 타인과 효과적으로 <strong>의사소통하고 상호작용</strong>하는 관찰 가능한 행동
+      </div>
+      <div class="soc-overall">
+        <div class="soc-overall-title">Overall · Social Effectiveness</div>
+        <div class="soc-chips" id="soc-overall-chips">
+          <span class="soc-chip" onclick="selSocOverall(this,0)">Effective, no disruption</span>
+          <span class="soc-chip" onclick="selSocOverall(this,1)">Minor disruption</span>
+          <span class="soc-chip" onclick="selSocOverall(this,2)">Moderate disruption</span>
+          <span class="soc-chip" onclick="selSocOverall(this,3)">Substantial disruption</span>
+        </div>
+      </div>
+      <table class="skill-table">
+        <thead>
+          <tr>
+            <th>기술명</th>
+            <th>평가</th>
+            <th>관찰 내용</th>
+          </tr>
+        </thead>
+        <tbody id="tb-social"></tbody>
+      </table>
+    </div>
+
+  </div>
+
+</div><!-- /step-2 -->
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  STEP 3: 목표설정 + 중재계획
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<div id="step-3" style="display:none;">
+
+  <div class="card">
+    <div class="card-title">
+      <div class="card-title-dot" style="background:var(--amber)"></div>
+      중재 모델 선택
+    </div>
+    <div class="model-grid" id="model-grid"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">
+      <div class="card-title-dot" style="background:var(--green)"></div>
+      작업 중심 목표 설정
+    </div>
+    <div class="form-grid">
+      <div class="form-field col-span-2">
+        <label class="form-label">목표 (작업 중심, 기능적 표현)</label>
+        <textarea class="form-input" id="f-goal" style="min-height:90px;"
+          placeholder="예: OO이는 4주 이내에 보조 없이 혼자 시리얼을 그릇에 담을 수 있다."></textarea>
+      </div>
+      <div class="form-field">
+        <label class="form-label">목표 달성 예정일</label>
+        <input class="form-input" id="f-tdate" type="date">
+      </div>
+      <div class="form-field">
+        <label class="form-label">목표 달성 기준</label>
+        <input class="form-input" id="f-criteria" type="text" placeholder="예: 3회 중 2회 독립 수행">
+      </div>
+      <div class="form-field col-span-2">
+        <label class="form-label">중재 계획 내용</label>
+        <textarea class="form-input" id="f-plan" style="min-height:90px;"
+          placeholder="구체적인 중재 방법, 전략, 환경 수정, 보조도구 등을 기술하세요."></textarea>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /step-3 -->
+
+</main>
+
+<!-- ── 하단 네비게이션 ── -->
+<div class="nav-bar">
+  <button class="btn-prev" id="btn-prev" onclick="prevStep()" style="display:none;">
+    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path d="M19 12H5M12 5l-7 7 7 7" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    이전
+  </button>
+  <div class="nav-step-info">
+    단계 <span id="nav-step-cur">1</span> / 4
+  </div>
+  <button class="btn-next" id="btn-next" onclick="nextStep()">
+    다음 단계
+    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path d="M5 12h14M12 5l7 7-7 7" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </button>
+  <span class="nav-pdf-hint" style="font-size:11px;color:var(--t3);max-width:180px;text-align:right;line-height:1.35;">PDF는 전체 평가 완료 후 종합 보고서에서 저장</span>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ═══════════════════════════════════════════
+   데이터 상수
+═══════════════════════════════════════════ */
+const MOTOR_SKILLS = [
+  { en:'Stabilizes',  ko:'안정화'     },
+  { en:'Aligns',      ko:'정렬'       },
+  { en:'Positions',   ko:'위치 잡기'  },
+  { en:'Reaches',     ko:'뻗기'       },
+  { en:'Bends',       ko:'굽히기'     },
+  { en:'Grips',       ko:'쥐기'       },
+  { en:'Manipulates', ko:'조작'       },
+  { en:'Coordinates', ko:'협응'       },
+  { en:'Moves',       ko:'이동'       },
+  { en:'Lifts',       ko:'들기'       },
+  { en:'Walks',       ko:'걷기'       },
+  { en:'Transports',  ko:'운반'       },
+  { en:'Calibrates',  ko:'조절'       },
+  { en:'Flows',       ko:'흐름'       },
+  { en:'Endures',     ko:'지구력'     },
+  { en:'Paces',       ko:'속도 조절'  },
+];
+
+const PROCESS_SKILLS = [
+  { en:'Attends',           ko:'주의집중'    },
+  { en:'Heeds',             ko:'따르기'      },
+  { en:'Chooses',           ko:'선택'        },
+  { en:'Uses',              ko:'사용'        },
+  { en:'Handles',           ko:'다루기'      },
+  { en:'Inquires',          ko:'질문'        },
+  { en:'Initiates',         ko:'시작'        },
+  { en:'Continues',         ko:'지속'        },
+  { en:'Sequences',         ko:'순서'        },
+  { en:'Terminates',        ko:'종료'        },
+  { en:'Searches/locates',  ko:'탐색/위치'   },
+  { en:'Gathers',           ko:'모으기'      },
+  { en:'Organizes',         ko:'정리'        },
+  { en:'Restores',          ko:'복원'        },
+  { en:'Navigates',         ko:'이동 경로'   },
+  { en:'Notices/responds',  ko:'인지/반응'   },
+  { en:'Adjusts',           ko:'조정'        },
+  { en:'Accommodates',      ko:'적응'        },
+  { en:'Benefits',          ko:'이득'        },
+];
+
+const SOCIAL_SKILLS = [
+  { en:'Approaches/starts',           ko:'접근/시작'       },
+  { en:'Concludes/disengages',        ko:'마무리/철수'      },
+  { en:'Produces speech',             ko:'발화'            },
+  { en:'Gesticulates',                ko:'몸짓'            },
+  { en:'Speaks fluently',             ko:'유창하게 말하기'  },
+  { en:'Turns toward',                ko:'몸 향하기'       },
+  { en:'Looks',                       ko:'시선 맞추기'     },
+  { en:'Places self',                 ko:'위치 잡기'       },
+  { en:'Touches',                     ko:'접촉'            },
+  { en:'Regulates',                   ko:'조절'            },
+  { en:'Questions',                   ko:'질문'            },
+  { en:'Replies',                     ko:'응답'            },
+  { en:'Discloses',                   ko:'표현'            },
+  { en:'Expresses emotions',          ko:'감정 표현'       },
+  { en:'Disagrees',                   ko:'동의/반론'       },
+  { en:'Thanks',                      ko:'감사'            },
+  { en:'Transitions',                 ko:'전환'            },
+  { en:'Times response',              ko:'반응 타이밍'     },
+  { en:'Times duration',              ko:'지속 시간'       },
+  { en:'Takes turns',                 ko:'차례 지키기'     },
+  { en:'Matches language',            ko:'언어 맞추기'     },
+  { en:'Clarifies',                   ko:'명료화'          },
+  { en:'Acknowledges/encourages',     ko:'인정/격려'       },
+  { en:'Empathizes',                  ko:'공감'            },
+  { en:'Heeds',                       ko:'경청'            },
+  { en:'Accommodates',                ko:'배려'            },
+  { en:'Benefits',                    ko:'혜택'            },
+];
+
+const OVERALL_FIELDS = [
+  {
+    key: 'effort',
+    label: 'Effort (노력)',
+    opts: ['No increase — 추가 노력 없음','Mild increase — 경미한 증가','Moderate increase — 중등도 증가','Substantial increase — 현저한 증가'],
+  },
+  {
+    key: 'efficiency',
+    label: 'Efficiency (효율성)',
+    opts: ['Well organized and timely — 효율적','Mild problems — 경미한 문제','Moderate problems — 중등도 문제','Substantial problems — 현저한 문제'],
+  },
+  {
+    key: 'safety',
+    label: 'Safety (안전)',
+    opts: ['No risk — 위험 없음','Mild risk — 경미한 위험','Moderate risk — 중등도 위험','Substantial risk / Unsafe — 현저한 위험'],
+  },
+  {
+    key: 'freq_assistance',
+    label: 'Frequency of Assistance (보조 빈도)',
+    opts: ['No need — 필요 없음','Occasional — 간헐적','Frequent — 빈번함','Constant — 지속적'],
+  },
+];
+
+const MODELS = [
+  { value:'COMPENSATORY',  name:'보상적 모델',      desc:'환경 수정 및 보조 전략으로 기능 보완' },
+  { value:'EDUCATION',     name:'교육 및 교수 모델', desc:'새로운 기술 학습과 지식 습득 촉진'   },
+  { value:'ACQUISITIONAL', name:'습득 (훈련) 모델',  desc:'반복 훈련을 통한 기술 습득'          },
+  { value:'RESTORATIVE',   name:'회복적 모델',       desc:'손상된 기능의 회복 및 재활'          },
+];
+
+const RATING_LABELS = ['No','Mi','Mo','Ma'];
+
+/* ═══════════════════════════════════════════
+   상태
+═══════════════════════════════════════════ */
+let currentStep = 0;
+const qState  = {};  // Overall Quality 선택값
+let socOv     = -1;  // Social Overall (-1 = 미선택)
+let selModel  = '';  // 중재 모델
+
+/* ═══════════════════════════════════════════
+   초기화
+═══════════════════════════════════════════ */
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('f-date').valueAsDate = new Date();
+
+  /* sessionStorage에서 기본정보 불러오기 */
+  try {
+    const sess = JSON.parse(sessionStorage.getItem('ot_session') || '{}');
+    if (sess.info) {
+      const i = sess.info;
+      if (i.name)      document.getElementById('f-name').value      = i.name;
+      if (i.date)      document.getElementById('f-date').value      = i.date;
+      if (i.gender)    document.getElementById('f-gender').value    = i.gender;
+      if (i.birth)     document.getElementById('f-birth').value     = i.birth;
+      if (i.diagnosis) document.getElementById('f-diagnosis').value = i.diagnosis;
+      if (i.therapist) document.getElementById('f-therapist').value = i.therapist;
+    }
+  } catch(e) {}
+
+  buildOverallGrid();
+  buildSkillTable('tb-motor',   MOTOR_SKILLS,   'motor');
+  buildSkillTable('tb-process', PROCESS_SKILLS, 'process');
+  buildSkillTable('tb-social',  SOCIAL_SKILLS,  'social');
+  buildModelGrid();
+  updateUI();
+});
+
+/* ═══════════════════════════════════════════
+   Overall Quality 빌드
+═══════════════════════════════════════════ */
+function buildOverallGrid() {
+  const g = document.getElementById('quality-grid');
+  g.innerHTML = OVERALL_FIELDS.map(f =>
+    `<div class="quality-item">
+      <div class="quality-label">${f.label}</div>
+      <div class="quality-chips" id="qchips-${f.key}">
+        ${f.opts.map((o,i) =>
+          `<span class="quality-chip" onclick="selQuality(this,'${f.key}',${i})">${o}</span>`
+        ).join('')}
+      </div>
+    </div>`
+  ).join('');
+}
+
+function selQuality(el, key, val) {
+  document.querySelectorAll(`#qchips-${key} .quality-chip`).forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  qState[key] = val;
+}
+
+function selSocOverall(el, val) {
+  document.querySelectorAll('#soc-overall-chips .soc-chip').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  socOv = val;
+}
+
+/* ═══════════════════════════════════════════
+   스킬 테이블 빌드
+═══════════════════════════════════════════ */
+function buildSkillTable(tbId, skills, pfx) {
+  const tb = document.getElementById(tbId);
+  tb.innerHTML = skills.map((s, idx) => {
+    const key = s.en.replace(/\//g,'_');
+    return `<tr class="skill-row" id="row-${pfx}-${idx}">
+      <td>
+        <div class="skill-name">${s.en}</div>
+        <div class="skill-name-en">${s.ko}</div>
+      </td>
+      <td>
+        <div class="rating-group" id="rg-${pfx}-${idx}">
+          ${RATING_LABELS.map(r =>
+            `<button class="rating-btn" data-rating="${r}"
+              onclick="pickRating('${pfx}',${idx},'${r}')">${r}</button>`
+          ).join('')}
+        </div>
+      </td>
+      <td>
+        <input class="obs-input" id="obs-${pfx}-${idx}" type="text" placeholder="관찰 내용...">
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function pickRating(pfx, idx, rating) {
+  const group = document.getElementById(`rg-${pfx}-${idx}`);
+  group.querySelectorAll('.rating-btn').forEach(b => {
+    b.className = 'rating-btn';
+  });
+  const btn = group.querySelector(`[data-rating="${rating}"]`);
+  btn.classList.add(`active-${rating}`);
+  updateBadge(pfx);
+}
+
+function updateBadge(pfx) {
+  const skills = pfx === 'motor' ? MOTOR_SKILLS : pfx === 'process' ? PROCESS_SKILLS : SOCIAL_SKILLS;
+  const total  = skills.length;
+  let issues   = 0;
+  skills.forEach((_, i) => {
+    const g = document.getElementById(`rg-${pfx}-${i}`);
+    if (!g) return;
+    const active = g.querySelector('.rating-btn[class*="active-"]');
+    if (active && !active.classList.contains('active-No')) issues++;
+  });
+  const badge = document.getElementById(`badge-${pfx}`);
+  badge.textContent = `${issues}/${total}`;
+  if (issues > 0) badge.classList.add('has-issues');
+  else badge.classList.remove('has-issues');
+}
+
+function switchTab(tab) {
+  ['motor','process','social'].forEach(t => {
+    document.getElementById(`panel-${t}`).style.display  = t === tab ? 'block' : 'none';
+    document.getElementById(`tab-${t}`).classList.toggle('active', t === tab);
+  });
+}
+
+/* ═══════════════════════════════════════════
+   중재 모델 카드 빌드
+═══════════════════════════════════════════ */
+function buildModelGrid() {
+  const g = document.getElementById('model-grid');
+  g.innerHTML = MODELS.map(m =>
+    `<div class="model-card" id="model-${m.value}" onclick="selectModel('${m.value}')">
+      <div class="model-card-name">${m.name}</div>
+      <div class="model-card-desc">${m.desc}</div>
+    </div>`
+  ).join('');
+}
+
+function selectModel(val) {
+  MODELS.forEach(m => {
+    document.getElementById(`model-${m.value}`).classList.toggle('selected', m.value === val);
+  });
+  selModel = val;
+}
+
+/* ═══════════════════════════════════════════
+   스텝 네비게이션
+═══════════════════════════════════════════ */
+function goStep(n) {
+  if (n < 0 || n > 3) return;
+
+  /* 유효성 검사 (0→1 이동 시) */
+  if (currentStep === 0 && n > 0) {
+    const name = document.getElementById('f-name').value.trim();
+    const task = document.getElementById('f-task').value.trim();
+    if (!name) { showToast('이름/등록번호를 입력해 주세요'); document.getElementById('f-name').focus(); return; }
+    if (!task) { showToast('과제명을 입력해 주세요'); document.getElementById('f-task').focus(); return; }
+  }
+
+  /* 현재 스텝 숨기기 */
+  document.getElementById(`step-${currentStep}`).style.display = 'none';
+  currentStep = n;
+  document.getElementById(`step-${currentStep}`).style.display = 'block';
+
+  /* 스크롤 상단 */
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  updateUI();
+}
+
+function nextStep() { goStep(currentStep + 1); }
+function prevStep() { goStep(currentStep - 1); }
+
+function goBack() {
+  if (confirm('허브 화면으로 돌아가면 입력된 내용이 사라집니다. 계속할까요?')) {
+    window.location.href = 'hub.html';
+  }
+}
+
+function updateUI() {
+  const n = currentStep;
+
+  /* 스텝 바 */
+  for (let i = 0; i < 4; i++) {
+    const nav = document.getElementById(`step-nav-${i}`);
+    const num = document.getElementById(`step-num-${i}`);
+    nav.className = 'step-item' + (i === n ? ' active' : i < n ? ' done' : '');
+    num.textContent = i < n ? '✓' : i + 1;
+  }
+
+  /* 진행률 */
+  document.getElementById('progress-fill').style.width = `${(n / 3) * 100}%`;
+
+  /* 네비 버튼 */
+  const btnPrev = document.getElementById('btn-prev');
+  const btnNext = document.getElementById('btn-next');
+  btnPrev.style.display = n > 0 ? 'flex' : 'none';
+  btnNext.style.display = n < 3 ? 'flex' : 'none';
+
+  document.getElementById('nav-step-cur').textContent = n + 1;
+}
+
+/* ═══════════════════════════════════════════
+   종합 보고서용 HTML 스냅샷
+═══════════════════════════════════════════ */
+const REPORT_SECTION_TITLE = '작업치료 수행분석 (OTIPM · Motor·Process·Social)';
+
+function buildToolReportHtml() {
+  const parts = [];
+  for (let i = 0; i < 4; i++) {
+    const el = document.getElementById(`step-${i}`);
+    if (el) {
+      parts.push(
+        `<div style="margin-bottom:20px;border:1px solid #E4E7F4;border-radius:12px;padding:14px;overflow:hidden;">` +
+        `<div style="font-size:11px;font-weight:800;color:#6C5CE7;margin-bottom:10px;">단계 ${i + 1}</div>${el.innerHTML}</div>`
+      );
+    }
+  }
+  return parts.join('');
+}
+
+/* ═══════════════════════════════════════════
+   토스트
+═══════════════════════════════════════════ */
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2400);
+}
+
+/* ═══════════════════════════════════════════
+   데이터 수집 (PDF 보고서용)
+═══════════════════════════════════════════ */
+function collectData() {
+  const getVal = id => document.getElementById(id)?.value?.trim() || '';
+  const getSkills = (pfx, skills) => skills.map((s, i) => {
+    const g = document.getElementById(`rg-${pfx}-${i}`);
+    const active = g?.querySelector('.rating-btn[class*="active-"]');
+    return {
+      en:    s.en,
+      ko:    s.ko,
+      rating: active ? active.dataset.rating : 'No',
+      obs:   getVal(`obs-${pfx}-${i}`),
+    };
+  });
+
+  return {
+    info: {
+      name:      getVal('f-name'),
+      birth:     getVal('f-birth'),
+      gender:    getVal('f-gender'),
+      diagnosis: getVal('f-diagnosis'),
+      grade:     getVal('f-grade'),
+      therapist: getVal('f-therapist'),
+    },
+    task: {
+      date:        getVal('f-date'),
+      task:        getVal('f-task'),
+      tasktype:    getVal('f-tasktype'),
+      reporter:    getVal('f-reporter'),
+      context:     getVal('f-context'),
+      perspective: getVal('f-perspective'),
+      obsq:        getVal('f-obsq'),
+      repq:        getVal('f-repq'),
+      cause:       getVal('f-cause'),
+      pri:         getVal('f-pri'),
+      memo:        getVal('f-memo'),
+    },
+    quality: { ...qState },
+    socOverall: socOv,
+    motor:   getSkills('motor',   MOTOR_SKILLS),
+    process: getSkills('process', PROCESS_SKILLS),
+    social:  getSkills('social',  SOCIAL_SKILLS),
+    goal: {
+      model:    selModel,
+      goal:     getVal('f-goal'),
+      tdate:    getVal('f-tdate'),
+      criteria: getVal('f-criteria'),
+      plan:     getVal('f-plan'),
+    },
+  };
+}
+
+window._TOOL_ID = 'otipm';
+/* ═══════════════════════════════════════
+   세션 네비게이션 — hub.html 라우팅 연동
+═══════════════════════════════════════ */
+function getSession() {
+  try { return JSON.parse(sessionStorage.getItem('ot_session') || '{}'); } catch(e) { return {}; }
+}
+
+function persistToolReport() {
+  try {
+    const sess = getSession();
+    if (!sess.reportByTool) sess.reportByTool = {};
+    sess.reportByTool[window._TOOL_ID] = {
+      title: REPORT_SECTION_TITLE,
+      html: typeof buildToolReportHtml === 'function' ? buildToolReportHtml() : ''
+    };
+    sessionStorage.setItem('ot_session', JSON.stringify(sess));
+  } catch (e) {}
+}
+
+function getCurrentToolIndex() {
+  const sess = getSession();
+  const ready = sess.ready || [];
+  const myId  = window._TOOL_ID || '';
+  return ready.indexOf(myId);
+}
+
+function goNextTool() {
+  persistToolReport();
+  const sess = getSession();
+  const ready = sess.ready || [];
+  const cur   = getCurrentToolIndex();
+  if (cur >= 0 && cur < ready.length - 1) {
+    const nextId = ready[cur + 1];
+    // TOOLS 매핑 (hub 없이도 알 수 있도록 인라인)
+    const ROUTE_MAP = {
+      'profiling':'assess-profiling.html','otipm':'assess-otipm.html',
+      'jthft':'assess-jthft.html','macs':'assess-macs.html',
+      'clinical':'assess-clinical.html','sensory':'assess-sensory.html',
+      'mbi':'assess-mbi.html','fim':'assess-fim.html','k-iadl':'assess-k-iadl.html',
+    };
+    const route = ROUTE_MAP[nextId];
+    if (route) window.location.href = route;
+  } else {
+    window.location.href = 'report.html';
+  }
+}
+
+</script>
+<script src="session-sidebar.js" defer></script>
+</body>
+</html>

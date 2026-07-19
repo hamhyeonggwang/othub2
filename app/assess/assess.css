@@ -1,0 +1,104 @@
+.assess-hero {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  align-items: center;
+  justify-content: space-between;
+  background: linear-gradient(135deg, rgba(7, 27, 63, 0.04), rgba(33, 191, 243, 0.08));
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  padding: 28px 32px;
+  margin-bottom: 32px;
+}
+
+.assess-hero h2 {
+  font-size: 20px;
+  color: var(--navy);
+  margin: 0 0 8px;
+}
+
+.assess-hero p {
+  color: var(--muted);
+  font-size: 14px;
+  max-width: 460px;
+  margin: 0;
+}
+
+.assess-session-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.assess-session-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 18px 22px;
+}
+
+.assess-session-card strong {
+  display: block;
+  color: var(--navy);
+  font-size: 15px;
+  margin-bottom: 4px;
+}
+
+.assess-session-card span {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.assess-session-status {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(29, 111, 220, 0.1);
+  color: var(--blue);
+  white-space: nowrap;
+}
+
+/* ── 세션 상세(보고서) ── */
+.assess-report-meta {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 18px 22px;
+  margin-bottom: 20px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.assess-report-meta strong {
+  color: var(--navy);
+}
+
+.assess-report-section {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 20px 22px;
+  margin-bottom: 16px;
+}
+
+.assess-report-section h2 {
+  font-size: 15px;
+  color: var(--blue);
+  margin: 0 0 14px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid var(--ice);
+}
+
+.assess-report-body {
+  font-size: 13px;
+  color: var(--navy);
+}
+
+.assess-report-body table {
+  max-width: 100%;
+}

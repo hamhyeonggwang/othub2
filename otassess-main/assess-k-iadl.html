@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>K-IADL — OTHub Assess</title>
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+<style>
+:root {
+  --bg:#F0F2FA; --surface:#FFFFFF; --surface-2:#F7F8FD; --border:#E4E7F4; --border-2:#CDD2EC;
+  --accent:#6C5CE7; --accent-2:#8B7FF0; --accent-dim:#EDEAFD; --accent-ring:rgba(108,92,231,.15);
+  --green:#00A86B; --green-dim:#E0F5EE; --green-dark:#006B44;
+  --amber:#F0A500; --amber-dim:#FEF4DC; --amber-dark:#7A5000;
+  --red:#D63031; --red-dim:#FDF0F0; --red-dark:#8B1A1A;
+  --t1:#1E1B3A; --t2:#4A4770; --t3:#9896B8;
+  --r-xs:6px; --r-sm:10px; --r:14px; --r-lg:20px; --font:'Pretendard',-apple-system,sans-serif; --touch:52px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--font);background:var(--bg);color:var(--t1);min-height:100vh;-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent;}
+.topbar{height:60px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;gap:12px;position:sticky;top:0;z-index:100;}
+.topbar-back{width:40px;height:40px;border-radius:var(--r-sm);border:1px solid var(--border);background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--t2);transition:all .15s;flex-shrink:0;}
+.topbar-back:hover{background:var(--bg);color:var(--t1);}
+.topbar-back svg{width:18px;height:18px;}
+.topbar-info{flex:1;}
+.topbar-title{font-size:15px;font-weight:800;color:var(--t1);}
+.topbar-sub{font-size:11px;color:var(--t3);margin-top:1px;}
+.topbar-right{display:flex;align-items:center;gap:10px;margin-left:auto;flex-shrink:0;}
+.dev-badge{font-size:11px;font-weight:700;color:var(--accent);background:var(--accent-dim);padding:4px 10px;border-radius:20px;}
+.progress-strip{height:3px;background:var(--border);}
+.progress-fill{height:100%;background:var(--accent);transition:width .4s cubic-bezier(.4,0,.2,1);border-radius:0 2px 2px 0;}
+.page{max-width:860px;margin:0 auto;padding:22px 20px 100px;}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:20px 22px;margin-bottom:14px;}
+.card-head{display:flex;align-items:center;gap:10px;padding-bottom:14px;margin-bottom:16px;border-bottom:1px solid var(--border);}
+.card-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.card-title{font-size:14px;font-weight:700;color:var(--t1);}
+.form-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
+.col2{grid-column:span 2;}
+.form-field{display:flex;flex-direction:column;gap:6px;}
+.form-label{font-size:11px;font-weight:700;color:var(--t3);letter-spacing:.05em;text-transform:uppercase;}
+.form-input{height:var(--touch);padding:0 14px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-family:var(--font);font-size:15px;color:var(--t1);background:var(--surface-2);outline:none;transition:border-color .15s,box-shadow .15s;width:100%;}
+.form-input:focus{border-color:var(--accent);box-shadow:0 0 0 4px var(--accent-ring);background:var(--surface);}
+.form-input::placeholder{color:var(--t3);}
+select.form-input{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2 4l4 4 4-4' stroke='%239896B8' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:36px;cursor:pointer;}
+.score-bar{position:sticky;top:63px;z-index:90;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:16px 18px;margin-bottom:14px;display:flex;align-items:center;gap:18px;box-shadow:0 6px 20px rgba(30,27,58,.06);}
+.score-main{display:flex;align-items:baseline;gap:4px;min-width:92px;}
+.score-num{font-size:34px;font-weight:900;color:var(--accent);line-height:1;}
+.score-den{font-size:13px;font-weight:700;color:var(--t3);}
+.score-grade{min-width:132px;}
+.grade-label{font-size:10px;font-weight:700;color:var(--t3);letter-spacing:.05em;text-transform:uppercase;margin-bottom:4px;}
+.grade-value{display:inline-flex;align-items:center;min-height:28px;padding:5px 12px;border-radius:20px;font-size:13px;font-weight:800;}
+.score-progress-wrap{flex:1;min-width:160px;}
+.score-progress-label{display:flex;justify-content:space-between;font-size:11px;font-weight:700;color:var(--t3);margin-bottom:6px;}
+.score-progress-track{height:6px;background:var(--border);border-radius:3px;overflow:hidden;}
+.score-progress-fill{height:100%;background:var(--accent);border-radius:3px;transition:width .35s;}
+.score-actions{display:flex;gap:8px;}
+.info-btn{height:38px;padding:0 12px;border-radius:var(--r-sm);border:1px solid var(--border);background:var(--surface-2);color:var(--t2);font-family:var(--font);font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;}
+.info-btn:hover{background:var(--accent-dim);border-color:var(--accent-2);color:var(--accent);}
+.info-btn svg{width:15px;height:15px;}
+.completion-bar{display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);margin-bottom:14px;}
+.completion-dots{display:flex;gap:6px;flex:1;}
+.completion-dot{width:10px;height:10px;border-radius:50%;background:var(--border-2);transition:all .2s;}
+.completion-dot.done{background:var(--accent);transform:scale(1.25);}
+.completion-text{font-size:12px;font-weight:700;color:var(--t3);}
+.iadl-category-header{font-size:12px;font-weight:800;color:var(--accent);margin:18px 0 8px;padding-left:4px;}
+.iadl-item-card{border:1.5px solid var(--border);border-radius:var(--r);padding:16px 18px;margin-bottom:10px;transition:border-color .15s,background .15s;background:var(--surface);}
+.iadl-item-card.answered{border-color:var(--accent);background:var(--accent-dim);}
+.iadl-item-header{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+.iadl-item-index{width:26px;height:26px;border-radius:8px;background:var(--surface-2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:var(--t3);flex-shrink:0;}
+.iadl-item-card.answered .iadl-item-index{background:#fff;color:var(--accent);border-color:var(--accent-2);}
+.iadl-item-name{font-size:15px;font-weight:800;color:var(--t1);flex:1;}
+.iadl-item-name.answered{color:var(--accent);}
+.iadl-max-badge{font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;background:var(--surface-2);color:var(--t3);border:1px solid var(--border);flex-shrink:0;}
+.iadl-item-card.answered .iadl-max-badge{background:#fff;color:var(--accent);border-color:var(--accent-2);}
+.iadl-options{display:grid;grid-template-columns:1fr;gap:7px;margin-bottom:10px;}
+.iadl-opt-btn{display:grid;grid-template-columns:42px 1fr;align-items:center;gap:10px;min-height:50px;padding:9px 12px;border-radius:var(--r-sm);border:1.5px solid var(--border-2);background:var(--surface-2);cursor:pointer;transition:all .15s;text-align:left;font-family:var(--font);}
+.iadl-opt-btn:hover{border-color:var(--accent-2);background:var(--accent-dim);}
+.iadl-opt-btn.selected{background:var(--accent);border-color:var(--accent);}
+.iadl-opt-score{width:32px;height:32px;border-radius:9px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:900;color:var(--accent);line-height:1;}
+.iadl-opt-btn.selected .iadl-opt-score{background:rgba(255,255,255,.18);color:#fff;}
+.iadl-opt-label{font-size:13px;font-weight:650;color:var(--t2);line-height:1.45;}
+.iadl-opt-btn.selected .iadl-opt-label{color:#fff;}
+.iadl-comment-input{width:100%;height:40px;padding:0 12px;border:1px solid var(--border);border-radius:var(--r-xs);font-family:var(--font);font-size:13px;color:var(--t1);background:var(--surface-2);outline:none;transition:border-color .15s;}
+.iadl-comment-input:focus{border-color:var(--accent);background:var(--surface);}
+.iadl-comment-input::placeholder{color:var(--t3);}
+.nav-bar{position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-top:1px solid var(--border);padding:12px 20px;display:flex;justify-content:center;align-items:center;gap:14px;z-index:100;}
+.nav-info{font-size:13px;font-weight:700;color:var(--t2);}
+.modal-backdrop{position:fixed;inset:0;background:rgba(30,27,58,.35);display:none;align-items:flex-end;justify-content:center;z-index:200;}
+.modal-backdrop.open{display:flex;}
+.modal-sheet{background:var(--surface);border-radius:24px 24px 0 0;width:100%;max-width:680px;max-height:78vh;overflow-y:auto;padding:12px 22px 28px;box-shadow:0 -10px 40px rgba(0,0,0,.12);}
+.modal-handle{width:42px;height:4px;background:var(--border-2);border-radius:2px;margin:0 auto 18px;}
+.modal-title{font-size:18px;font-weight:800;color:var(--t1);margin-bottom:4px;}
+.modal-sub{font-size:13px;color:var(--t3);margin-bottom:18px;}
+.guide-row{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);}
+.guide-num{width:28px;height:28px;border-radius:50%;background:var(--accent-dim);color:var(--accent);font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.guide-text{font-size:13px;color:var(--t2);line-height:1.6;}
+.guide-note{margin-top:14px;padding:12px 14px;background:var(--amber-dim);border:1px solid var(--amber);border-radius:var(--r-sm);font-size:12px;color:var(--amber-dark);line-height:1.55;}
+.help-table{width:100%;border-collapse:collapse;font-size:13px;}
+.help-table th,.help-table td{padding:10px 12px;border-bottom:1px solid var(--border);text-align:left;}
+.help-table th{font-size:11px;color:var(--t3);font-weight:800;text-transform:uppercase;}
+.grade-chip{display:inline-flex;padding:4px 10px;border-radius:20px;font-weight:800;font-size:12px;}
+.current-row{background:var(--accent-dim);}
+.toast{position:fixed;bottom:88px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--t1);color:#fff;padding:12px 18px;border-radius:12px;font-size:13px;font-weight:700;opacity:0;pointer-events:none;transition:all .25s;z-index:300;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.pdf-header,.pdf-score-summary,.sign-area{display:none;}
+@media(max-width:720px){
+  .topbar{padding:0 16px;}
+  .page{padding:16px 14px 96px;}
+  .form-grid{grid-template-columns:1fr;}
+  .col2{grid-column:span 1;}
+  .score-bar{top:63px;flex-wrap:wrap;gap:12px;}
+  .score-main{min-width:80px;}
+  .score-actions{width:100%;}
+  .info-btn{flex:1;justify-content:center;}
+}
+@media print{
+  @page{size:A4;margin:14mm 17mm;}
+  .topbar,.progress-strip,.score-bar,.nav-bar,.toast,.modal-backdrop,.completion-bar{display:none!important;}
+  body{background:#fff!important;}
+  .page{max-width:100%;padding:0;}
+  .pdf-header{display:flex!important;justify-content:space-between;align-items:flex-start;border-bottom:2px solid var(--t1);padding-bottom:12px;margin-bottom:18px;}
+  .pdf-header-title{font-size:16px;font-weight:800;}
+  .pdf-header-sub{font-size:10px;color:#666;margin-top:3px;}
+  .pdf-header-right{text-align:right;font-size:10px;color:#666;line-height:1.8;}
+  .pdf-score-summary{display:block!important;margin-bottom:18px;}
+  .iadl-item-card{border:1px solid #ddd;page-break-inside:avoid;margin-bottom:8px;}
+  .iadl-opt-btn{border:1px solid #ddd!important;}
+  .iadl-opt-btn.selected{background:#6C5CE7!important;}
+  .iadl-opt-btn.selected .iadl-opt-score,.iadl-opt-btn.selected .iadl-opt-label{color:#fff!important;}
+  .sign-area{display:flex!important;margin-top:24px;padding-top:14px;border-top:1px solid #ddd;justify-content:flex-end;}
+  .sign-box{text-align:center;min-width:180px;}
+  .sign-label{font-size:9px;color:#999;margin-bottom:22px;}
+  .sign-line{border-top:1px solid #1E1B3A;padding-top:4px;font-size:9px;color:#555;}
+}
+</style>
+</head>
+<body>
+<div class="pdf-header" id="pdf-header">
+  <div>
+    <div class="pdf-header-title">한국형 도구적 일상생활 평가 (K-IADL) 보고서</div>
+    <div class="pdf-header-sub">Instrumental Activities of Daily Living (Lawton IADL)</div>
+  </div>
+  <div class="pdf-header-right" id="pdf-meta"></div>
+</div>
+<div class="pdf-score-summary" id="pdf-score-summary"></div>
+
+<header class="topbar">
+  <button class="topbar-back" onclick="goBack()">
+    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path d="M19 12H5M12 5l-7 7 7 7" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </button>
+  <div class="topbar-info">
+    <div class="topbar-title">K-IADL</div>
+    <div class="topbar-sub">한국형 도구적 일상생활 평가 · Lawton IADL</div>
+  </div>
+  <div class="topbar-right">
+    <span class="dev-badge">OTDev · 함선생</span>
+  </div>
+</header>
+
+<div class="progress-strip">
+  <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+</div>
+
+<main class="page">
+  <div class="card" id="info-card">
+    <div class="card-head">
+      <div class="card-dot" style="background:var(--accent)"></div>
+      <div class="card-title">기본 정보</div>
+    </div>
+    <div class="form-grid">
+      <div class="form-field col2">
+        <label class="form-label">이름 / 등록번호</label>
+        <input class="form-input" id="f-name" type="text" placeholder="예: 홍OO / 24-001">
+      </div>
+      <div class="form-field">
+        <label class="form-label">평가일</label>
+        <input class="form-input" id="f-date" type="date">
+      </div>
+      <div class="form-field">
+        <label class="form-label">성별</label>
+        <select class="form-input" id="f-gender">
+          <option value="">선택</option>
+          <option value="남">남</option>
+          <option value="여">여</option>
+        </select>
+      </div>
+      <div class="form-field">
+        <label class="form-label">진단명</label>
+        <input class="form-input" id="f-diagnosis" type="text" placeholder="예: 뇌졸중">
+      </div>
+      <div class="form-field">
+        <label class="form-label">담당 치료사</label>
+        <input class="form-input" id="f-therapist" type="text" placeholder="이름 (OT)">
+      </div>
+    </div>
+  </div>
+
+  <div class="score-bar" id="score-bar">
+    <div class="score-main">
+      <div class="score-num" id="score-num">0</div>
+      <div class="score-den">/ 24점</div>
+    </div>
+    <div class="score-grade">
+      <div class="grade-label">해석</div>
+      <div class="grade-value" id="grade-value" style="background:var(--border);color:var(--t3);">—</div>
+    </div>
+    <div class="score-progress-wrap">
+      <div class="score-progress-label">
+        <span id="prog-answered">0 / 8개 완료</span>
+        <span id="prog-pct">0%</span>
+      </div>
+      <div class="score-progress-track">
+        <div class="score-progress-fill" id="score-prog-fill"></div>
+      </div>
+    </div>
+    <div class="score-actions">
+      <button class="info-btn" onclick="openModal('modal-guide')">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="10" stroke-width="1.5"/>
+          <path d="M12 16v-4M12 8h.01" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        사용 지침
+      </button>
+      <button class="info-btn" onclick="openModal('modal-help')">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 0-2-2h6a2 2 0 0 0 2 2" stroke-width="1.5"/>
+        </svg>
+        점수 해석
+      </button>
+    </div>
+  </div>
+
+  <div class="completion-bar" id="completion-bar">
+    <div class="completion-dots" id="completion-dots"></div>
+    <div class="completion-text"><span id="comp-done">0</span> / 8개 항목 완료</div>
+  </div>
+
+  <div id="iadl-items"></div>
+</main>
+
+<div class="nav-bar">
+  <div class="nav-info">
+    <span id="nav-done">0</span> / 8개 완료
+  </div>
+  <span style="font-size:11px;color:var(--t3);max-width:220px;text-align:right;line-height:1.35;">PDF는 전체 평가 완료 후 종합 보고서에서 저장</span>
+</div>
+
+<div class="modal-backdrop" id="modal-guide" onclick="handleBackdrop(event,'modal-guide')">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">K-IADL 사용 지침</div>
+    <div class="modal-sub">CSV 원본의 8개 도구적 일상생활활동 항목을 0-3점으로 평가합니다.</div>
+    <div class="guide-row">
+      <div class="guide-num">1</div>
+      <div class="guide-text">각 항목에서 현재 수행 수준에 가장 가까운 선택지를 고릅니다. 선택한 버튼을 다시 누르면 해제됩니다.</div>
+    </div>
+    <div class="guide-row">
+      <div class="guide-num">2</div>
+      <div class="guide-text">점수가 높을수록 도구적 일상생활활동의 독립성이 높음을 의미합니다. 총점 범위는 0-24점입니다.</div>
+    </div>
+    <div class="guide-row">
+      <div class="guide-num">3</div>
+      <div class="guide-text">"적용대상이 아님" 문구가 포함된 선택지도 CSV의 배점 그대로 반영했습니다.</div>
+    </div>
+    <div class="guide-note">임상적 해석은 대상자의 역할, 생활환경, 보호자 보고를 함께 고려해 기록하세요.</div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="modal-help" onclick="handleBackdrop(event,'modal-help')">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">점수 해석</div>
+    <div class="modal-sub">총점에 따른 간단한 독립성 수준 분류</div>
+    <table class="help-table">
+      <thead>
+        <tr>
+          <th>총점</th>
+          <th>수준</th>
+          <th>설명</th>
+        </tr>
+      </thead>
+      <tbody id="help-table-body"></tbody>
+    </table>
+    <div class="modal-score-banner" id="modal-score-banner"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const IADL_ITEMS = [
+  {
+    id: 'telephone',
+    name: '전화사용',
+    category: '의사소통',
+    options: [
+      { score: 3, label: '자신이 스스로 전화번호를 눌러 전화를 거는 등 전화기를 사용한다.' },
+      { score: 2, label: '몇몇의 잘 아는 전화번호에만 전화를 건다.' },
+      { score: 1, label: '전화를 받을 수 있으나 전화를 걸지는 못한다.' },
+      { score: 0, label: '자신이 스스로는 전화를 사용하지 못한다.' },
+    ],
+  },
+  {
+    id: 'shopping',
+    name: '물건사기',
+    category: '지역사회 활동',
+    options: [
+      { score: 3, label: '모든 물건을 독자적으로 구입할 수 있다.' },
+      { score: 2, label: '제한된 수의 물건만 독자적으로 구입할 수 있다.' },
+      { score: 1, label: '어떤 물건 구입도 도와주어야만 할 수 있다.' },
+      { score: 0, label: '물건 구입을 전혀 할 수 없다.' },
+    ],
+  },
+  {
+    id: 'meal',
+    name: '식사준비',
+    category: '가정생활',
+    options: [
+      { score: 3, label: '독자적으로 실시를 계획하고 준비하고 적절하게 상을 차릴 수 있다.' },
+      { score: 2, label: '음식재료를 주면 적절하게 음식을 준비할 수 있다.' },
+      { score: 1, label: '다른 사람이 식사를 준비해 주고 상을 차려 주어야 한다.' },
+      { score: 0, label: '적용대상이 아님, 음식 준비를 해본 적이 없음.' },
+    ],
+  },
+  {
+    id: 'housework',
+    name: '가사',
+    category: '가정생활',
+    options: [
+      { score: 3, label: '가사일을 혼자 할 수 있고 때로 힘든 일인 경우는 가족의 도움을 받기도 한다.' },
+      { score: 2, label: '간단한 일을 할 수 있으나 깨끗하게 하기는 힘들어 한다.' },
+      { score: 1, label: '모든 가사일에 다른 사람의 도움을 필요로 한다.' },
+      { score: 0, label: '적용대상이 아님, 가사일을 해본 적이 없음.' },
+    ],
+  },
+  {
+    id: 'laundry',
+    name: '세탁',
+    category: '가정생활',
+    options: [
+      { score: 3, label: '모든 세탁은 다른 사람이 해주어야 한다.' },
+      { score: 2, label: '자신의 세탁은 완벽하게 할 수 있다.' },
+      { score: 1, label: '작은 물건 예컨대 양말이나 스타킹은 세탁할 수 있다.' },
+      { score: 0, label: '적용대상이 아님, 세탁일을 해본 적이 없음.' },
+    ],
+  },
+  {
+    id: 'transport',
+    name: '교통수단 이용',
+    category: '지역사회 활동',
+    options: [
+      { score: 3, label: '혼자서 대중교통수단을 이용하거나 직접 운전할 수 있다.' },
+      { score: 2, label: '스스로 택시를 이용할 수 있으나 다른 교통수단을 이용하지는 못한다.' },
+      { score: 1, label: '다른 사람이 동반하거나 도와주면 대중 교통수단을 이용할 수 있다.' },
+      { score: 0, label: '다른 사람의 도움을 받아야만 택시나 다른 제한된 교통 수단을 이용한다.' },
+    ],
+  },
+  {
+    id: 'medication',
+    name: '약 복용',
+    category: '건강관리',
+    options: [
+      { score: 3, label: '스스로 책임지고 정확한 시간에 정확한 용량의 약을 복용할 수 있다.' },
+      { score: 2, label: '각각의 약을 미리 준비해주면 책임지고 복용할 수 있다.' },
+      { score: 1, label: '각각의 약을 준비해 주고 일러주면 혼자서 약을 복용할 수 있다.' },
+      { score: 0, label: '전적으로 다른 사람의 도움을 받아 약을 보관할 수 있다.' },
+    ],
+  },
+  {
+    id: 'finance',
+    name: '재정관리',
+    category: '지역사회 활동',
+    options: [
+      { score: 3, label: '재산을 스스로 관리할 수 있고, 수입을 모을 수 있다.' },
+      { score: 2, label: '그날 그날의 물건 구입은 할 수 있으나, 은행 일이나 큰돈 관리는 다른 사람의 도움을 필요로 한다.' },
+      { score: 1, label: '돈을 관리할 수 있다.' },
+      { score: 0, label: '적용대상이 아님, 재산을 관리해본 적이 없다.' },
+    ],
+  },
+];
+
+const HELP_LEVELS = [
+  { min: 19, max: 24, label: '높은 독립성', desc: '대부분의 IADL을 독립적으로 수행', bg: '#E0F5EE', color: '#00A86B' },
+  { min: 13, max: 18, label: '부분 의존', desc: '일부 IADL에서 감독 또는 도움이 필요', bg: '#FEF4DC', color: '#F0A500' },
+  { min: 0, max: 12, label: '높은 의존', desc: '여러 IADL에서 지속적인 도움이 필요', bg: '#FDF0F0', color: '#D63031' },
+];
+
+const answers = {};
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('f-date').valueAsDate = new Date();
+
+  try {
+    const sess = JSON.parse(sessionStorage.getItem('ot_session') || '{}');
+    if (sess.info) {
+      const i = sess.info;
+      if (i.name) document.getElementById('f-name').value = i.name;
+      if (i.date) document.getElementById('f-date').value = i.date;
+      if (i.gender) document.getElementById('f-gender').value = i.gender;
+      if (i.diagnosis) document.getElementById('f-diagnosis').value = i.diagnosis;
+      if (i.therapist) document.getElementById('f-therapist').value = i.therapist;
+    }
+  } catch(e) {}
+
+  buildHelpTable();
+  renderItems();
+  updateScore();
+});
+
+function renderItems() {
+  const container = document.getElementById('iadl-items');
+  container.innerHTML = '';
+  let lastCat = null;
+
+  IADL_ITEMS.forEach((item, idx) => {
+    if (item.category !== lastCat) {
+      lastCat = item.category;
+      const catDiv = document.createElement('div');
+      catDiv.className = 'iadl-category-header';
+      catDiv.textContent = item.category;
+      container.appendChild(catDiv);
+    }
+
+    const card = document.createElement('div');
+    card.className = 'iadl-item-card';
+    card.id = `card-${item.id}`;
+    card.innerHTML = `
+      <div class="iadl-item-header">
+        <div class="iadl-item-index">${idx + 1}</div>
+        <div class="iadl-item-name" id="name-${item.id}">${item.name}</div>
+        <div class="iadl-max-badge">만점 3점</div>
+      </div>
+      <div class="iadl-options" id="opts-${item.id}">
+        ${item.options.map((opt, j) => `
+          <button class="iadl-opt-btn" data-item="${item.id}" data-score="${opt.score}"
+            onclick="selectScore('${item.id}', ${opt.score}, ${j})" id="btn-${item.id}-${j}">
+            <span class="iadl-opt-score">${opt.score}</span>
+            <span class="iadl-opt-label">${opt.label}</span>
+          </button>
+        `).join('')}
+      </div>
+      <input class="iadl-comment-input" id="comment-${item.id}" type="text"
+        placeholder="Comment (선택사항)" oninput="onComment('${item.id}', this.value)">
+    `;
+    container.appendChild(card);
+  });
+
+  buildCompletionDots();
+}
+
+function selectScore(itemId, score, optionIndex) {
+  if (answers[itemId] && answers[itemId].score === score && answers[itemId].optionIndex === optionIndex) {
+    delete answers[itemId];
+    clearSelected(itemId);
+    updateScore();
+    return;
+  }
+
+  if (!answers[itemId]) answers[itemId] = {};
+  answers[itemId].score = score;
+  answers[itemId].optionIndex = optionIndex;
+
+  clearSelected(itemId);
+  const btn = document.getElementById(`btn-${itemId}-${optionIndex}`);
+  if (btn) btn.classList.add('selected');
+
+  const card = document.getElementById(`card-${itemId}`);
+  if (card) card.classList.add('answered');
+  const nameEl = document.getElementById(`name-${itemId}`);
+  if (nameEl) nameEl.classList.add('answered');
+
+  updateScore();
+}
+
+function clearSelected(itemId) {
+  document.querySelectorAll(`#opts-${itemId} .iadl-opt-btn`).forEach(btn => btn.classList.remove('selected'));
+  const card = document.getElementById(`card-${itemId}`);
+  if (card) card.classList.remove('answered');
+  const nameEl = document.getElementById(`name-${itemId}`);
+  if (nameEl) nameEl.classList.remove('answered');
+}
+
+function onComment(itemId, val) {
+  if (!answers[itemId]) answers[itemId] = {};
+  answers[itemId].comment = val;
+}
+
+function updateScore() {
+  let total = 0;
+  let answered = 0;
+
+  IADL_ITEMS.forEach(item => {
+    const a = answers[item.id];
+    if (a && a.score !== undefined) {
+      total += a.score;
+      answered++;
+    }
+  });
+
+  const pct = Math.round(answered / IADL_ITEMS.length * 100);
+  document.getElementById('score-num').textContent = total;
+  document.getElementById('prog-answered').textContent = `${answered} / ${IADL_ITEMS.length}개 완료`;
+  document.getElementById('prog-pct').textContent = `${pct}%`;
+  document.getElementById('nav-done').textContent = answered;
+  document.getElementById('comp-done').textContent = answered;
+  document.getElementById('score-prog-fill').style.width = `${pct}%`;
+  document.getElementById('progress-fill').style.width = `${pct}%`;
+
+  const grade = getGrade(total);
+  const gradeEl = document.getElementById('grade-value');
+  gradeEl.textContent = grade ? grade.label : '—';
+  gradeEl.style.background = grade ? grade.bg : 'var(--border)';
+  gradeEl.style.color = grade ? grade.color : 'var(--t3)';
+
+  updateCompletionDots();
+}
+
+function getGrade(score) {
+  return HELP_LEVELS.find(lv => score >= lv.min && score <= lv.max) || null;
+}
+
+function buildCompletionDots() {
+  const container = document.getElementById('completion-dots');
+  container.innerHTML = '';
+  IADL_ITEMS.forEach(item => {
+    const dot = document.createElement('div');
+    dot.className = 'completion-dot';
+    dot.id = `dot-${item.id}`;
+    dot.title = item.name;
+    container.appendChild(dot);
+  });
+}
+
+function updateCompletionDots() {
+  IADL_ITEMS.forEach(item => {
+    const dot = document.getElementById(`dot-${item.id}`);
+    if (!dot) return;
+    dot.className = answers[item.id] && answers[item.id].score !== undefined ? 'completion-dot done' : 'completion-dot';
+  });
+}
+
+function buildHelpTable() {
+  const tbody = document.getElementById('help-table-body');
+  tbody.innerHTML = HELP_LEVELS.map((lv, i) => `
+    <tr id="help-row-${i}">
+      <td>${lv.min}-${lv.max}점</td>
+      <td><span class="grade-chip" style="background:${lv.bg};color:${lv.color};">${lv.label}</span></td>
+      <td>${lv.desc}</td>
+    </tr>`).join('');
+}
+
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+  if (id === 'modal-help') {
+    const total = parseInt(document.getElementById('score-num').textContent) || 0;
+    const grade = getGrade(total);
+    const banner = document.getElementById('modal-score-banner');
+    HELP_LEVELS.forEach((lv, i) => {
+      const row = document.getElementById(`help-row-${i}`);
+      if (row) row.classList.toggle('current-row', lv === grade);
+    });
+    if (grade) {
+      banner.style.cssText = `display:block;background:${grade.bg};color:${grade.color};border:1px solid ${grade.color}40;border-radius:var(--r-sm);padding:12px 16px;font-size:14px;font-weight:700;text-align:center;margin-top:14px;`;
+      banner.textContent = `현재 총점 ${total}점 → ${grade.label}`;
+    }
+  }
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+function handleBackdrop(e, id) {
+  if (e.target === document.getElementById(id)) closeModal(id);
+}
+
+const REPORT_SECTION_TITLE = '한국형 도구적 일상생활 평가 (K-IADL)';
+
+function buildToolReportHtml() {
+  const name = document.getElementById('f-name').value.trim() || '(미입력)';
+  const date = document.getElementById('f-date').value || '';
+  const diagnosis = document.getElementById('f-diagnosis').value.trim() || '—';
+  const total = parseInt(document.getElementById('score-num').textContent) || 0;
+  const grade = getGrade(total);
+  const rows = IADL_ITEMS.map(item => {
+    const a = answers[item.id];
+    const selected = a && a.score !== undefined ? item.options[a.optionIndex] : null;
+    const comment = a && a.comment ? a.comment : '';
+    return `
+      <tr>
+        <td style="padding:8px;border-bottom:1px solid #eee;font-weight:700;">${item.name}</td>
+        <td style="padding:8px;border-bottom:1px solid #eee;text-align:center;font-weight:800;color:${grade?.color || '#333'};">${selected ? selected.score : '—'}</td>
+        <td style="padding:8px;border-bottom:1px solid #eee;color:#4A4770;">${selected ? selected.label : '미선택'}${comment ? `<br><span style="color:#9896B8;">Comment: ${comment}</span>` : ''}</td>
+      </tr>`;
+  }).join('');
+
+  return `
+    <div style="display:flex;align-items:center;gap:16px;padding:14px 18px;
+      background:${grade?.bg || '#f5f5f5'};border-radius:10px;border:1px solid ${grade?.color || '#ccc'}30;
+      margin-bottom:18px;">
+      <div>
+        <div style="font-size:10px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px;">K-IADL 총점</div>
+        <div style="font-size:36px;font-weight:800;color:${grade?.color || '#333'};line-height:1;">${total}</div>
+        <div style="font-size:12px;color:#666;">/ 24점</div>
+      </div>
+      <div style="flex:1;padding-left:16px;border-left:1px solid ${grade?.color || '#ccc'}40;">
+        <div style="font-size:14px;font-weight:800;color:${grade?.color || '#333'};margin-bottom:4px;">${grade?.label || '—'}</div>
+        <div style="font-size:12px;color:#666;">${grade?.desc || '점수 해석 없음'}</div>
+        <div style="font-size:11px;color:#999;margin-top:4px;">
+          이름: ${name} &nbsp;·&nbsp; 평가일: ${date} &nbsp;·&nbsp; 진단: ${diagnosis}
+        </div>
+      </div>
+    </div>
+    <table style="width:100%;border-collapse:collapse;font-size:11px;">
+      <thead>
+        <tr>
+          <th style="padding:8px;border-bottom:2px solid #EDEAFD;text-align:left;color:#9896B8;">항목</th>
+          <th style="padding:8px;border-bottom:2px solid #EDEAFD;text-align:center;color:#9896B8;">점수</th>
+          <th style="padding:8px;border-bottom:2px solid #EDEAFD;text-align:left;color:#9896B8;">선택 내용</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>`;
+}
+
+function goBack() {
+  const answered = Object.keys(answers).filter(id => answers[id].score !== undefined).length;
+  if (answered > 0) {
+    if (!confirm('입력된 평가 내용이 사라집니다. 뒤로 가시겠어요?')) return;
+  }
+  window.location.href = 'hub.html';
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2400);
+}
+
+window._TOOL_ID = 'k-iadl';
+
+function getSession() {
+  try { return JSON.parse(sessionStorage.getItem('ot_session') || '{}'); } catch(e) { return {}; }
+}
+
+function persistToolReport() {
+  try {
+    const sess = getSession();
+    if (!sess.reportByTool) sess.reportByTool = {};
+    sess.reportByTool[window._TOOL_ID] = {
+      title: REPORT_SECTION_TITLE,
+      html: typeof buildToolReportHtml === 'function' ? buildToolReportHtml() : ''
+    };
+    sessionStorage.setItem('ot_session', JSON.stringify(sess));
+  } catch (e) {}
+}
+
+function getCurrentToolIndex() {
+  const sess = getSession();
+  const ready = sess.ready || [];
+  const myId = window._TOOL_ID || '';
+  return ready.indexOf(myId);
+}
+
+function goNextTool() {
+  persistToolReport();
+  const sess = getSession();
+  const ready = sess.ready || [];
+  const cur = getCurrentToolIndex();
+  if (cur >= 0 && cur < ready.length - 1) {
+    const nextId = ready[cur + 1];
+    const ROUTE_MAP = {
+      'profiling':'assess-profiling.html','otipm':'assess-otipm.html',
+      'jthft':'assess-jthft.html','macs':'assess-macs.html',
+      'clinical':'assess-clinical.html','sensory':'assess-sensory.html',
+      'mbi':'assess-mbi.html','fim':'assess-fim.html','k-iadl':'assess-k-iadl.html',
+    };
+    const route = ROUTE_MAP[nextId];
+    if (route) window.location.href = route;
+  } else {
+    window.location.href = 'report.html';
+  }
+}
+</script>
+<script src="session-sidebar.js" defer></script>
+</body>
+</html>

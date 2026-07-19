@@ -1,0 +1,320 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="함형광 — 임상과 연구, 교육, AI를 연결해 반복 가능한 시스템을 설계하는 Clinical System Designer"
+    />
+    <meta name="theme-color" content="#eef6ff" />
+    <title>함형광 | Clinical System Designer</title>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" />
+    <link
+      rel="stylesheet"
+      as="style"
+      crossorigin
+      href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">본문으로 바로가기</a>
+
+    <header class="site-header" id="top">
+      <a class="brand" href="#top" aria-label="함형광 포트폴리오 홈">
+        <span class="brand-mark" aria-hidden="true">H</span>
+        <span>
+          <strong>HAM HYUNGKWANG</strong>
+          <small>Clinical System Designer</small>
+        </span>
+      </a>
+
+      <nav class="desktop-nav" aria-label="주요 메뉴">
+        <a href="#about">About</a>
+        <a href="#work">Selected Work</a>
+        <a href="#approach">Approach</a>
+      </nav>
+
+      <a class="nav-cta" href="#contact">프로젝트 이야기하기</a>
+    </header>
+
+    <main id="main">
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="hero-aurora hero-aurora-one" aria-hidden="true"></div>
+        <div class="hero-aurora hero-aurora-two" aria-hidden="true"></div>
+
+        <div class="hero-copy">
+          <p class="eyebrow"><span></span> OCCUPATION × EVIDENCE × TECHNOLOGY</p>
+          <h1 id="hero-title">
+            임상의 문제를<br />
+            <em>작동하는 시스템</em>으로.
+          </h1>
+          <p class="hero-description">
+            작업치료의 관점으로 현실의 문제를 구조화하고,<br class="desktop-only" />
+            연구·교육·AI 제품으로 연결합니다.
+          </p>
+          <div class="hero-actions">
+            <a class="button button-primary" href="#work">
+              프로젝트 보기
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+            </a>
+            <a class="button button-secondary" href="#about">일하는 방식</a>
+          </div>
+          <div class="hero-meta" aria-label="전문 영역">
+            <div><strong>01</strong><span>Clinical<br />Practice</span></div>
+            <div><strong>02</strong><span>Research<br />Design</span></div>
+            <div><strong>03</strong><span>Learning<br />Experience</span></div>
+            <div><strong>04</strong><span>AI<br />Systems</span></div>
+          </div>
+        </div>
+
+        <div class="data-space" aria-label="전문 영역을 시각화한 대시보드" data-parallax-root>
+          <div class="orbit orbit-one" aria-hidden="true"></div>
+          <div class="orbit orbit-two" aria-hidden="true"></div>
+
+          <article class="glass-card mini-card clinical-card" data-depth="0.55">
+            <div class="card-heading">
+              <span class="icon-wrap">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V9m5 10V5m5 14v-7m5 7V3" /></svg>
+              </span>
+              <span>Clinical Practice</span>
+            </div>
+            <div class="mini-bars" aria-hidden="true">
+              <i style="--h: 42%"></i><i style="--h: 68%"></i><i style="--h: 53%"></i><i style="--h: 82%"></i><i style="--h: 72%"></i>
+            </div>
+            <small>Participation-centered care</small>
+          </article>
+
+          <article class="glass-card mini-card research-card" data-depth="0.32">
+            <div class="card-heading">
+              <span class="icon-wrap">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6" /><path d="m16 16 4 4M8 11h6M11 8v6" /></svg>
+              </span>
+              <span>Research</span>
+            </div>
+            <div class="donut-row">
+              <div class="donut" aria-hidden="true"><span>EBP</span></div>
+              <p><strong>Evidence</strong><br />into practice</p>
+            </div>
+          </article>
+
+          <article class="glass-card system-card" data-depth="0.82">
+            <div class="system-topline">
+              <div>
+                <p>CLINICAL SYSTEM MAP</p>
+                <strong>From insight to impact</strong>
+              </div>
+              <span class="live-pill"><i></i> SYSTEM ONLINE</span>
+            </div>
+
+            <div class="system-chart" aria-label="임상 통찰이 시스템으로 연결되는 과정">
+              <svg viewBox="0 0 520 190" role="img" aria-hidden="true">
+                <defs>
+                  <linearGradient id="lineGradient" x1="0" x2="1">
+                    <stop offset="0" stop-color="#1747a6" />
+                    <stop offset=".55" stop-color="#00a6e9" />
+                    <stop offset="1" stop-color="#64d7ff" />
+                  </linearGradient>
+                  <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0" stop-color="#2cbdf2" stop-opacity=".3" />
+                    <stop offset="1" stop-color="#2cbdf2" stop-opacity="0" />
+                  </linearGradient>
+                </defs>
+                <g class="grid-lines">
+                  <path d="M20 35H500M20 80H500M20 125H500M20 170H500" />
+                </g>
+                <path class="area" d="M20 151C55 143 70 108 108 116s43 31 81 17 45-74 92-71 48 63 91 52 48-74 85-71 30 49 43 48V170H20Z" />
+                <path class="chart-line" d="M20 151C55 143 70 108 108 116s43 31 81 17 45-74 92-71 48 63 91 52 48-74 85-71 30 49 43 48" />
+                <circle cx="457" cy="43" r="5" />
+              </svg>
+              <span class="chart-label">Designed for<br /><strong>real-world use</strong></span>
+            </div>
+
+            <div class="system-stats">
+              <div><span>01</span><strong>Observe</strong><small>현실을 관찰합니다</small></div>
+              <div><span>02</span><strong>Structure</strong><small>문제를 구조화합니다</small></div>
+              <div><span>03</span><strong>Build</strong><small>도구로 구현합니다</small></div>
+              <div><span>04</span><strong>Validate</strong><small>현장에서 검증합니다</small></div>
+            </div>
+          </article>
+
+          <article class="glass-card mini-card education-card" data-depth="0.45">
+            <div class="card-heading">
+              <span class="icon-wrap">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 8 9-5 9 5-9 5-9-5Z" /><path d="M7 11v5c3 3 7 3 10 0v-5" /></svg>
+              </span>
+              <span>Education</span>
+            </div>
+            <strong class="big-number">Learn<span>→</span>Apply</strong>
+            <small>Practice-changing learning</small>
+          </article>
+
+          <article class="glass-card mini-card ai-card" data-depth="0.27">
+            <div class="card-heading">
+              <span class="icon-wrap">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="5" width="14" height="14" rx="3" /><path d="M9 2v3m6-3v3M9 19v3m6-3v3M2 9h3m-3 6h3m14-6h3m-3 6h3" /></svg>
+              </span>
+              <span>AI Systems</span>
+            </div>
+            <div class="pulse-line"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+            <small>Human-led workflow</small>
+          </article>
+        </div>
+
+        <a class="scroll-cue" href="#about" aria-label="다음 섹션으로 이동">
+          <span>SCROLL TO EXPLORE</span>
+          <i></i>
+        </a>
+      </section>
+
+      <section class="about section" id="about" aria-labelledby="about-title">
+        <div class="section-label">01 — ABOUT</div>
+        <div class="about-layout">
+          <div>
+            <p class="eyebrow"><span></span> CLINICAL SYSTEM DESIGNER</p>
+            <h2 id="about-title">좋은 아이디어보다<br /><em>지속되는 구조</em>를 만듭니다.</h2>
+          </div>
+          <div class="about-copy">
+            <p class="lead">
+              저는 작업치료사이자 임상 리더, 연구자, 교육자이며 AI 기반 시스템을 설계하고 구현합니다.
+            </p>
+            <p>
+              현장에서 발견한 문제를 한 번의 해결책으로 끝내지 않습니다. 임상적 관찰을 데이터와 근거로 구조화하고,
+              교육과 디지털 도구를 통해 반복해서 사용할 수 있는 시스템으로 전환합니다.
+            </p>
+            <div class="principles">
+              <span>Participation-centered</span>
+              <span>Evidence-informed</span>
+              <span>Workflow-first</span>
+              <span>Human-led AI</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="work section" id="work" aria-labelledby="work-title">
+        <div class="section-heading">
+          <div>
+            <div class="section-label">02 — SELECTED WORK</div>
+            <h2 id="work-title">현장에서 시작한<br /><em>시스템과 실험</em></h2>
+          </div>
+          <p>임상, 연구, 교육, 기술의 경계를 넘어<br />실제 사용 가능한 변화를 설계합니다.</p>
+        </div>
+
+        <div class="project-grid">
+          <article class="project-card project-featured">
+            <div class="project-visual occupation-visual" aria-hidden="true">
+              <div class="flow-panel flow-panel-a"><small>HUMAN</small><strong>Clinical<br />Judgment</strong><i></i></div>
+              <div class="flow-panel flow-panel-b"><small>AI</small><strong>Workflow<br />Support</strong><i></i></div>
+              <svg viewBox="0 0 500 250"><path d="M65 144C175 40 321 218 438 89" /><circle cx="65" cy="144" r="7" /><circle cx="438" cy="89" r="7" /></svg>
+            </div>
+            <div class="project-body">
+              <div class="project-meta"><span>AI WORKFLOW · EDUCATION</span><small>01</small></div>
+              <h3>Occupation Flow</h3>
+              <p>작업치료사가 반복 업무를 분석하고, 사람의 판단과 AI의 지원을 구분해 자신만의 워크플로우를 만드는 참여형 교육 시스템.</p>
+              <div class="project-tags"><span>Workflow Design</span><span>AI Literacy</span><span>Workshop</span></div>
+            </div>
+          </article>
+
+          <article class="project-card">
+            <div class="project-visual linkit-visual" aria-hidden="true">
+              <div class="phone-mock">
+                <div class="phone-top"></div>
+                <small>TODAY'S MISSION</small>
+                <strong>생활 속 선택을<br />연습해요</strong>
+                <div class="mission-row"><i>01</i><span>물건 찾기</span><b>✓</b></div>
+                <div class="mission-row"><i>02</i><span>가격 비교</span><b>→</b></div>
+                <div class="mission-row"><i>03</i><span>결제하기</span><b>·</b></div>
+              </div>
+            </div>
+            <div class="project-body">
+              <div class="project-meta"><span>PEDIATRIC OT · I-ADL</span><small>02</small></div>
+              <h3>Link IT</h3>
+              <p>학령기 아동이 구매·주문·결제 같은 생활과제를 연습하고 수행 데이터를 축적하는 참여 중심 I-ADL 프로그램.</p>
+              <div class="project-tags"><span>Participation</span><span>Assessment</span></div>
+            </div>
+          </article>
+
+          <article class="project-card">
+            <div class="project-visual icf-visual" aria-hidden="true">
+              <div class="icf-core">PARTICIPATION</div>
+              <span class="node node-one">Person</span>
+              <span class="node node-two">Activity</span>
+              <span class="node node-three">Environment</span>
+              <svg viewBox="0 0 400 250"><circle cx="200" cy="125" r="82" /><path d="M200 43 87 180M200 43l113 137M87 180h226" /></svg>
+            </div>
+            <div class="project-body">
+              <div class="project-meta"><span>ICF · CLINICAL DOCUMENTATION</span><small>03</small></div>
+              <h3>ICF Record System</h3>
+              <p>치료사의 서술 기록을 ICF 관점으로 구조화하고, 임상적 판단은 보존하면서 기록 부담을 줄이는 문서화 워크플로우.</p>
+              <div class="project-tags"><span>ICF</span><span>Documentation</span></div>
+            </div>
+          </article>
+
+          <article class="project-card project-wide">
+            <div class="project-visual adl-visual" aria-hidden="true">
+              <div class="hand-map">
+                <i style="--x: 19%; --y: 48%"></i><i style="--x: 31%; --y: 32%"></i><i style="--x: 45%; --y: 26%"></i>
+                <i style="--x: 56%; --y: 35%"></i><i style="--x: 62%; --y: 53%"></i><i style="--x: 47%; --y: 65%"></i>
+                <svg viewBox="0 0 600 260"><path d="M98 150c55-7 77-86 129-76 33 7 22 61 53 66 35 6 46-87 87-79 39 8 13 87 54 93 25 4 40-23 76-2" /></svg>
+              </div>
+              <div class="tracking-panel"><small>MOTION TRACKING</small><strong>Pack My Bag</strong><span>Hand interaction · Task sequence · Performance data</span></div>
+            </div>
+            <div class="project-body">
+              <div class="project-meta"><span>INTERACTIVE REHABILITATION · R&amp;D</span><small>04</small></div>
+              <h3>ADL Interaction Lab</h3>
+              <p>웹캠 기반 손·몸 움직임으로 일상생활 과제를 연습하고, 결과뿐 아니라 과정 데이터를 기록하는 인터랙티브 재활 실험.</p>
+              <div class="project-tags"><span>MediaPipe</span><span>Web Game</span><span>Performance Data</span></div>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="approach section" id="approach" aria-labelledby="approach-title">
+        <div class="section-label">03 — APPROACH</div>
+        <div class="approach-layout">
+          <div class="approach-intro">
+            <p class="eyebrow"><span></span> FROM REALITY TO REUSABLE ASSET</p>
+            <h2 id="approach-title">현실에서 시작해<br /><em>현실로 돌아오는</em> 설계</h2>
+            <p>기술 자체보다 그것이 전체 시스템에서 맡는 역할, 사람의 판단이 남아야 할 지점, 현장에서 검증할 기준을 먼저 봅니다.</p>
+          </div>
+
+          <ol class="process-list">
+            <li><span>01</span><div><strong>Observe</strong><p>임상과 일상의 실제 문제를 관찰합니다.</p></div></li>
+            <li><span>02</span><div><strong>Frame</strong><p>목적, 사용자, 성공 기준을 명확히 합니다.</p></div></li>
+            <li><span>03</span><div><strong>Design</strong><p>사용자 흐름과 데이터, 판단 구조를 설계합니다.</p></div></li>
+            <li><span>04</span><div><strong>Build</strong><p>작게 구현하고 실제 사용 환경에 연결합니다.</p></div></li>
+            <li><span>05</span><div><strong>Validate</strong><p>근거와 사용 경험으로 효과를 검증합니다.</p></div></li>
+            <li><span>06</span><div><strong>Systemize</strong><p>다음 문제에도 쓸 수 있는 자산으로 남깁니다.</p></div></li>
+          </ol>
+        </div>
+      </section>
+
+      <section class="contact section" id="contact" aria-labelledby="contact-title">
+        <div class="contact-glow" aria-hidden="true"></div>
+        <div class="contact-inner">
+          <p class="eyebrow light"><span></span> LET'S DESIGN WHAT WORKS</p>
+          <h2 id="contact-title">좋은 문제에서<br />좋은 시스템이 시작됩니다.</h2>
+          <p>임상, 교육, 연구, AI가 만나는 지점의 프로젝트를 함께 설계합니다.</p>
+          <a class="button button-light" href="mailto:hello@example.com" data-placeholder-email>
+            프로젝트 이야기하기
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+          </a>
+          <small class="contact-note">※ 실제 이메일 또는 문의 링크로 교체할 영역입니다.</small>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <a class="brand footer-brand" href="#top">
+        <span class="brand-mark" aria-hidden="true">H</span>
+        <span><strong>HAM HYUNGKWANG</strong><small>Clinical System Designer</small></span>
+      </a>
+      <p>Occupational Therapist · Researcher · Educator · System Builder</p>
+      <p>© <span id="year"></span> Ham Hyungkwang</p>
+    </footer>
+
+    <script src="./script.js"></script>
+  </body>
+</html>

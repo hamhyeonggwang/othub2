@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>MACS — OTHub Assess</title>
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════
+   TOKENS
+═══════════════════════════════════════ */
+:root {
+  --bg:          #F0F2FA;
+  --surface:     #FFFFFF;
+  --surface-2:   #F7F8FD;
+  --border:      #E4E7F4;
+  --border-2:    #CDD2EC;
+
+  --accent:      #6C5CE7;
+  --accent-2:    #8B7FF0;
+  --accent-dim:  #EDEAFD;
+  --accent-ring: rgba(108,92,231,.15);
+
+  --amber:       #F0A500;
+  --amber-dim:   #FEF4DC;
+  --amber-dark:  #7A5000;
+
+  --green:       #00A86B;
+  --green-dim:   #E0F5EE;
+  --green-dark:  #005C39;
+
+  --red:         #D63031;
+  --red-dim:     #FDF0F0;
+
+  --t1: #1E1B3A;
+  --t2: #4A4770;
+  --t3: #9896B8;
+
+  --r-xs: 6px;
+  --r-sm: 10px;
+  --r:    14px;
+  --r-lg: 20px;
+  --r-xl: 28px;
+
+  --font:  'Pretendard', -apple-system, sans-serif;
+  --touch: 52px;
+
+  /* 레벨별 색상 */
+  --lv1-c:   #00A86B; --lv1-dim: #E0F5EE; --lv1-dark: #005C39;
+  --lv2-c:   #2D9CDB; --lv2-dim: #EAF5FD; --lv2-dark: #1A5E8A;
+  --lv3-c:   #F0A500; --lv3-dim: #FEF4DC; --lv3-dark: #7A5000;
+  --lv4-c:   #D06020; --lv4-dim: #FDF0E6; --lv4-dark: #7A3010;
+  --lv5-c:   #D63031; --lv5-dim: #FDF0F0; --lv5-dark: #8B1A1A;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--t1);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ═══════════════════════════════════════
+   TOP BAR
+═══════════════════════════════════════ */
+.topbar {
+  height: 60px; background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center;
+  padding: 0 24px; gap: 12px;
+  position: sticky; top: 0; z-index: 100;
+}
+.topbar-back {
+  width: 40px; height: 40px; border-radius: var(--r-sm);
+  border: 1px solid var(--border); background: transparent;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: var(--t2); transition: all .15s; flex-shrink: 0;
+}
+.topbar-back:hover { background: var(--bg); color: var(--t1); }
+.topbar-back svg { width: 18px; height: 18px; }
+.topbar-info { flex: 1; }
+.topbar-title { font-size: 15px; font-weight: 800; color: var(--t1); }
+.topbar-sub   { font-size: 11px; color: var(--t3); margin-top: 1px; }
+.topbar-right { display: flex; align-items: center; gap: 10px; margin-left: auto; flex-shrink: 0; }
+.dev-badge {
+  font-size: 11px; font-weight: 700;
+  color: var(--accent); background: var(--accent-dim);
+  padding: 4px 10px; border-radius: 20px;
+}
+
+/* ═══════════════════════════════════════
+   LAYOUT
+═══════════════════════════════════════ */
+.page { max-width: 680px; margin: 0 auto; padding: 22px 20px 100px; }
+
+/* ═══════════════════════════════════════
+   CARD
+═══════════════════════════════════════ */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 20px 22px;
+  margin-bottom: 14px;
+}
+.card-head {
+  display: flex; align-items: center; gap: 10px;
+  padding-bottom: 14px; margin-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+.card-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.card-title { font-size: 14px; font-weight: 700; color: var(--t1); }
+.card-sub   { font-size: 12px; color: var(--t3); margin-left: auto; }
+
+/* ═══════════════════════════════════════
+   기본정보 폼
+═══════════════════════════════════════ */
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.col2 { grid-column: span 2; }
+.form-field { display: flex; flex-direction: column; gap: 6px; }
+.form-label {
+  font-size: 11px; font-weight: 700; color: var(--t3);
+  letter-spacing: .05em; text-transform: uppercase;
+}
+.form-input {
+  height: var(--touch); padding: 0 14px;
+  border: 1.5px solid var(--border); border-radius: var(--r-sm);
+  font-family: var(--font); font-size: 15px; color: var(--t1);
+  background: var(--surface-2); outline: none;
+  transition: border-color .15s, box-shadow .15s; width: 100%;
+}
+.form-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px var(--accent-ring);
+  background: var(--surface);
+}
+.form-input::placeholder { color: var(--t3); }
+select.form-input {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2 4l4 4 4-4' stroke='%239896B8' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 14px center;
+  padding-right: 36px; cursor: pointer;
+}
+textarea.form-input {
+  height: auto; min-height: 68px; padding: 12px 14px;
+  resize: vertical; line-height: 1.6;
+}
+
+/* ═══════════════════════════════════════
+   우세손 선택
+═══════════════════════════════════════ */
+.dominant-row {
+  display: flex; gap: 10px;
+}
+.dominant-btn {
+  flex: 1; height: 52px;
+  border-radius: var(--r-sm);
+  border: 2px solid var(--border-2);
+  background: var(--surface-2);
+  font-family: var(--font); font-size: 15px; font-weight: 700;
+  color: var(--t3); cursor: pointer;
+  transition: all .15s;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.dominant-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+.dominant-btn.active {
+  border-color: var(--accent); background: var(--accent-dim); color: var(--accent);
+}
+
+/* ═══════════════════════════════════════
+   레벨 안내 칩
+═══════════════════════════════════════ */
+.level-guide {
+  display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px;
+}
+.level-chip {
+  display: flex; align-items: center; gap: 5px;
+  padding: 5px 12px; border-radius: 20px;
+  font-size: 12px; font-weight: 700;
+  border: 1.5px solid;
+  cursor: pointer; transition: all .12s;
+  opacity: .55;
+}
+.level-chip.active { opacity: 1; transform: scale(1.04); }
+.level-chip-num { font-size: 13px; font-weight: 800; }
+
+/* ═══════════════════════════════════════
+   MACS 레벨 카드 (핵심)
+═══════════════════════════════════════ */
+.macs-card {
+  border: 2.5px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 0;
+  margin-bottom: 10px;
+  cursor: pointer;
+  transition: all .18s;
+  overflow: hidden;
+  background: var(--surface);
+  -webkit-tap-highlight-color: transparent;
+}
+.macs-card:hover { border-color: var(--accent-2); transform: translateY(-1px); box-shadow: 0 4px 16px rgba(108,92,231,.1); }
+.macs-card.selected { box-shadow: 0 6px 24px rgba(0,0,0,.1); transform: translateY(-2px); }
+
+/* 카드 상단 컬러 바 */
+.macs-card-bar {
+  height: 6px; width: 100%;
+  transition: height .18s;
+}
+.macs-card.selected .macs-card-bar { height: 8px; }
+
+/* 카드 본문 */
+.macs-card-body {
+  display: flex; align-items: flex-start; gap: 16px;
+  padding: 18px 20px;
+}
+
+/* 레벨 로마자 뱃지 */
+.macs-level-badge {
+  width: 52px; height: 52px; border-radius: var(--r-sm); flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px; font-weight: 900;
+  letter-spacing: -.02em;
+  border: 2.5px solid;
+  transition: all .18s;
+}
+
+/* 텍스트 영역 */
+.macs-card-text { flex: 1; }
+.macs-card-level-num {
+  font-size: 10px; font-weight: 800; letter-spacing: .1em;
+  text-transform: uppercase; margin-bottom: 4px;
+  transition: color .15s;
+}
+.macs-card-title {
+  font-size: 16px; font-weight: 800; color: var(--t1);
+  margin-bottom: 6px; line-height: 1.3;
+  transition: color .15s;
+}
+.macs-card-desc {
+  font-size: 13px; color: var(--t3); line-height: 1.65;
+}
+.macs-card.selected .macs-card-desc { color: var(--t2); }
+
+/* 선택 체크 */
+.macs-check {
+  width: 26px; height: 26px; border-radius: 50%;
+  border: 2px solid var(--border-2);
+  background: var(--surface-2);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; align-self: center;
+  transition: all .18s;
+}
+.macs-check svg { display: none; width: 13px; height: 13px; }
+.macs-card.selected .macs-check { border-color: transparent; }
+.macs-card.selected .macs-check svg { display: block; }
+
+/* 레벨 1 */
+.macs-lv-1 .macs-card-bar     { background: var(--lv1-c); }
+.macs-lv-1 .macs-level-badge  { background: var(--lv1-dim); border-color: var(--lv1-c); color: var(--lv1-c); }
+.macs-lv-1 .macs-card-level-num { color: var(--lv1-c); }
+.macs-lv-1.selected { border-color: var(--lv1-c); }
+.macs-lv-1.selected .macs-card-title { color: var(--lv1-dark); }
+.macs-lv-1.selected .macs-check { background: var(--lv1-c); }
+.macs-lv-1.selected .macs-check svg { color: #fff; }
+
+/* 레벨 2 */
+.macs-lv-2 .macs-card-bar     { background: var(--lv2-c); }
+.macs-lv-2 .macs-level-badge  { background: var(--lv2-dim); border-color: var(--lv2-c); color: var(--lv2-c); }
+.macs-lv-2 .macs-card-level-num { color: var(--lv2-c); }
+.macs-lv-2.selected { border-color: var(--lv2-c); }
+.macs-lv-2.selected .macs-card-title { color: var(--lv2-dark); }
+.macs-lv-2.selected .macs-check { background: var(--lv2-c); }
+.macs-lv-2.selected .macs-check svg { color: #fff; }
+
+/* 레벨 3 */
+.macs-lv-3 .macs-card-bar     { background: var(--lv3-c); }
+.macs-lv-3 .macs-level-badge  { background: var(--lv3-dim); border-color: var(--lv3-c); color: var(--lv3-c); }
+.macs-lv-3 .macs-card-level-num { color: var(--lv3-c); }
+.macs-lv-3.selected { border-color: var(--lv3-c); }
+.macs-lv-3.selected .macs-card-title { color: var(--lv3-dark); }
+.macs-lv-3.selected .macs-check { background: var(--lv3-c); }
+.macs-lv-3.selected .macs-check svg { color: #fff; }
+
+/* 레벨 4 */
+.macs-lv-4 .macs-card-bar     { background: var(--lv4-c); }
+.macs-lv-4 .macs-level-badge  { background: var(--lv4-dim); border-color: var(--lv4-c); color: var(--lv4-c); }
+.macs-lv-4 .macs-card-level-num { color: var(--lv4-c); }
+.macs-lv-4.selected { border-color: var(--lv4-c); }
+.macs-lv-4.selected .macs-card-title { color: var(--lv4-dark); }
+.macs-lv-4.selected .macs-check { background: var(--lv4-c); }
+.macs-lv-4.selected .macs-check svg { color: #fff; }
+
+/* 레벨 5 */
+.macs-lv-5 .macs-card-bar     { background: var(--lv5-c); }
+.macs-lv-5 .macs-level-badge  { background: var(--lv5-dim); border-color: var(--lv5-c); color: var(--lv5-c); }
+.macs-lv-5 .macs-card-level-num { color: var(--lv5-c); }
+.macs-lv-5.selected { border-color: var(--lv5-c); }
+.macs-lv-5.selected .macs-card-title { color: var(--lv5-dark); }
+.macs-lv-5.selected .macs-check { background: var(--lv5-c); }
+.macs-lv-5.selected .macs-check svg { color: #fff; }
+
+/* ═══════════════════════════════════════
+   결과 요약 바 (sticky)
+═══════════════════════════════════════ */
+.result-bar {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 16px 20px;
+  margin-bottom: 16px;
+  position: sticky; top: 68px; z-index: 50;
+  box-shadow: 0 2px 12px rgba(30,27,58,.07);
+  display: flex; align-items: center; gap: 14px;
+  transition: all .2s;
+}
+.result-bar.has-level { border-color: var(--accent); }
+
+.result-empty {
+  font-size: 13px; color: var(--t3); font-weight: 500;
+  display: flex; align-items: center; gap: 8px;
+}
+.result-empty svg { width: 16px; height: 16px; opacity: .5; }
+
+.result-content {
+  display: none; align-items: center; gap: 14px; width: 100%;
+}
+.result-bar.has-level .result-empty   { display: none; }
+.result-bar.has-level .result-content { display: flex; }
+
+.result-lv-badge {
+  width: 52px; height: 52px; border-radius: var(--r-sm); flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px; font-weight: 900; border: 2px solid;
+}
+.result-text { flex: 1; }
+.result-level-num { font-size: 10px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; margin-bottom: 2px; }
+.result-level-title { font-size: 15px; font-weight: 800; color: var(--t1); }
+.result-dom { font-size: 11px; color: var(--t3); margin-top: 3px; }
+
+/* ═══════════════════════════════════════
+   하단 네비 바
+═══════════════════════════════════════ */
+.nav-bar {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  background: var(--surface); border-top: 1px solid var(--border);
+  padding: 10px 24px;
+  display: flex; align-items: center; gap: 10px;
+  z-index: 200;
+}
+.nav-info { flex: 1; font-size: 13px; color: var(--t3); font-weight: 600; }
+.nav-info .sel { color: var(--accent); font-weight: 800; }
+.nav-info .not-sel { color: var(--t3); }
+
+.btn-pdf {
+  height: var(--touch); padding: 0 28px;
+  border-radius: var(--r-sm); border: none;
+  background: var(--accent); color: #fff;
+  font-family: var(--font); font-size: 15px; font-weight: 700;
+  cursor: pointer; transition: all .15s;
+  display: flex; align-items: center; gap: 8px;
+}
+.btn-pdf:hover { opacity: .9; }
+.btn-pdf:active { transform: scale(.97); }
+.btn-pdf.selected { animation: pulse 2s ease-in-out infinite; }
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 4px 16px rgba(108,92,231,.3); }
+  50%       { box-shadow: 0 4px 24px rgba(108,92,231,.55); }
+}
+.btn-pdf svg { width: 16px; height: 16px; }
+
+/* ═══════════════════════════════════════
+   TOAST
+═══════════════════════════════════════ */
+.toast {
+  position: fixed; top: 76px; left: 50%;
+  transform: translateX(-50%) translateY(-8px);
+  background: var(--t1); color: #fff;
+  padding: 10px 20px; border-radius: 20px;
+  font-size: 13px; font-weight: 600;
+  opacity: 0; pointer-events: none;
+  transition: all .22s; z-index: 600; white-space: nowrap;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ═══════════════════════════════════════
+   반응형
+═══════════════════════════════════════ */
+@media (max-width: 600px) {
+  .page { padding: 16px 12px 90px; }
+  .form-grid { grid-template-columns: 1fr; }
+  .col2 { grid-column: span 1; }
+  .nav-bar { padding: 10px 14px; }
+  .macs-card-title { font-size: 14px; }
+  .macs-card-desc  { font-size: 12px; }
+  .macs-level-badge { width: 44px; height: 44px; font-size: 17px; }
+}
+
+/* ═══════════════════════════════════════
+   PDF / PRINT
+═══════════════════════════════════════ */
+@media print {
+  @page { size: A4; margin: 14mm 17mm; }
+
+  .topbar, .result-bar, .nav-bar, .toast,
+  .level-guide, .dominant-row { display: none !important; }
+
+  body { background: #fff !important; }
+  .page { max-width: 100%; padding: 0; }
+
+  .pdf-header  { display: flex !important; }
+  .pdf-summary { display: block !important; }
+  .sign-area   { display: flex !important; }
+
+  /* 미선택 카드 흐리게 */
+  .macs-card:not(.selected) { opacity: .35; }
+  .macs-card.selected { transform: none; box-shadow: none; }
+  .macs-card-bar { height: 6px !important; }
+}
+
+.pdf-header {
+  display: none; justify-content: space-between; align-items: flex-start;
+  border-bottom: 2px solid var(--t1); padding-bottom: 12px; margin-bottom: 18px;
+}
+.pdf-header-title { font-size: 16px; font-weight: 800; }
+.pdf-header-sub   { font-size: 10px; color: #666; margin-top: 3px; }
+.pdf-header-right { text-align: right; font-size: 10px; color: #666; line-height: 1.8; }
+
+.pdf-summary { display: none; margin-bottom: 18px; }
+.sign-area   { display: none; }
+</style>
+</head>
+<body>
+
+<!-- PDF 전용 헤더 -->
+<div class="pdf-header" id="pdf-header">
+  <div>
+    <div class="pdf-header-title">손기능 분류체계 (MACS) 평가 보고서</div>
+    <div class="pdf-header-sub">Manual Ability Classification System</div>
+  </div>
+  <div class="pdf-header-right" id="pdf-meta"></div>
+</div>
+
+<!-- PDF 전용 요약 -->
+<div class="pdf-summary" id="pdf-summary"></div>
+
+<!-- Top Bar -->
+<header class="topbar">
+  <button class="topbar-back" onclick="goBack()">
+    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path d="M19 12H5M12 5l-7 7 7 7" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </button>
+  <div class="topbar-info">
+    <div class="topbar-title">MACS</div>
+    <div class="topbar-sub">손기능 분류체계 · Manual Ability Classification System</div>
+  </div>
+  <div class="topbar-right">
+    <span class="dev-badge">OTDev · 함선생</span>
+  </div>
+</header>
+
+<main class="page">
+
+  <!-- 기본정보 -->
+  <div class="card">
+    <div class="card-head">
+      <div class="card-dot" style="background:var(--accent)"></div>
+      <div class="card-title">기본 정보</div>
+    </div>
+    <div class="form-grid">
+      <div class="form-field col2">
+        <label class="form-label">이름 / 등록번호</label>
+        <input class="form-input" id="f-name" type="text" placeholder="예: 홍OO / 24-001">
+      </div>
+      <div class="form-field">
+        <label class="form-label">평가일</label>
+        <input class="form-input" id="f-date" type="date">
+      </div>
+      <div class="form-field">
+        <label class="form-label">진단명</label>
+        <input class="form-input" id="f-diagnosis" type="text" placeholder="예: 뇌성마비">
+      </div>
+      <div class="form-field">
+        <label class="form-label">담당 치료사</label>
+        <input class="form-input" id="f-therapist" type="text" placeholder="이름 (OT)">
+      </div>
+    </div>
+  </div>
+
+  <!-- 우세손 + 비고 -->
+  <div class="card">
+    <div class="card-head">
+      <div class="card-dot" style="background:var(--amber)"></div>
+      <div class="card-title">우세손 · 비고</div>
+    </div>
+    <div class="dominant-row" style="margin-bottom:12px;">
+      <button class="dominant-btn active" id="dom-rt" onclick="setDominant('Rt')">
+        Rt. (오른손)
+      </button>
+      <button class="dominant-btn" id="dom-lt" onclick="setDominant('Lt')">
+        Lt. (왼손)
+      </button>
+    </div>
+    <div class="form-field">
+      <label class="form-label">비고 / Comment</label>
+      <textarea class="form-input" id="f-note" placeholder="관찰 내용, 특이사항, 보조도구 사용 여부 등"></textarea>
+    </div>
+  </div>
+
+  <!-- 결과 요약 바 (sticky) -->
+  <div class="result-bar" id="result-bar">
+    <div class="result-empty">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path d="M9 12l2 2 4-4M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      아래 카드에서 해당 레벨을 선택하세요
+    </div>
+    <div class="result-content" id="result-content">
+      <div class="result-lv-badge" id="result-badge">—</div>
+      <div class="result-text">
+        <div class="result-level-num" id="result-level-num"></div>
+        <div class="result-level-title" id="result-title"></div>
+        <div class="result-dom" id="result-dom"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 레벨 빠른 이동 칩 -->
+  <div class="level-guide" id="level-chips"></div>
+
+  <!-- MACS 레벨 카드 5개 -->
+  <div id="macs-cards"></div>
+
+</main>
+
+<!-- 하단 네비 바 -->
+<div class="nav-bar">
+  <div class="nav-info" id="nav-info">
+    <span class="not-sel">레벨 미선택</span>
+  </div>
+  <span style="font-size:11px;color:var(--t3);max-width:200px;text-align:right;line-height:1.35;">PDF는 전체 평가 완료 후 종합 보고서에서 저장</span>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ═══════════════════════════════════════
+   MACS 데이터 — GAS 앱 원본 한글 텍스트 계승
+═══════════════════════════════════════ */
+const MACS_LEVELS = [
+  {
+    num: 1,
+    roman: 'I',
+    title: '쉽고 성공적으로 조작',
+    titleEn: 'Handles objects easily and successfully',
+    desc: '다양한 물체를 쉽고 성공적으로 다룰 수 있습니다. 독립적으로 일상생활 활동을 수행하는 데 제한이 없으며, 손기능이 손상되거나 제한되더라도 수행 속도나 질에서 약간의 제한만 보입니다.',
+    detail: '물건을 쉽게 잡고 조작할 수 있으며, 필요한 경우 최소한의 노력으로 수행합니다.',
+    color: '#00A86B', dim: '#E0F5EE', dark: '#005C39',
+  },
+  {
+    num: 2,
+    roman: 'II',
+    title: '속도 저하 · 부자연스러움',
+    titleEn: 'Handles most objects but with somewhat reduced quality',
+    desc: '대부분의 물체를 다룰 수 있지만 수행의 질이 다소 감소합니다. 특정 활동에서는 속도가 느리거나 동작의 질이 저하됩니다. 일부 활동에서 대안적 수행 방법을 사용할 수도 있습니다.',
+    detail: '특정 종류의 물체 조작이 어렵거나 두 손 중 한 손의 기능이 제한될 수 있습니다.',
+    color: '#2D9CDB', dim: '#EAF5FD', dark: '#1A5E8A',
+  },
+  {
+    num: 3,
+    roman: 'III',
+    title: '준비 · 조정 도움 필요',
+    titleEn: 'Handles objects with difficulty',
+    desc: '물체를 다루기 어려우며, 활동을 준비하거나 조정하는 데 도움이 필요합니다. 수행이 느리고 수행의 질이 제한적입니다. 활동을 일부만 수행할 수 있으며 지속적인 도움이 필요합니다.',
+    detail: '물체 준비·조정 시 보조자의 도움이 필요하고, 일부 활동은 대안적 방법으로만 가능합니다.',
+    color: '#F0A500', dim: '#FEF4DC', dark: '#7A5000',
+  },
+  {
+    num: 4,
+    roman: 'IV',
+    title: '제한된 사물만 조작',
+    titleEn: 'Handles a limited selection of easily managed objects',
+    desc: '쉽게 조작할 수 있는 제한된 물체만 다룰 수 있습니다. 적절한 환경이 갖추어진 상황에서만 부분적으로 활동에 참여할 수 있으며, 지속적인 지원과 적응된 장비가 필요합니다.',
+    detail: '선택된 단순 물체만 조작 가능하며, 모든 활동에서 보조자의 지속적 지원이 필요합니다.',
+    color: '#D06020', dim: '#FDF0E6', dark: '#7A3010',
+  },
+  {
+    num: 5,
+    roman: 'V',
+    title: '조작 불가 (최대 도움)',
+    titleEn: 'Does not handle objects',
+    desc: '물체를 다루지 못하며 일상적인 물체 조작 능력이 심각하게 제한되어 있습니다. 기본적인 활동에도 최대한의 도움이 필요합니다. 일부 단순한 동작은 가능하지만 제한적인 기능만 있습니다.',
+    detail: '독립적인 물체 조작이 불가능하며, 모든 일상활동에서 전적인 보조자 지원이 필요합니다.',
+    color: '#D63031', dim: '#FDF0F0', dark: '#8B1A1A',
+  },
+];
+
+/* ═══════════════════════════════════════
+   상태
+═══════════════════════════════════════ */
+let selectedLevel = null;
+let dominant = 'Rt';
+
+/* ═══════════════════════════════════════
+   초기화
+═══════════════════════════════════════ */
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('f-date').valueAsDate = new Date();
+
+  // sessionStorage 기본정보 복원
+  try {
+    const sess = JSON.parse(sessionStorage.getItem('ot_session') || '{}');
+    if (sess.info) {
+      const i = sess.info;
+      if (i.name)      setVal('f-name',      i.name);
+      if (i.date)      setVal('f-date',      i.date);
+      if (i.diagnosis) setVal('f-diagnosis', i.diagnosis);
+      if (i.therapist) setVal('f-therapist', i.therapist);
+    }
+  } catch(e) {}
+
+  buildLevelChips();
+  buildCards();
+  updateResultBar();
+});
+
+const setVal = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };
+
+/* ═══════════════════════════════════════
+   우세손
+═══════════════════════════════════════ */
+function setDominant(side) {
+  dominant = side;
+  document.getElementById('dom-rt').classList.toggle('active', side === 'Rt');
+  document.getElementById('dom-lt').classList.toggle('active', side === 'Lt');
+  updateResultBar();
+}
+
+/* ═══════════════════════════════════════
+   레벨 빠른 이동 칩 빌드
+═══════════════════════════════════════ */
+function buildLevelChips() {
+  const container = document.getElementById('level-chips');
+  container.innerHTML = MACS_LEVELS.map(lv => `
+    <div class="level-chip" id="chip-lv${lv.num}"
+      style="background:${lv.dim};border-color:${lv.color};color:${lv.dark};"
+      onclick="scrollToCard(${lv.num})">
+      <span class="level-chip-num">${lv.roman}</span>
+      ${lv.title.split('·')[0].trim()}
+    </div>`).join('');
+}
+
+function scrollToCard(num) {
+  const card = document.getElementById(`macs-card-${num}`);
+  if (card) card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+/* ═══════════════════════════════════════
+   카드 빌드
+═══════════════════════════════════════ */
+function buildCards() {
+  const container = document.getElementById('macs-cards');
+  container.innerHTML = MACS_LEVELS.map(lv => `
+    <div class="macs-card macs-lv-${lv.num}" id="macs-card-${lv.num}"
+      onclick="selectLevel(${lv.num})">
+      <div class="macs-card-bar" style="background:${lv.color}"></div>
+      <div class="macs-card-body">
+
+        <div class="macs-level-badge"
+          style="background:${lv.dim};border-color:${lv.color};color:${lv.color};">
+          ${lv.roman}
+        </div>
+
+        <div class="macs-card-text">
+          <div class="macs-card-level-num" style="color:${lv.color};">
+            Level ${lv.num}
+          </div>
+          <div class="macs-card-title">${lv.title}</div>
+          <div class="macs-card-desc">${lv.desc}</div>
+          <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);
+            font-size:11px;color:var(--t3);line-height:1.5;">
+            ${lv.detail}
+          </div>
+        </div>
+
+        <div class="macs-check" style="border-color:${lv.color}30;">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:${lv.color}">
+            <path d="M20 6L9 17l-5-5" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+
+      </div>
+    </div>`).join('');
+}
+
+/* ═══════════════════════════════════════
+   레벨 선택
+═══════════════════════════════════════ */
+function selectLevel(num) {
+  // 같은 카드 재탭 → 해제
+  if (selectedLevel === num) {
+    selectedLevel = null;
+    document.getElementById(`macs-card-${num}`).classList.remove('selected');
+    document.getElementById(`chip-lv${num}`).classList.remove('active');
+    updateResultBar();
+    updateNav();
+    return;
+  }
+
+  // 이전 선택 해제
+  if (selectedLevel !== null) {
+    document.getElementById(`macs-card-${selectedLevel}`).classList.remove('selected');
+    document.getElementById(`chip-lv${selectedLevel}`).classList.remove('active');
+  }
+
+  // 새 선택
+  selectedLevel = num;
+  document.getElementById(`macs-card-${num}`).classList.add('selected');
+  document.getElementById(`chip-lv${num}`).classList.add('active');
+
+  updateResultBar();
+  updateNav();
+
+  // 부드럽게 결과 바로 스크롤
+  setTimeout(() => {
+    document.getElementById('result-bar').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }, 100);
+}
+
+/* ═══════════════════════════════════════
+   결과 바 갱신
+═══════════════════════════════════════ */
+function updateResultBar() {
+  const bar = document.getElementById('result-bar');
+
+  if (selectedLevel === null) {
+    bar.classList.remove('has-level');
+    bar.style.borderColor = '';
+    return;
+  }
+
+  const lv = MACS_LEVELS[selectedLevel - 1];
+  bar.classList.add('has-level');
+  bar.style.borderColor = lv.color;
+
+  // 배지
+  const badge = document.getElementById('result-badge');
+  badge.textContent = lv.roman;
+  badge.style.cssText = `background:${lv.dim};border-color:${lv.color};color:${lv.color};`;
+
+  // 텍스트
+  document.getElementById('result-level-num').style.color = lv.color;
+  document.getElementById('result-level-num').textContent = `Level ${lv.num}`;
+  document.getElementById('result-title').textContent = lv.title;
+  document.getElementById('result-dom').textContent =
+    `우세손: ${dominant === 'Rt' ? 'Rt. (오른손)' : 'Lt. (왼손)'}`;
+}
+
+function updateNav() {
+  const navInfo = document.getElementById('nav-info');
+  if (selectedLevel !== null) {
+    const lv = MACS_LEVELS[selectedLevel - 1];
+    navInfo.innerHTML = `<span class="sel" style="color:${lv.color}">Level ${lv.num} ${lv.roman}</span> 선택됨`;
+  } else {
+    navInfo.innerHTML = `<span class="not-sel">레벨 미선택</span>`;
+  }
+}
+
+/* ═══════════════════════════════════════
+   종합 보고서용 HTML 스냅샷
+═══════════════════════════════════════ */
+const REPORT_SECTION_TITLE = '손기능 분류체계 (MACS)';
+
+function buildToolReportHtml() {
+  const name      = document.getElementById('f-name').value.trim()      || '(미입력)';
+  const date      = document.getElementById('f-date').value             || '';
+  const diagnosis = document.getElementById('f-diagnosis').value.trim() || '—';
+  const note      = document.getElementById('f-note').value.trim();
+
+  if (selectedLevel !== null) {
+    const lv = MACS_LEVELS[selectedLevel - 1];
+    return `
+      <div style="display:flex;align-items:center;gap:16px;padding:16px 20px;
+        background:${lv.dim};border-radius:10px;border:1px solid ${lv.color}40;margin-bottom:18px;">
+        <div style="width:60px;height:60px;border-radius:10px;
+          background:${lv.dim};border:2px solid ${lv.color};
+          display:flex;align-items:center;justify-content:center;
+          font-size:24px;font-weight:900;color:${lv.color};flex-shrink:0;">
+          ${lv.roman}
+        </div>
+        <div>
+          <div style="font-size:10px;font-weight:700;color:${lv.color};text-transform:uppercase;
+            letter-spacing:.08em;margin-bottom:4px;">Level ${lv.num}</div>
+          <div style="font-size:18px;font-weight:800;color:${lv.dark};margin-bottom:4px;">${lv.title}</div>
+          <div style="font-size:11px;color:#666;">
+            ${name} &nbsp;·&nbsp; ${diagnosis} &nbsp;·&nbsp; 평가일: ${date}
+            &nbsp;·&nbsp; 우세손: ${dominant === 'Rt' ? 'Rt.' : 'Lt.'}
+          </div>
+        </div>
+      </div>
+      ${note ? `<div style="padding:10px 14px;background:#f5f5f5;border-radius:8px;
+        border-left:3px solid ${lv.color};font-size:12px;color:#4A4770;line-height:1.6;margin-bottom:14px;">
+        <strong>Comment:</strong> ${note}</div>` : ''}`;
+  }
+  return `<div style="padding:12px 16px;background:#f5f5f5;border-radius:8px;
+    font-size:13px;color:#9896B8;text-align:center;">레벨 미선택</div>`;
+}
+
+/* ═══════════════════════════════════════
+   뒤로 / 토스트
+═══════════════════════════════════════ */
+function goBack() {
+  if (selectedLevel !== null) {
+    if (!confirm('선택된 레벨 정보가 사라집니다. 뒤로 가시겠어요?')) return;
+  }
+  window.location.href = 'hub.html';
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2400);
+}
+
+window._TOOL_ID = 'macs';
+/* ═══════════════════════════════════════
+   세션 네비게이션 — hub.html 라우팅 연동
+═══════════════════════════════════════ */
+function getSession() {
+  try { return JSON.parse(sessionStorage.getItem('ot_session') || '{}'); } catch(e) { return {}; }
+}
+
+function persistToolReport() {
+  try {
+    const sess = getSession();
+    if (!sess.reportByTool) sess.reportByTool = {};
+    sess.reportByTool[window._TOOL_ID] = {
+      title: REPORT_SECTION_TITLE,
+      html: typeof buildToolReportHtml === 'function' ? buildToolReportHtml() : ''
+    };
+    sessionStorage.setItem('ot_session', JSON.stringify(sess));
+  } catch (e) {}
+}
+
+function getCurrentToolIndex() {
+  const sess = getSession();
+  const ready = sess.ready || [];
+  const myId  = window._TOOL_ID || '';
+  return ready.indexOf(myId);
+}
+
+function goNextTool() {
+  persistToolReport();
+  const sess = getSession();
+  const ready = sess.ready || [];
+  const cur   = getCurrentToolIndex();
+  if (cur >= 0 && cur < ready.length - 1) {
+    const nextId = ready[cur + 1];
+    // TOOLS 매핑 (hub 없이도 알 수 있도록 인라인)
+    const ROUTE_MAP = {
+      'profiling':'assess-profiling.html','otipm':'assess-otipm.html',
+      'jthft':'assess-jthft.html','macs':'assess-macs.html',
+      'clinical':'assess-clinical.html','sensory':'assess-sensory.html',
+      'mbi':'assess-mbi.html','fim':'assess-fim.html','k-iadl':'assess-k-iadl.html',
+    };
+    const route = ROUTE_MAP[nextId];
+    if (route) window.location.href = route;
+  } else {
+    window.location.href = 'report.html';
+  }
+}
+
+</script>
+<script src="session-sidebar.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,1141 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>JTHFT — OTHub Assess</title>
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════
+   TOKENS
+═══════════════════════════════════════ */
+:root {
+  --bg:          #F0F2FA;
+  --surface:     #FFFFFF;
+  --surface-2:   #F7F8FD;
+  --border:      #E4E7F4;
+  --border-2:    #CDD2EC;
+
+  --accent:      #6C5CE7;
+  --accent-2:    #8B7FF0;
+  --accent-dim:  #EDEAFD;
+  --accent-ring: rgba(108,92,231,.15);
+
+  --teal:        #00B894;
+  --teal-dim:    #E0F8F3;
+  --teal-dark:   #006B44;
+
+  --amber:       #F0A500;
+  --amber-dim:   #FEF4DC;
+  --amber-dark:  #7A5000;
+
+  --red:         #D63031;
+  --red-dim:     #FDF0F0;
+
+  --green:       #00A86B;
+  --green-dim:   #E0F5EE;
+
+  --t1: #1E1B3A;
+  --t2: #4A4770;
+  --t3: #9896B8;
+
+  --r-xs: 6px;
+  --r-sm: 10px;
+  --r:    14px;
+  --r-lg: 20px;
+  --r-xl: 28px;
+
+  --font:  'Pretendard', -apple-system, sans-serif;
+  --mono:  'SF Mono', 'Courier New', monospace;
+  --touch: 52px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--t1);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ═══════════════════════════════════════
+   TOP BAR
+═══════════════════════════════════════ */
+.topbar {
+  height: 60px; background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center;
+  padding: 0 24px; gap: 12px;
+  position: sticky; top: 0; z-index: 100;
+}
+.topbar-back {
+  width: 40px; height: 40px; border-radius: var(--r-sm);
+  border: 1px solid var(--border); background: transparent;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: var(--t2); transition: all .15s; flex-shrink: 0;
+}
+.topbar-back:hover { background: var(--bg); color: var(--t1); }
+.topbar-back svg { width: 18px; height: 18px; }
+.topbar-info { flex: 1; }
+.topbar-title { font-size: 15px; font-weight: 800; color: var(--t1); }
+.topbar-sub   { font-size: 11px; color: var(--t3); margin-top: 1px; }
+.topbar-right { display: flex; align-items: center; gap: 10px; margin-left: auto; flex-shrink: 0; }
+.dev-badge {
+  font-size: 11px; font-weight: 700;
+  color: var(--accent); background: var(--accent-dim);
+  padding: 4px 10px; border-radius: 20px;
+}
+
+/* 진행률 */
+.progress-strip { height: 3px; background: var(--border); }
+.progress-fill  {
+  height: 100%; background: var(--teal);
+  transition: width .4s cubic-bezier(.4,0,.2,1);
+  border-radius: 0 2px 2px 0;
+}
+
+/* ═══════════════════════════════════════
+   LAYOUT
+═══════════════════════════════════════ */
+.page { max-width: 860px; margin: 0 auto; padding: 22px 20px 100px; }
+
+/* ═══════════════════════════════════════
+   CARD
+═══════════════════════════════════════ */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 20px 22px;
+  margin-bottom: 14px;
+}
+.card-head {
+  display: flex; align-items: center; gap: 10px;
+  padding-bottom: 14px; margin-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+.card-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.card-title { font-size: 14px; font-weight: 700; color: var(--t1); }
+.card-sub   { font-size: 12px; color: var(--t3); margin-left: auto; }
+
+/* ═══════════════════════════════════════
+   기본정보 폼
+═══════════════════════════════════════ */
+.form-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+.col2 { grid-column: span 2; }
+.form-field { display: flex; flex-direction: column; gap: 6px; }
+.form-label { font-size: 11px; font-weight: 700; color: var(--t3); letter-spacing: .05em; text-transform: uppercase; }
+.form-input {
+  height: var(--touch); padding: 0 14px;
+  border: 1.5px solid var(--border); border-radius: var(--r-sm);
+  font-family: var(--font); font-size: 15px; color: var(--t1);
+  background: var(--surface-2); outline: none;
+  transition: border-color .15s, box-shadow .15s; width: 100%;
+}
+.form-input:focus {
+  border-color: var(--teal);
+  box-shadow: 0 0 0 4px rgba(0,184,148,.12);
+  background: var(--surface);
+}
+.form-input::placeholder { color: var(--t3); }
+select.form-input {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2 4l4 4 4-4' stroke='%239896B8' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 14px center;
+  padding-right: 36px; cursor: pointer;
+}
+
+/* ═══════════════════════════════════════
+   우세손 선택 (크고 명확하게)
+═══════════════════════════════════════ */
+.dominant-picker {
+  display: flex; gap: 10px; margin-bottom: 20px;
+}
+.dominant-btn {
+  flex: 1; height: 56px;
+  border-radius: var(--r);
+  border: 2px solid var(--border-2);
+  background: var(--surface-2);
+  font-family: var(--font); font-size: 16px; font-weight: 700;
+  color: var(--t3); cursor: pointer;
+  transition: all .15s;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.dominant-btn:hover { border-color: var(--teal); color: var(--teal); background: var(--teal-dim); }
+.dominant-btn.active {
+  border-color: var(--teal); background: var(--teal-dim); color: var(--teal-dark);
+}
+.dominant-btn.active .dom-star { display: inline-block; }
+.dom-star {
+  display: none;
+  font-size: 12px; color: var(--teal);
+  background: var(--teal); color: #fff;
+  padding: 1px 7px; border-radius: 10px;
+  font-size: 10px; font-weight: 800;
+}
+
+/* ═══════════════════════════════════════
+   진행 요약 바
+═══════════════════════════════════════ */
+.summary-bar {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 18px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  margin-bottom: 16px;
+  position: sticky; top: 68px; z-index: 50;
+  box-shadow: 0 2px 10px rgba(30,27,58,.06);
+}
+.summary-done {
+  font-size: 13px; font-weight: 700; color: var(--t2);
+}
+.summary-done span { font-size: 22px; font-weight: 800; color: var(--teal); }
+.summary-dots { display: flex; gap: 4px; flex: 1; justify-content: center; }
+.summary-dot {
+  width: 9px; height: 9px; border-radius: 50%;
+  background: var(--border); transition: background .2s;
+  flex-shrink: 0;
+}
+.summary-dot.rt-done  { background: var(--teal); }
+.summary-dot.lt-done  { background: var(--accent); }
+.summary-dot.both-done { background: var(--green); }
+.summary-dot.nt        { background: var(--amber); }
+.summary-legend {
+  display: flex; gap: 10px; font-size: 10px; color: var(--t3); flex-shrink: 0;
+}
+.legend-item { display: flex; align-items: center; gap: 4px; }
+.legend-dot  { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+
+/* ═══════════════════════════════════════
+   과제 카드 (핵심)
+═══════════════════════════════════════ */
+.task-card {
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--r);
+  padding: 18px 20px;
+  margin-bottom: 10px;
+  transition: border-color .15s, background .15s;
+}
+.task-card.complete {
+  border-color: var(--green);
+  background: var(--green-dim);
+}
+.task-card.partial {
+  border-color: var(--teal);
+  background: var(--teal-dim);
+}
+
+.task-header {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 14px;
+}
+.task-num {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: var(--border); color: var(--t3);
+  font-size: 12px; font-weight: 800;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; transition: all .2s;
+}
+.task-card.complete .task-num { background: var(--green); color: #fff; }
+.task-card.partial  .task-num { background: var(--teal);  color: #fff; }
+.task-name { font-size: 15px; font-weight: 700; color: var(--t1); }
+.task-card.complete .task-name { color: var(--teal-dark); }
+
+/* ═══════════════════════════════════════
+   Rt / Lt 컬럼
+═══════════════════════════════════════ */
+.task-sides {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+}
+
+.side-block {
+  border: 1.5px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 12px 14px;
+  background: var(--surface-2);
+  transition: all .15s;
+}
+.side-block.dominant {
+  border-color: var(--teal);
+  background: var(--teal-dim);
+}
+.side-block.filled    { border-color: var(--teal); }
+.side-block.nt-active { border-color: var(--amber); background: var(--amber-dim); }
+
+.side-label {
+  display: flex; align-items: center; gap: 6px;
+  margin-bottom: 10px;
+}
+.side-label-text {
+  font-size: 12px; font-weight: 800; color: var(--t2);
+  letter-spacing: .04em;
+}
+.dominant-star {
+  font-size: 9px; font-weight: 800; padding: 1px 6px;
+  border-radius: 8px; background: var(--teal); color: #fff;
+  letter-spacing: .04em;
+}
+.side-block.nt-active .dominant-star { background: var(--amber); }
+
+/* 타이머 디스플레이 */
+.timer-display {
+  font-family: var(--mono); font-size: 30px; font-weight: 800;
+  color: var(--t1); text-align: center; letter-spacing: .02em;
+  margin-bottom: 10px; line-height: 1;
+  transition: color .15s;
+  min-width: 0;
+}
+.timer-display.running { color: var(--red); }
+.timer-display.nt      { color: var(--amber); font-size: 22px; }
+.timer-display.done    { color: var(--teal-dark); }
+
+/* 타이머 버튼 행 */
+.timer-controls {
+  display: flex; gap: 6px; align-items: center; margin-bottom: 8px;
+}
+.btn-start {
+  flex: 1; height: 48px;
+  border-radius: var(--r-sm); border: none;
+  background: var(--teal); color: #fff;
+  font-family: var(--font); font-size: 14px; font-weight: 700;
+  cursor: pointer; transition: all .15s;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+}
+.btn-start:hover { opacity: .9; }
+.btn-start:active { transform: scale(.97); }
+.btn-start.running { background: var(--red); }
+.btn-start:disabled { background: var(--border-2); color: var(--t3); cursor: not-allowed; transform: none; opacity: 1; }
+
+.btn-start svg { width: 16px; height: 16px; }
+
+.btn-reset {
+  width: 48px; height: 48px;
+  border-radius: var(--r-sm); border: 1.5px solid var(--border-2);
+  background: var(--surface); color: var(--t3);
+  font-family: var(--font); font-size: 18px;
+  cursor: pointer; transition: all .15s;
+  display: flex; align-items: center; justify-content: center;
+}
+.btn-reset:hover { border-color: var(--accent); color: var(--accent); }
+.btn-reset:disabled { opacity: .4; cursor: not-allowed; }
+
+/* 수동 입력 */
+.manual-row {
+  display: flex; align-items: center; gap: 6px;
+}
+.manual-label { font-size: 10px; font-weight: 700; color: var(--t3); letter-spacing: .04em; white-space: nowrap; }
+.manual-input {
+  flex: 1; height: 40px; padding: 0 10px;
+  border: 1px solid var(--border); border-radius: var(--r-xs);
+  font-family: var(--mono); font-size: 15px; font-weight: 600;
+  color: var(--t1); background: var(--surface); outline: none;
+  text-align: center; transition: border-color .15s;
+  -moz-appearance: textfield;
+}
+.manual-input::-webkit-outer-spin-button,
+.manual-input::-webkit-inner-spin-button { -webkit-appearance: none; }
+.manual-input:focus { border-color: var(--teal); background: #fff; }
+.manual-input:disabled { background: var(--surface-2); color: var(--t3); }
+.manual-unit { font-size: 12px; font-weight: 600; color: var(--t3); white-space: nowrap; }
+
+/* NT 체크박스 */
+.nt-row {
+  display: flex; align-items: center; gap: 8px;
+  margin-top: 8px; padding-top: 8px;
+  border-top: 1px solid var(--border);
+  cursor: pointer;
+}
+.nt-toggle {
+  width: 40px; height: 24px; border-radius: 12px;
+  background: var(--border-2); position: relative;
+  transition: background .2s; flex-shrink: 0; cursor: pointer;
+  border: none;
+}
+.nt-toggle::after {
+  content: '';
+  position: absolute; top: 3px; left: 3px;
+  width: 18px; height: 18px; border-radius: 50%;
+  background: #fff; transition: transform .2s;
+  box-shadow: 0 1px 4px rgba(0,0,0,.15);
+}
+.nt-toggle.on { background: var(--amber); }
+.nt-toggle.on::after { transform: translateX(16px); }
+.nt-label { font-size: 12px; font-weight: 700; color: var(--t2); }
+.nt-desc  { font-size: 11px; color: var(--t3); }
+
+/* ═══════════════════════════════════════
+   Comment 입력
+═══════════════════════════════════════ */
+.comment-wrap {
+  margin-top: 4px;
+}
+.comment-label { font-size: 11px; font-weight: 700; color: var(--t3); letter-spacing: .05em; text-transform: uppercase; margin-bottom: 6px; }
+.comment-input {
+  width: 100%; height: 44px; padding: 0 14px;
+  border: 1.5px solid var(--border); border-radius: var(--r-sm);
+  font-family: var(--font); font-size: 14px; color: var(--t1);
+  background: var(--surface-2); outline: none;
+  transition: border-color .15s;
+}
+.comment-input:focus { border-color: var(--teal); background: var(--surface); }
+.comment-input::placeholder { color: var(--t3); }
+
+/* ═══════════════════════════════════════
+   하단 네비 바
+═══════════════════════════════════════ */
+.nav-bar {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  background: var(--surface); border-top: 1px solid var(--border);
+  padding: 10px 24px;
+  display: flex; align-items: center; gap: 10px;
+  z-index: 200;
+}
+.nav-info { flex: 1; font-size: 13px; color: var(--t3); font-weight: 600; }
+.nav-info span { color: var(--teal); font-weight: 800; font-size: 16px; }
+
+.btn-pdf {
+  height: var(--touch); padding: 0 28px;
+  border-radius: var(--r-sm); border: none;
+  background: var(--teal); color: #fff;
+  font-family: var(--font); font-size: 15px; font-weight: 700;
+  cursor: pointer; transition: all .15s;
+  display: flex; align-items: center; gap: 8px;
+}
+.btn-pdf:hover { opacity: .9; }
+.btn-pdf:active { transform: scale(.97); }
+.btn-pdf svg { width: 16px; height: 16px; }
+.btn-pdf.all-done {
+  background: var(--green);
+  box-shadow: 0 4px 16px rgba(0,168,107,.3);
+  animation: pulse 2s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 4px 16px rgba(0,168,107,.3); }
+  50%       { box-shadow: 0 4px 24px rgba(0,168,107,.5); }
+}
+
+/* ═══════════════════════════════════════
+   TOAST
+═══════════════════════════════════════ */
+.toast {
+  position: fixed; top: 76px; left: 50%;
+  transform: translateX(-50%) translateY(-8px);
+  background: var(--t1); color: #fff;
+  padding: 10px 20px; border-radius: 20px;
+  font-size: 13px; font-weight: 600;
+  opacity: 0; pointer-events: none;
+  transition: all .22s; z-index: 600; white-space: nowrap;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ═══════════════════════════════════════
+   반응형
+═══════════════════════════════════════ */
+@media (max-width: 768px) {
+  .page { padding: 16px 12px 90px; }
+  .form-grid { grid-template-columns: 1fr 1fr; }
+  .col2 { grid-column: span 2; }
+  .timer-display { font-size: 26px; }
+  .nav-bar { padding: 10px 14px; }
+  .summary-legend { display: none; }
+}
+@media (max-width: 520px) {
+  .task-sides { grid-template-columns: 1fr; }
+  .form-grid { grid-template-columns: 1fr; }
+  .col2 { grid-column: span 1; }
+}
+
+/* ═══════════════════════════════════════
+   PDF / PRINT
+═══════════════════════════════════════ */
+@media print {
+  @page { size: A4; margin: 14mm 17mm; }
+
+  .topbar, .progress-strip, .summary-bar, .nav-bar, .toast,
+  .timer-controls, .nt-row, .btn-start, .btn-reset,
+  .manual-row, .dominant-picker { display: none !important; }
+
+  body { background: #fff !important; }
+  .page { max-width: 100%; padding: 0; }
+
+  .pdf-header   { display: flex !important; }
+  .pdf-results  { display: block !important; }
+  .sign-area    { display: flex !important; }
+
+  .task-card { border: 1px solid #ddd; page-break-inside: avoid; margin-bottom: 8px; }
+  .side-block { border: 1px solid #ddd; }
+  .timer-display { color: #1E1B3A !important; font-size: 18px !important; }
+}
+
+.pdf-header {
+  display: none; justify-content: space-between; align-items: flex-start;
+  border-bottom: 2px solid var(--t1); padding-bottom: 12px; margin-bottom: 18px;
+}
+.pdf-header-title { font-size: 16px; font-weight: 800; }
+.pdf-header-sub   { font-size: 10px; color: #666; margin-top: 3px; }
+.pdf-header-right { text-align: right; font-size: 10px; color: #666; line-height: 1.8; }
+
+.pdf-results { display: none; margin-bottom: 18px; }
+.sign-area   { display: none; }
+</style>
+</head>
+<body>
+
+<!-- PDF 전용 헤더 -->
+<div class="pdf-header" id="pdf-header">
+  <div>
+    <div class="pdf-header-title">Jebsen-Taylor Hand Function Test (JTHFT)</div>
+    <div class="pdf-header-sub">손기능 시간평가 · 우세손 / 비우세손 수행 시간 측정</div>
+  </div>
+  <div class="pdf-header-right" id="pdf-meta"></div>
+</div>
+
+<!-- PDF 전용 결과 요약 -->
+<div class="pdf-results" id="pdf-results"></div>
+
+<!-- Top Bar -->
+<header class="topbar">
+  <button class="topbar-back" onclick="goBack()">
+    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path d="M19 12H5M12 5l-7 7 7 7" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </button>
+  <div class="topbar-info">
+    <div class="topbar-title">JTHFT</div>
+    <div class="topbar-sub">Jebsen-Taylor Hand Function Test · 7개 과제</div>
+  </div>
+  <div class="topbar-right">
+    <span class="dev-badge">OTDev · 함선생</span>
+  </div>
+</header>
+
+<div class="progress-strip">
+  <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+</div>
+
+<main class="page">
+
+  <!-- 기본정보 -->
+  <div class="card">
+    <div class="card-head">
+      <div class="card-dot" style="background:var(--teal)"></div>
+      <div class="card-title">기본 정보</div>
+    </div>
+    <div class="form-grid">
+      <div class="form-field col2">
+        <label class="form-label">이름 / 등록번호</label>
+        <input class="form-input" id="f-name" type="text" placeholder="예: 홍OO / 24-001">
+      </div>
+      <div class="form-field">
+        <label class="form-label">평가일</label>
+        <input class="form-input" id="f-date" type="date">
+      </div>
+      <div class="form-field">
+        <label class="form-label">성별</label>
+        <select class="form-input" id="f-gender">
+          <option value="">선택</option>
+          <option value="남">남</option>
+          <option value="여">여</option>
+        </select>
+      </div>
+      <div class="form-field">
+        <label class="form-label">진단명</label>
+        <input class="form-input" id="f-diagnosis" type="text" placeholder="예: 뇌성마비">
+      </div>
+      <div class="form-field">
+        <label class="form-label">담당 치료사</label>
+        <input class="form-input" id="f-therapist" type="text" placeholder="이름 (OT)">
+      </div>
+    </div>
+  </div>
+
+  <!-- 우세손 선택 -->
+  <div class="card">
+    <div class="card-head">
+      <div class="card-dot" style="background:var(--teal)"></div>
+      <div class="card-title">우세손 선택</div>
+      <div class="card-sub">선택하면 해당 컬럼이 강조됩니다</div>
+    </div>
+    <div class="dominant-picker">
+      <button class="dominant-btn active" id="dom-rt" onclick="setDominant('Rt')">
+        <span>Rt. (오른손)</span>
+        <span class="dom-star">우세</span>
+      </button>
+      <button class="dominant-btn" id="dom-lt" onclick="setDominant('Lt')">
+        <span>Lt. (왼손)</span>
+        <span class="dom-star">우세</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- 진행 요약 바 -->
+  <div class="summary-bar">
+    <div class="summary-done"><span id="sum-done">0</span> / 14셀</div>
+    <div class="summary-dots" id="summary-dots"></div>
+    <div class="summary-legend">
+      <div class="legend-item">
+        <div class="legend-dot" style="background:var(--green)"></div>양손완료
+      </div>
+      <div class="legend-item">
+        <div class="legend-dot" style="background:var(--teal)"></div>한손완료
+      </div>
+      <div class="legend-item">
+        <div class="legend-dot" style="background:var(--amber)"></div>NT
+      </div>
+    </div>
+  </div>
+
+  <!-- 7개 과제 (JS 렌더) -->
+  <div id="task-list"></div>
+
+  <!-- 전체 Comment -->
+  <div class="card">
+    <div class="card-head">
+      <div class="card-dot" style="background:var(--t3)"></div>
+      <div class="card-title">전체 Comment</div>
+    </div>
+    <textarea id="global-comment" class="comment-input"
+      style="height:80px;padding:10px 14px;resize:vertical;"
+      placeholder="평가 전반에 대한 관찰 내용, 특이사항 등을 기록하세요."></textarea>
+  </div>
+
+</main>
+
+<!-- 하단 네비 바 -->
+<div class="nav-bar">
+  <div class="nav-info">완료 <span id="nav-done">0</span> / 14</div>
+  <span style="font-size:11px;color:var(--t3);max-width:200px;text-align:right;line-height:1.35;">PDF는 전체 평가 완료 후 종합 보고서에서 저장</span>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ═══════════════════════════════════════
+   데이터
+═══════════════════════════════════════ */
+const TASKS = [
+  { id: 'writing',    name: '문장 쓰기',   hint: '글씨 쓰기 능력 측정' },
+  { id: 'cards',      name: '카드 뒤집기', hint: '손가락 섬세 조작 능력' },
+  { id: 'objects',    name: '물건 옮기기', hint: '다양한 크기 물체 집기' },
+  { id: 'feeding',    name: '먹는 흉내',   hint: '숟가락 사용 모방 동작' },
+  { id: 'stacking',   name: '장기말 쌓기', hint: '검지 기능 및 내재근 조절' },
+  { id: 'light_can',  name: '가벼운 캔',   hint: '빈 음료캔 이동' },
+  { id: 'heavy_can',  name: '무거운 캔',   hint: '꽉 찬 음료캔 이동' },
+];
+
+/* ═══════════════════════════════════════
+   상태
+═══════════════════════════════════════ */
+let dominant = 'Rt';
+
+// state[taskId][side] = { val: number|null, nt: bool, running: bool }
+const state = {};
+TASKS.forEach(t => {
+  state[t.id] = {
+    Rt: { val: null, nt: false, running: false },
+    Lt: { val: null, nt: false, running: false },
+  };
+});
+
+// 타이머 핸들
+const timers = {};  // key: `${taskId}-${side}`
+
+/* ═══════════════════════════════════════
+   초기화
+═══════════════════════════════════════ */
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('f-date').valueAsDate = new Date();
+
+  // sessionStorage 기본정보 복원
+  try {
+    const sess = JSON.parse(sessionStorage.getItem('ot_session') || '{}');
+    if (sess.info) {
+      const i = sess.info;
+      if (i.name)      setVal('f-name',      i.name);
+      if (i.date)      setVal('f-date',      i.date);
+      if (i.gender)    setVal('f-gender',    i.gender);
+      if (i.diagnosis) setVal('f-diagnosis', i.diagnosis);
+      if (i.therapist) setVal('f-therapist', i.therapist);
+    }
+  } catch(e) {}
+
+  buildSummaryDots();
+  renderTasks();
+  updateProgress();
+});
+
+const setVal = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };
+
+/* ═══════════════════════════════════════
+   우세손 설정
+═══════════════════════════════════════ */
+function setDominant(side) {
+  dominant = side;
+  document.getElementById('dom-rt').classList.toggle('active', side === 'Rt');
+  document.getElementById('dom-lt').classList.toggle('active', side === 'Lt');
+
+  // 모든 side-block 강조 갱신
+  TASKS.forEach(t => {
+    const rtBlock = document.getElementById(`block-${t.id}-Rt`);
+    const ltBlock = document.getElementById(`block-${t.id}-Lt`);
+    if (rtBlock) {
+      rtBlock.classList.toggle('dominant', side === 'Rt');
+      document.getElementById(`dom-label-${t.id}-Rt`).style.display = side === 'Rt' ? 'inline' : 'none';
+    }
+    if (ltBlock) {
+      ltBlock.classList.toggle('dominant', side === 'Lt');
+      document.getElementById(`dom-label-${t.id}-Lt`).style.display = side === 'Lt' ? 'inline' : 'none';
+    }
+  });
+}
+
+/* ═══════════════════════════════════════
+   과제 렌더링
+═══════════════════════════════════════ */
+function renderTasks() {
+  const container = document.getElementById('task-list');
+  container.innerHTML = '';
+
+  TASKS.forEach((task, idx) => {
+    const card = document.createElement('div');
+    card.className = 'task-card';
+    card.id = `task-card-${task.id}`;
+
+    card.innerHTML = `
+      <div class="task-header">
+        <div class="task-num" id="task-num-${task.id}">${idx + 1}</div>
+        <div>
+          <div class="task-name">${task.name}</div>
+          <div style="font-size:11px;color:var(--t3);margin-top:1px;">${task.hint}</div>
+        </div>
+      </div>
+      <div class="task-sides">
+        ${buildSideBlock(task, 'Rt')}
+        ${buildSideBlock(task, 'Lt')}
+      </div>`;
+
+    container.appendChild(card);
+  });
+}
+
+function buildSideBlock(task, side) {
+  const isDom  = side === dominant;
+  const key    = `${task.id}-${side}`;
+  const oppSide = side === 'Rt' ? 'Lt' : 'Rt';
+
+  return `
+    <div class="side-block ${isDom ? 'dominant' : ''}" id="block-${task.id}-${side}">
+      <div class="side-label">
+        <span class="side-label-text">${side}.</span>
+        <span class="dominant-star" id="dom-label-${task.id}-${side}" style="display:${isDom ? 'inline' : 'none'}">우세</span>
+      </div>
+
+      <!-- 타이머 디스플레이 -->
+      <div class="timer-display" id="disp-${key}">0.00</div>
+
+      <!-- 타이머 컨트롤 -->
+      <div class="timer-controls">
+        <button class="btn-start" id="btn-start-${key}" onclick="toggleTimer('${task.id}','${side}')">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <polygon points="5 3 19 12 5 21 5 3" fill="currentColor" stroke="none"/>
+          </svg>
+          시작
+        </button>
+        <button class="btn-reset" id="btn-reset-${key}" onclick="resetTimer('${task.id}','${side}')">↺</button>
+      </div>
+
+      <!-- 수동 입력 -->
+      <div class="manual-row">
+        <span class="manual-label">직접 입력</span>
+        <input class="manual-input" type="number" id="val-${key}"
+          step="0.01" min="0" placeholder="초"
+          oninput="onManualInput('${task.id}','${side}')">
+        <span class="manual-unit">초</span>
+      </div>
+
+      <!-- NT 토글 -->
+      <div class="nt-row" onclick="toggleNT('${task.id}','${side}')">
+        <button class="nt-toggle" id="nt-toggle-${key}"></button>
+        <span class="nt-label">NT</span>
+        <span class="nt-desc">Not Tested — 검사 불가</span>
+      </div>
+    </div>`;
+}
+
+/* ═══════════════════════════════════════
+   타이머
+═══════════════════════════════════════ */
+function toggleTimer(taskId, side) {
+  const key = `${taskId}-${side}`;
+  const s   = state[taskId][side];
+
+  if (s.nt) return; // NT 상태면 무시
+
+  const dispEl  = document.getElementById(`disp-${key}`);
+  const startBtn = document.getElementById(`btn-start-${key}`);
+  const resetBtn = document.getElementById(`btn-reset-${key}`);
+  const valInput = document.getElementById(`val-${key}`);
+
+  if (timers[key]) {
+    // ── 정지 ──
+    clearInterval(timers[key].iv);
+    const elapsed = ((Date.now() - timers[key].start) / 1000).toFixed(2);
+    timers[key] = null;
+
+    dispEl.textContent = elapsed;
+    dispEl.classList.remove('running');
+    dispEl.classList.add('done');
+
+    startBtn.innerHTML = `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <polygon points="5 3 19 12 5 21 5 3" fill="currentColor" stroke="none"/>
+    </svg>시작`;
+    startBtn.classList.remove('running');
+
+    valInput.value = elapsed;
+    s.val = parseFloat(elapsed);
+    s.running = false;
+
+    updateTaskCard(taskId);
+    updateProgress();
+
+  } else {
+    // ── 시작 ──
+    const t0 = Date.now();
+    s.running = true;
+
+    dispEl.textContent = '0.00';
+    dispEl.classList.add('running');
+    dispEl.classList.remove('done');
+
+    startBtn.innerHTML = `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <rect x="6" y="4" width="4" height="16" fill="currentColor" rx="1"/>
+      <rect x="14" y="4" width="4" height="16" fill="currentColor" rx="1"/>
+    </svg>정지`;
+    startBtn.classList.add('running');
+
+    timers[key] = {
+      start: t0,
+      iv: setInterval(() => {
+        dispEl.textContent = ((Date.now() - t0) / 1000).toFixed(2);
+      }, 50)
+    };
+  }
+}
+
+function resetTimer(taskId, side) {
+  const key = `${taskId}-${side}`;
+  const s   = state[taskId][side];
+
+  // 실행 중이면 중단
+  if (timers[key]) {
+    clearInterval(timers[key].iv);
+    timers[key] = null;
+  }
+
+  // 상태 초기화
+  s.val = null; s.running = false;
+
+  // UI 초기화
+  const dispEl   = document.getElementById(`disp-${key}`);
+  const startBtn = document.getElementById(`btn-start-${key}`);
+  const valInput = document.getElementById(`val-${key}`);
+
+  if (dispEl) {
+    dispEl.textContent = '0.00';
+    dispEl.classList.remove('running', 'done');
+  }
+  if (startBtn) {
+    startBtn.innerHTML = `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <polygon points="5 3 19 12 5 21 5 3" fill="currentColor" stroke="none"/>
+    </svg>시작`;
+    startBtn.classList.remove('running');
+  }
+  if (valInput) valInput.value = '';
+
+  updateTaskCard(taskId);
+  updateProgress();
+}
+
+/* ═══════════════════════════════════════
+   수동 입력
+═══════════════════════════════════════ */
+function onManualInput(taskId, side) {
+  const key   = `${taskId}-${side}`;
+  const s     = state[taskId][side];
+  const input = document.getElementById(`val-${key}`);
+  const disp  = document.getElementById(`disp-${key}`);
+  const val   = parseFloat(input.value);
+
+  if (!isNaN(val) && val >= 0) {
+    s.val = val;
+    if (disp) {
+      disp.textContent = val.toFixed(2);
+      disp.classList.remove('running');
+      disp.classList.add('done');
+    }
+    // 실행 중인 타이머 중단
+    if (timers[key]) {
+      clearInterval(timers[key].iv);
+      timers[key] = null;
+      const startBtn = document.getElementById(`btn-start-${key}`);
+      if (startBtn) {
+        startBtn.innerHTML = `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <polygon points="5 3 19 12 5 21 5 3" fill="currentColor" stroke="none"/>
+        </svg>시작`;
+        startBtn.classList.remove('running');
+      }
+    }
+  } else {
+    s.val = null;
+    if (disp && !timers[key]) {
+      disp.textContent = '0.00';
+      disp.classList.remove('running', 'done');
+    }
+  }
+
+  updateTaskCard(taskId);
+  updateProgress();
+}
+
+/* ═══════════════════════════════════════
+   NT 토글
+═══════════════════════════════════════ */
+function toggleNT(taskId, side) {
+  const key     = `${taskId}-${side}`;
+  const s       = state[taskId][side];
+  const toggle  = document.getElementById(`nt-toggle-${key}`);
+  const block   = document.getElementById(`block-${taskId}-${side}`);
+  const disp    = document.getElementById(`disp-${key}`);
+  const startBtn = document.getElementById(`btn-start-${key}`);
+  const resetBtn = document.getElementById(`btn-reset-${key}`);
+  const valInput = document.getElementById(`val-${key}`);
+
+  s.nt = !s.nt;
+
+  if (s.nt) {
+    // NT 활성화 — 타이머 중단, 입력 비활성화
+    if (timers[key]) {
+      clearInterval(timers[key].iv);
+      timers[key] = null;
+    }
+    s.val = null; s.running = false;
+
+    toggle.classList.add('on');
+    block.classList.add('nt-active');
+
+    if (disp)     { disp.textContent = 'NT'; disp.classList.add('nt'); disp.classList.remove('running','done'); }
+    if (startBtn) { startBtn.disabled = true; startBtn.innerHTML = `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3" fill="currentColor" stroke="none"/></svg>시작`; startBtn.classList.remove('running'); }
+    if (resetBtn) { resetBtn.disabled = true; }
+    if (valInput) { valInput.value = ''; valInput.disabled = true; }
+
+  } else {
+    // NT 해제
+    toggle.classList.remove('on');
+    block.classList.remove('nt-active');
+
+    if (disp)     { disp.textContent = '0.00'; disp.classList.remove('nt','running','done'); }
+    if (startBtn) { startBtn.disabled = false; }
+    if (resetBtn) { resetBtn.disabled = false; }
+    if (valInput) { valInput.disabled = false; }
+  }
+
+  updateTaskCard(taskId);
+  updateProgress();
+}
+
+/* ═══════════════════════════════════════
+   카드 상태 갱신
+═══════════════════════════════════════ */
+function updateTaskCard(taskId) {
+  const card  = document.getElementById(`task-card-${taskId}`);
+  const numEl = document.getElementById(`task-num-${taskId}`);
+  if (!card) return;
+
+  const rt = state[taskId]['Rt'];
+  const lt = state[taskId]['Lt'];
+  const rtDone = rt.nt || (rt.val !== null);
+  const ltDone = lt.nt || (lt.val !== null);
+
+  card.classList.remove('complete', 'partial');
+  if (rtDone && ltDone) { card.classList.add('complete'); }
+  else if (rtDone || ltDone) { card.classList.add('partial'); }
+}
+
+/* ═══════════════════════════════════════
+   진행률 & 요약 도트
+═══════════════════════════════════════ */
+function buildSummaryDots() {
+  const container = document.getElementById('summary-dots');
+  container.innerHTML = '';
+  TASKS.forEach(t => {
+    const dot = document.createElement('div');
+    dot.className = 'summary-dot';
+    dot.id = `sdot-${t.id}`;
+    dot.title = t.name;
+    container.appendChild(dot);
+  });
+}
+
+function updateProgress() {
+  let done = 0;
+  TASKS.forEach(t => {
+    const rt = state[t.id]['Rt'];
+    const lt = state[t.id]['Lt'];
+    const rtDone = rt.nt || (rt.val !== null);
+    const ltDone = lt.nt || (lt.val !== null);
+
+    if (rtDone) done++;
+    if (ltDone) done++;
+
+    // 도트 색상
+    const dot = document.getElementById(`sdot-${t.id}`);
+    if (!dot) return;
+    if (rtDone && ltDone) {
+      const isNt = rt.nt && lt.nt;
+      dot.className = 'summary-dot ' + (isNt ? 'nt' : 'both-done');
+    } else if (rtDone || ltDone) {
+      const isNt = (rtDone && rt.nt) || (ltDone && lt.nt);
+      dot.className = 'summary-dot ' + (isNt ? 'nt' : 'rt-done');
+    } else {
+      dot.className = 'summary-dot';
+    }
+  });
+
+  const total = TASKS.length * 2; // 14
+  const pct   = Math.round(done / total * 100);
+
+  document.getElementById('sum-done').textContent  = done;
+  document.getElementById('nav-done').textContent  = done;
+  document.getElementById('progress-fill').style.width = `${pct}%`;
+
+}
+
+/* ═══════════════════════════════════════
+   종합 보고서용 HTML 스냅샷
+═══════════════════════════════════════ */
+const REPORT_SECTION_TITLE = 'Jebsen-Taylor Hand Function Test (JTHFT)';
+
+function buildToolReportHtml() {
+  const name      = document.getElementById('f-name').value.trim()      || '(미입력)';
+  const date      = document.getElementById('f-date').value             || '';
+  const diagnosis = document.getElementById('f-diagnosis').value.trim() || '—';
+  const comment   = document.getElementById('global-comment').value.trim();
+
+  let tableRows = TASKS.map(t => {
+    const rt  = state[t.id]['Rt'];
+    const lt  = state[t.id]['Lt'];
+    const rtVal = rt.nt ? 'NT' : rt.val !== null ? `${rt.val.toFixed(2)}초` : '—';
+    const ltVal = lt.nt ? 'NT' : lt.val !== null ? `${lt.val.toFixed(2)}초` : '—';
+    const domRt = dominant === 'Rt';
+    const rtStyle = domRt ? 'font-weight:800;color:#006B44;' : '';
+    const ltStyle = !domRt ? 'font-weight:800;color:#006B44;' : '';
+    return `<tr>
+      <td style="font-weight:600;padding:8px 12px;border-bottom:1px solid #eee;">${t.name}</td>
+      <td style="text-align:center;padding:8px 12px;border-bottom:1px solid #eee;font-family:monospace;font-size:14px;${rtStyle}">${rtVal}</td>
+      <td style="text-align:center;padding:8px 12px;border-bottom:1px solid #eee;font-family:monospace;font-size:14px;${ltStyle}">${ltVal}</td>
+    </tr>`;
+  }).join('');
+
+  return `
+    <div style="background:#E0F8F3;border-radius:10px;padding:14px 18px;margin-bottom:16px;display:flex;gap:20px;align-items:center;border:1px solid #00B89440;flex-wrap:wrap;">
+      <div>
+        <div style="font-size:10px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px;">대상자</div>
+        <div style="font-size:16px;font-weight:800;color:#1E1B3A;">${name}</div>
+        <div style="font-size:11px;color:#666;margin-top:2px;">${diagnosis} &nbsp;·&nbsp; 평가일: ${date}</div>
+      </div>
+      <div style="border-left:1px solid #00B89440;padding-left:20px;">
+        <div style="font-size:10px;font-weight:700;color:#999;text-transform:uppercase;margin-bottom:3px;">우세손</div>
+        <div style="font-size:16px;font-weight:800;color:#006B44;">${dominant}. (${dominant === 'Rt' ? '오른손' : '왼손'})</div>
+      </div>
+      <div style="border-left:1px solid #00B89440;padding-left:20px;">
+        <div style="font-size:10px;font-weight:700;color:#999;text-transform:uppercase;margin-bottom:3px;">완료</div>
+        <div style="font-size:16px;font-weight:800;color:#00A86B;">${document.getElementById('nav-done').textContent} / 14셀</div>
+      </div>
+    </div>
+    <table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:${comment ? '14px' : '0'}">
+      <thead>
+        <tr style="background:#F7F8FD;">
+          <th style="padding:9px 12px;text-align:left;font-size:10px;font-weight:700;color:#9896B8;text-transform:uppercase;border-bottom:2px solid #E4E7F4;">과제</th>
+          <th style="padding:9px 12px;text-align:center;font-size:10px;font-weight:700;color:${dominant === 'Rt' ? '#006B44' : '#9896B8'};text-transform:uppercase;border-bottom:2px solid #E4E7F4;">Rt. ${dominant === 'Rt' ? '★우세' : ''}</th>
+          <th style="padding:9px 12px;text-align:center;font-size:10px;font-weight:700;color:${dominant === 'Lt' ? '#006B44' : '#9896B8'};text-transform:uppercase;border-bottom:2px solid #E4E7F4;">Lt. ${dominant === 'Lt' ? '★우세' : ''}</th>
+        </tr>
+      </thead>
+      <tbody>${tableRows}</tbody>
+    </table>
+    ${comment ? `<div style="padding:10px 14px;background:#F7F8FD;border-radius:8px;border-left:3px solid #00B894;font-size:12px;color:#4A4770;line-height:1.6;"><strong style="color:#006B44;">Comment</strong><br>${comment}</div>` : ''}`;
+}
+
+/* ═══════════════════════════════════════
+   뒤로 / 토스트
+═══════════════════════════════════════ */
+function goBack() {
+  const done = parseInt(document.getElementById('nav-done').textContent) || 0;
+  if (done > 0) {
+    if (!confirm('측정된 데이터가 사라집니다. 뒤로 가시겠어요?')) return;
+  }
+  window.location.href = 'hub.html';
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2400);
+}
+
+window._TOOL_ID = 'jthft';
+/* ═══════════════════════════════════════
+   세션 네비게이션 — hub.html 라우팅 연동
+═══════════════════════════════════════ */
+function getSession() {
+  try { return JSON.parse(sessionStorage.getItem('ot_session') || '{}'); } catch(e) { return {}; }
+}
+
+function persistToolReport() {
+  try {
+    const sess = getSession();
+    if (!sess.reportByTool) sess.reportByTool = {};
+    sess.reportByTool[window._TOOL_ID] = {
+      title: REPORT_SECTION_TITLE,
+      html: typeof buildToolReportHtml === 'function' ? buildToolReportHtml() : ''
+    };
+    sessionStorage.setItem('ot_session', JSON.stringify(sess));
+  } catch (e) {}
+}
+
+function getCurrentToolIndex() {
+  const sess = getSession();
+  const ready = sess.ready || [];
+  const myId  = window._TOOL_ID || '';
+  return ready.indexOf(myId);
+}
+
+function goNextTool() {
+  persistToolReport();
+  const sess = getSession();
+  const ready = sess.ready || [];
+  const cur   = getCurrentToolIndex();
+  if (cur >= 0 && cur < ready.length - 1) {
+    const nextId = ready[cur + 1];
+    // TOOLS 매핑 (hub 없이도 알 수 있도록 인라인)
+    const ROUTE_MAP = {
+      'profiling':'assess-profiling.html','otipm':'assess-otipm.html',
+      'jthft':'assess-jthft.html','macs':'assess-macs.html',
+      'clinical':'assess-clinical.html','sensory':'assess-sensory.html',
+      'mbi':'assess-mbi.html','fim':'assess-fim.html','k-iadl':'assess-k-iadl.html',
+    };
+    const route = ROUTE_MAP[nextId];
+    if (route) window.location.href = route;
+  } else {
+    window.location.href = 'report.html';
+  }
+}
+
+</script>
+<script src="session-sidebar.js" defer></script>
+</body>
+</html>

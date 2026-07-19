@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>종합 결과보고서 — OTHub Assess</title>
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+<style>
+:root {
+  --bg:#F0F2FA; --surface:#fff; --border:#E4E7F4; --t1:#1E1B3A; --t2:#4A4770; --t3:#9896B8; --accent:#6C5CE7;
+  --font:'Pretendard',-apple-system,sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--font);background:var(--bg);color:var(--t1);line-height:1.5;padding:24px 20px 120px;}
+.top-actions{max-width:900px;margin:0 auto 20px;display:flex;gap:12px;flex-wrap:wrap;align-items:flex-start;justify-content:space-between;}
+h1{font-size:22px;font-weight:800;}
+.sub{font-size:13px;color:var(--t3);margin-top:6px;max-width:520px;}
+.btn{height:44px;padding:0 20px;border-radius:12px;border:none;background:var(--accent);color:#fff;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;}
+.btn-ghost{background:var(--surface);color:var(--t2);border:1px solid var(--border);}
+.meta-bar{max-width:900px;margin:0 auto 24px;padding:16px 20px;background:var(--surface);border-radius:14px;border:1px solid var(--border);font-size:13px;color:var(--t2);}
+.meta-bar strong{color:var(--t1);}
+#sections{max-width:900px;margin:0 auto;}
+section.tool-sec{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px 20px;margin-bottom:16px;page-break-inside:avoid;}
+section.tool-sec h2{font-size:15px;font-weight:800;color:var(--accent);margin-bottom:14px;padding-bottom:10px;border-bottom:2px solid #EDEAFD;}
+.tool-body{font-size:13px;}
+.tool-body table{max-width:100%;}
+.sign-area{margin-top:28px;max-width:900px;margin-left:auto;margin-right:auto;}
+.sign-box{border:1px dashed var(--border);border-radius:12px;padding:16px;background:var(--surface);}
+.empty{text-align:center;padding:48px 20px;color:var(--t3);background:var(--surface);border-radius:14px;border:1px solid var(--border);max-width:900px;margin:0 auto;}
+@media print{
+  body{background:#fff;padding:12px;}
+  .no-print{display:none!important;}
+}
+</style>
+</head>
+<body>
+<div class="top-actions no-print">
+  <div>
+    <h1>종합 결과보고서</h1>
+    <p class="sub">선택한 모든 평가를 마친 뒤, 아래 버튼으로 브라우저 인쇄 대화상자를 열고 <strong>PDF로 저장</strong>을 선택하세요.</p>
+  </div>
+  <div style="display:flex;gap:8px;flex-shrink:0;">
+    <button type="button" class="btn btn-ghost" onclick="location.href='hub.html'">허브로</button>
+    <button type="button" class="btn" onclick="window.print()">PDF 저장 · 인쇄</button>
+  </div>
+</div>
+<div id="meta-bar" class="meta-bar"></div>
+<div id="sections"></div>
+<div id="sign-wrap"></div>
+<script>
+(function () {
+  function escapeHtml(str) {
+    if (str == null || str === '') return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function getSession() {
+    try { return JSON.parse(sessionStorage.getItem('ot_session') || '{}'); } catch (e) { return {}; }
+  }
+
+  var sess = getSession();
+  var info = sess.info || {};
+  var ready = sess.ready || [];
+  var reportByTool = sess.reportByTool || {};
+
+  var meta = document.getElementById('meta-bar');
+  var sections = document.getElementById('sections');
+  var signWrap = document.getElementById('sign-wrap');
+
+  if (ready.length === 0) {
+    meta.style.display = 'none';
+    sections.innerHTML = '<div class="empty">세션 정보가 없습니다. 허브에서 평가를 시작해 주세요.</div>';
+    signWrap.innerHTML = '';
+    return;
+  }
+
+  meta.innerHTML =
+    '<strong>' + escapeHtml(info.name || '(이름 없음)') + '</strong>' +
+    (info.date ? ' · 평가일: ' + escapeHtml(info.date) : '') +
+    (info.diagnosis ? ' · 진단: ' + escapeHtml(info.diagnosis) : '') +
+    (info.birth ? ' · 생년월일: ' + escapeHtml(info.birth) : '') +
+    (info.gender ? ' · 성별: ' + escapeHtml(info.gender) : '') +
+    '<br><span style="color:#9896B8;font-size:12px;">병원: 푸르메재단 넥슨어린이재활병원 · 출력: ' +
+    new Date().toLocaleString('ko-KR') + '</span>';
+
+  var missing = [];
+  for (var i = 0; i < ready.length; i++) {
+    var id = ready[i];
+    var b = reportByTool[id];
+    if (!b || !b.html) missing.push(id);
+  }
+
+  if (missing.length) {
+    sections.innerHTML =
+      '<div class="empty">종합 보고서를 만들 데이터가 부족합니다. 허브에서 선택한 순서대로 평가를 진행한 뒤, <strong>마지막 평가</strong>에서 「평가 완료」를 눌러 주세요.<br><br>' +
+      '<span style="font-size:12px;">누락: ' + escapeHtml(missing.join(', ')) + '</span></div>';
+    signWrap.innerHTML = '';
+    return;
+  }
+
+  var parts = [];
+  for (var j = 0; j < ready.length; j++) {
+    var rid = ready[j];
+    var block = reportByTool[rid];
+    var h = block.title || rid;
+    parts.push(
+      '<section class="tool-sec"><h2>' + escapeHtml(h) + '</h2><div class="tool-body">' + block.html + '</div></section>'
+    );
+  }
+  sections.innerHTML = parts.join('');
+
+  var th = info.therapist || '';
+  signWrap.innerHTML =
+    '<div class="sign-area"><div class="sign-box">' +
+    '<div style="font-size:11px;font-weight:700;color:#9896B8;margin-bottom:8px;">담당 작업치료사</div>' +
+    '<div style="min-height:40px;border-bottom:1px solid #1E1B3A;max-width:360px;font-size:14px;">' +
+    escapeHtml(th) + (th ? '' : '　　　　　') + ' <span style="color:#9896B8;font-size:12px;">(서명)</span></div>' +
+    '</div></div>';
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,967 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>HFT 임상관찰 — OTHub Assess</title>
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════
+   TOKENS
+═══════════════════════════════════════ */
+:root {
+  --bg:          #F0F2FA;
+  --surface:     #FFFFFF;
+  --surface-2:   #F7F8FD;
+  --border:      #E4E7F4;
+  --border-2:    #CDD2EC;
+
+  --accent:      #6C5CE7;
+  --accent-2:    #8B7FF0;
+  --accent-dim:  #EDEAFD;
+  --accent-ring: rgba(108,92,231,.15);
+
+  --green:       #00A86B;
+  --green-dim:   #E0F5EE;
+  --green-dark:  #005C39;
+
+  --red:         #D63031;
+  --red-dim:     #FDF0F0;
+  --red-dark:    #8B1A1A;
+
+  --amber:       #F0A500;
+  --amber-dim:   #FEF4DC;
+  --amber-dark:  #7A5000;
+
+  --teal:        #00B894;
+  --teal-dim:    #E0F8F3;
+
+  --t1: #1E1B3A;
+  --t2: #4A4770;
+  --t3: #9896B8;
+
+  --r-xs: 6px;
+  --r-sm: 10px;
+  --r:    14px;
+  --r-lg: 20px;
+  --r-xl: 28px;
+
+  --font:  'Pretendard', -apple-system, sans-serif;
+  --touch: 52px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--t1);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ═══════════════════════════════════════
+   TOP BAR
+═══════════════════════════════════════ */
+.topbar {
+  height: 60px; background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center;
+  padding: 0 24px; gap: 12px;
+  position: sticky; top: 0; z-index: 100;
+}
+.topbar-back {
+  width: 40px; height: 40px; border-radius: var(--r-sm);
+  border: 1px solid var(--border); background: transparent;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: var(--t2); transition: all .15s; flex-shrink: 0;
+}
+.topbar-back:hover { background: var(--bg); color: var(--t1); }
+.topbar-back svg { width: 18px; height: 18px; }
+.topbar-info { flex: 1; }
+.topbar-title { font-size: 15px; font-weight: 800; color: var(--t1); }
+.topbar-sub   { font-size: 11px; color: var(--t3); margin-top: 1px; }
+.topbar-right { display: flex; align-items: center; gap: 10px; margin-left: auto; flex-shrink: 0; }
+.dev-badge {
+  font-size: 11px; font-weight: 700;
+  color: var(--accent); background: var(--accent-dim);
+  padding: 4px 10px; border-radius: 20px;
+}
+
+/* 진행률 */
+.progress-strip { height: 3px; background: var(--border); }
+.progress-fill  {
+  height: 100%; background: var(--accent);
+  transition: width .4s cubic-bezier(.4,0,.2,1);
+  border-radius: 0 2px 2px 0;
+}
+
+/* ═══════════════════════════════════════
+   LAYOUT
+═══════════════════════════════════════ */
+.page { max-width: 900px; margin: 0 auto; padding: 22px 20px 100px; }
+
+/* ═══════════════════════════════════════
+   CARD
+═══════════════════════════════════════ */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 20px 22px;
+  margin-bottom: 14px;
+}
+.card-head {
+  display: flex; align-items: center; gap: 10px;
+  padding-bottom: 14px; margin-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+.card-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.card-title { font-size: 14px; font-weight: 700; color: var(--t1); }
+.card-sub   { font-size: 12px; color: var(--t3); margin-left: auto; }
+
+/* ═══════════════════════════════════════
+   기본정보 폼
+═══════════════════════════════════════ */
+.form-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+.col2 { grid-column: span 2; }
+.form-field { display: flex; flex-direction: column; gap: 6px; }
+.form-label { font-size: 11px; font-weight: 700; color: var(--t3); letter-spacing: .05em; text-transform: uppercase; }
+.form-input {
+  height: var(--touch); padding: 0 14px;
+  border: 1.5px solid var(--border); border-radius: var(--r-sm);
+  font-family: var(--font); font-size: 15px; color: var(--t1);
+  background: var(--surface-2); outline: none;
+  transition: border-color .15s, box-shadow .15s; width: 100%;
+}
+.form-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px var(--accent-ring);
+  background: var(--surface);
+}
+.form-input::placeholder { color: var(--t3); }
+select.form-input {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2 4l4 4 4-4' stroke='%239896B8' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 14px center;
+  padding-right: 36px; cursor: pointer;
+}
+
+/* ═══════════════════════════════════════
+   연령구간 선택 (핵심 필터)
+═══════════════════════════════════════ */
+.age-picker {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;
+}
+.age-btn {
+  height: 56px; border-radius: var(--r);
+  border: 2px solid var(--border-2);
+  background: var(--surface-2);
+  font-family: var(--font); cursor: pointer;
+  transition: all .15s;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 2px;
+}
+.age-btn:hover { border-color: var(--accent); background: var(--accent-dim); }
+.age-btn.active {
+  border-color: var(--accent); background: var(--accent-dim);
+  box-shadow: 0 2px 8px var(--accent-ring);
+}
+.age-btn-range {
+  font-size: 14px; font-weight: 800; color: var(--t2);
+  transition: color .15s;
+}
+.age-btn.active .age-btn-range { color: var(--accent); }
+.age-btn-cnt {
+  font-size: 10px; font-weight: 600; color: var(--t3);
+  transition: color .15s;
+}
+.age-btn.active .age-btn-cnt { color: var(--accent-2); }
+
+/* 우세손 선택 */
+.dominant-row { display: flex; gap: 8px; margin-top: 12px; }
+.dominant-btn {
+  flex: 1; height: 48px; border-radius: var(--r-sm);
+  border: 2px solid var(--border-2); background: var(--surface-2);
+  font-family: var(--font); font-size: 14px; font-weight: 700;
+  color: var(--t3); cursor: pointer; transition: all .15s;
+}
+.dominant-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+.dominant-btn.active { border-color: var(--accent); background: var(--accent-dim); color: var(--accent); }
+
+/* ═══════════════════════════════════════
+   진행 요약 바 (sticky)
+═══════════════════════════════════════ */
+.summary-bar {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r-lg); padding: 13px 18px;
+  margin-bottom: 14px;
+  position: sticky; top: 68px; z-index: 50;
+  box-shadow: 0 2px 10px rgba(30,27,58,.06);
+  display: flex; align-items: center; gap: 14px;
+}
+.sum-count {
+  font-size: 13px; font-weight: 700; color: var(--t2); flex-shrink: 0;
+  white-space: nowrap;
+}
+.sum-count span { font-size: 20px; font-weight: 800; color: var(--accent); }
+.sum-progress-track {
+  flex: 1; height: 6px; background: var(--border);
+  border-radius: 3px; overflow: hidden;
+}
+.sum-progress-fill {
+  height: 100%; background: var(--accent); border-radius: 3px;
+  transition: width .35s cubic-bezier(.4,0,.2,1);
+}
+.sum-legend {
+  display: flex; gap: 8px; flex-shrink: 0;
+}
+.sum-lv-item {
+  display: flex; align-items: center; gap: 4px;
+  font-size: 10px; font-weight: 700; color: var(--t3);
+}
+.sum-lv-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+/* ═══════════════════════════════════════
+   카테고리 헤더
+═══════════════════════════════════════ */
+.cat-header {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 0 8px;
+  margin-top: 6px;
+  border-top: 1px solid var(--border);
+}
+.cat-header:first-child { border-top: none; margin-top: 0; }
+.cat-label {
+  font-size: 10px; font-weight: 800; letter-spacing: .1em;
+  color: var(--t3); text-transform: uppercase;
+  white-space: nowrap;
+}
+.cat-bar { flex: 1; height: 1px; background: var(--border); }
+.cat-count {
+  font-size: 10px; font-weight: 700; color: var(--t3);
+  background: var(--surface-2); border: 1px solid var(--border);
+  padding: 2px 8px; border-radius: 10px; white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* ═══════════════════════════════════════
+   관찰 항목 행 (핵심 UI)
+═══════════════════════════════════════ */
+.obs-row {
+  display: grid;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 4px;
+  border-bottom: 1px solid var(--border);
+  transition: background .12s;
+  border-radius: var(--r-xs);
+}
+/* Rt/Lt 개별 — 4컬럼 */
+.obs-row.bilateral-false {
+  grid-template-columns: 1fr 110px 110px 140px;
+}
+/* 양손 통합 — 3컬럼 */
+.obs-row.bilateral-true {
+  grid-template-columns: 1fr 110px 140px;
+}
+.obs-row:last-child { border-bottom: none; }
+.obs-row:hover { background: var(--surface-2); }
+.obs-row.completed { background: var(--green-dim); }
+.obs-row.completed:hover { background: #d0f0e4; }
+
+.obs-name {
+  font-size: 13px; font-weight: 500; color: var(--t1); line-height: 1.4;
+}
+.obs-name-age {
+  font-size: 10px; color: var(--t3); margin-top: 1px;
+  display: inline-block;
+}
+
+/* 컬럼 레이블 */
+.col-label-row {
+  display: grid; gap: 8px; padding: 4px 4px 2px;
+  border-bottom: 1px solid var(--border-2);
+  margin-bottom: 2px;
+}
+.col-label-row.bilateral-false { grid-template-columns: 1fr 110px 110px 140px; }
+.col-label-row.bilateral-true  { grid-template-columns: 1fr 110px 140px; }
+.col-label {
+  font-size: 9px; font-weight: 800; letter-spacing: .08em;
+  color: var(--t3); text-transform: uppercase; text-align: center;
+}
+.col-label:first-child { text-align: left; }
+
+/* ±/- 버튼 그룹 (핵심 — 태블릿 터치) */
+.result-group {
+  display: flex; gap: 4px; justify-content: center;
+}
+.result-btn {
+  flex: 1; height: 44px;
+  border-radius: var(--r-xs);
+  border: 1.5px solid var(--border-2);
+  background: var(--surface-2);
+  font-family: var(--font); font-size: 13px; font-weight: 800;
+  color: var(--t3); cursor: pointer;
+  transition: all .13s;
+  display: flex; align-items: center; justify-content: center;
+  -webkit-tap-highlight-color: transparent;
+}
+.result-btn:hover { border-color: var(--accent-2); color: var(--accent); }
+
+/* 선택 상태 */
+.result-btn.sel-plus {
+  background: var(--green-dim); border-color: var(--green); color: var(--green-dark);
+}
+.result-btn.sel-minus {
+  background: var(--red-dim); border-color: var(--red); color: var(--red-dark);
+}
+.result-btn.sel-pm {
+  background: var(--amber-dim); border-color: var(--amber); color: var(--amber-dark);
+}
+
+/* Comment 입력 */
+.obs-comment {
+  height: 40px; padding: 0 10px;
+  border: 1px solid var(--border); border-radius: var(--r-xs);
+  font-family: var(--font); font-size: 12px; color: var(--t1);
+  background: var(--surface-2); outline: none; width: 100%;
+  transition: border-color .15s;
+}
+.obs-comment:focus { border-color: var(--accent); background: var(--surface); }
+.obs-comment::placeholder { color: var(--t3); }
+
+/* ═══════════════════════════════════════
+   하단 네비 바
+═══════════════════════════════════════ */
+.nav-bar {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  background: var(--surface); border-top: 1px solid var(--border);
+  padding: 10px 24px;
+  display: flex; align-items: center; gap: 10px;
+  z-index: 200;
+}
+.nav-info { flex: 1; font-size: 13px; color: var(--t3); font-weight: 600; }
+.nav-info span { color: var(--accent); font-weight: 800; font-size: 16px; }
+
+.btn-pdf {
+  height: var(--touch); padding: 0 28px;
+  border-radius: var(--r-sm); border: none;
+  background: var(--accent); color: #fff;
+  font-family: var(--font); font-size: 15px; font-weight: 700;
+  cursor: pointer; transition: all .15s;
+  display: flex; align-items: center; gap: 8px;
+}
+.btn-pdf:hover { opacity: .9; }
+.btn-pdf:active { transform: scale(.97); }
+.btn-pdf.all-done { background: var(--green); animation: pulse 2s ease-in-out infinite; }
+.btn-pdf svg { width: 16px; height: 16px; }
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 4px 16px rgba(0,168,107,.3); }
+  50%       { box-shadow: 0 4px 24px rgba(0,168,107,.5); }
+}
+
+/* ═══════════════════════════════════════
+   TOAST
+═══════════════════════════════════════ */
+.toast {
+  position: fixed; top: 76px; left: 50%;
+  transform: translateX(-50%) translateY(-8px);
+  background: var(--t1); color: #fff;
+  padding: 10px 20px; border-radius: 20px;
+  font-size: 13px; font-weight: 600;
+  opacity: 0; pointer-events: none;
+  transition: all .22s; z-index: 600; white-space: nowrap;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ═══════════════════════════════════════
+   반응형
+═══════════════════════════════════════ */
+@media (max-width: 768px) {
+  .page { padding: 16px 12px 90px; }
+  .form-grid { grid-template-columns: 1fr 1fr; }
+  .col2 { grid-column: span 2; }
+  .obs-row.bilateral-false { grid-template-columns: 1fr 90px 90px 110px; }
+  .obs-row.bilateral-true  { grid-template-columns: 1fr 90px 110px; }
+  .col-label-row.bilateral-false { grid-template-columns: 1fr 90px 90px 110px; }
+  .col-label-row.bilateral-true  { grid-template-columns: 1fr 90px 110px; }
+  .result-btn { font-size: 12px; height: 40px; }
+  .sum-legend { display: none; }
+  .nav-bar { padding: 10px 14px; }
+}
+@media (max-width: 520px) {
+  .age-picker { grid-template-columns: repeat(2, 1fr); }
+  .obs-row.bilateral-false { grid-template-columns: 1fr 76px 76px; }
+  .obs-row.bilateral-true  { grid-template-columns: 1fr 76px; }
+  .col-label-row.bilateral-false { grid-template-columns: 1fr 76px 76px; }
+  .col-label-row.bilateral-true  { grid-template-columns: 1fr 76px; }
+  .obs-comment { display: none; }
+  .form-grid { grid-template-columns: 1fr; }
+  .col2 { grid-column: span 1; }
+}
+
+/* ═══════════════════════════════════════
+   PDF / PRINT
+═══════════════════════════════════════ */
+@media print {
+  @page { size: A4; margin: 12mm 15mm; }
+
+  .topbar, .progress-strip, .summary-bar, .nav-bar, .toast,
+  .age-picker, .dominant-row { display: none !important; }
+
+  body { background: #fff !important; }
+  .page { max-width: 100%; padding: 0; }
+
+  .pdf-header  { display: flex !important; }
+  .pdf-summary { display: block !important; }
+  .sign-area   { display: flex !important; }
+
+  .obs-row { padding: 5px 2px; }
+  .result-btn {
+    height: 30px !important; font-size: 11px !important;
+    border-width: 1px !important;
+  }
+  .obs-comment { height: 28px !important; font-size: 11px !important; }
+  .cat-header { padding: 6px 0 4px; }
+  .card { padding: 14px 16px; page-break-inside: avoid; }
+}
+
+.pdf-header {
+  display: none; justify-content: space-between; align-items: flex-start;
+  border-bottom: 2px solid var(--t1); padding-bottom: 12px; margin-bottom: 14px;
+}
+.pdf-header-title { font-size: 16px; font-weight: 800; }
+.pdf-header-sub   { font-size: 10px; color: #666; margin-top: 3px; }
+.pdf-header-right { text-align: right; font-size: 10px; color: #666; line-height: 1.8; }
+
+.pdf-summary { display: none; margin-bottom: 14px; }
+.sign-area   { display: none; }
+</style>
+</head>
+<body>
+
+<!-- PDF 전용 헤더 -->
+<div class="pdf-header" id="pdf-header">
+  <div>
+    <div class="pdf-header-title">HFT 임상관찰 평가 보고서</div>
+    <div class="pdf-header-sub">Hand Function Test — Clinical Observation</div>
+  </div>
+  <div class="pdf-header-right" id="pdf-meta"></div>
+</div>
+
+<!-- PDF 전용 요약 -->
+<div class="pdf-summary" id="pdf-summary"></div>
+
+<!-- Top Bar -->
+<header class="topbar">
+  <button class="topbar-back" onclick="goBack()">
+    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path d="M19 12H5M12 5l-7 7 7 7" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </button>
+  <div class="topbar-info">
+    <div class="topbar-title">HFT 임상관찰</div>
+    <div class="topbar-sub">Hand Function Test · 연령구간별 관찰 항목</div>
+  </div>
+  <div class="topbar-right">
+    <span class="dev-badge">OTDev · 함선생</span>
+  </div>
+</header>
+
+<div class="progress-strip">
+  <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+</div>
+
+<main class="page">
+
+  <!-- 기본정보 -->
+  <div class="card">
+    <div class="card-head">
+      <div class="card-dot" style="background:var(--accent)"></div>
+      <div class="card-title">기본 정보</div>
+    </div>
+    <div class="form-grid">
+      <div class="form-field col2">
+        <label class="form-label">이름 / 등록번호</label>
+        <input class="form-input" id="f-name" type="text" placeholder="예: 홍OO / 24-001">
+      </div>
+      <div class="form-field">
+        <label class="form-label">평가일</label>
+        <input class="form-input" id="f-date" type="date">
+      </div>
+      <div class="form-field">
+        <label class="form-label">진단명</label>
+        <input class="form-input" id="f-diagnosis" type="text" placeholder="예: 뇌성마비">
+      </div>
+      <div class="form-field">
+        <label class="form-label">담당 치료사</label>
+        <input class="form-input" id="f-therapist" type="text" placeholder="이름 (OT)">
+      </div>
+    </div>
+  </div>
+
+  <!-- 연령구간 + 우세손 -->
+  <div class="card">
+    <div class="card-head">
+      <div class="card-dot" style="background:var(--amber)"></div>
+      <div class="card-title">연령구간 · 우세손</div>
+      <div class="card-sub" id="age-sub">연령구간을 선택하면 해당 항목이 표시됩니다</div>
+    </div>
+
+    <div class="age-picker" id="age-picker">
+      <button class="age-btn" id="age-6-12m" onclick="setAge('6-12m')">
+        <span class="age-btn-range">6 – 12개월</span>
+        <span class="age-btn-cnt">21개 항목</span>
+      </button>
+      <button class="age-btn" id="age-1-2y" onclick="setAge('1-2y')">
+        <span class="age-btn-range">1 – 2세</span>
+        <span class="age-btn-cnt">25개 항목</span>
+      </button>
+      <button class="age-btn" id="age-3-5y" onclick="setAge('3-5y')">
+        <span class="age-btn-range">3 – 5세</span>
+        <span class="age-btn-cnt">30개 항목</span>
+      </button>
+      <button class="age-btn active" id="age-6y" onclick="setAge('6y')">
+        <span class="age-btn-range">6세 이상</span>
+        <span class="age-btn-cnt">33개 항목</span>
+      </button>
+    </div>
+
+    <div class="dominant-row">
+      <button class="dominant-btn active" id="dom-rt" onclick="setDominant('Rt')">Rt. (오른손) — 우세손</button>
+      <button class="dominant-btn"        id="dom-lt" onclick="setDominant('Lt')">Lt. (왼손) — 우세손</button>
+    </div>
+  </div>
+
+  <!-- 진행 요약 바 -->
+  <div class="summary-bar">
+    <div class="sum-count"><span id="sum-done">0</span> / <span id="sum-total">33</span>개 완료</div>
+    <div class="sum-progress-track">
+      <div class="sum-progress-fill" id="sum-fill"></div>
+    </div>
+    <div class="sum-legend">
+      <div class="sum-lv-item"><div class="sum-lv-dot" style="background:var(--green)"></div>+</div>
+      <div class="sum-lv-item"><div class="sum-lv-dot" style="background:var(--red)"></div>−</div>
+      <div class="sum-lv-item"><div class="sum-lv-dot" style="background:var(--amber)"></div>+/−</div>
+    </div>
+  </div>
+
+  <!-- 관찰 항목 (JS 렌더) -->
+  <div class="card" id="obs-card">
+    <div id="obs-body"></div>
+  </div>
+
+  <!-- 전체 Comment -->
+  <div class="card">
+    <div class="card-head">
+      <div class="card-dot" style="background:var(--t3)"></div>
+      <div class="card-title">전체 Comment</div>
+    </div>
+    <textarea class="form-input" id="global-comment"
+      style="min-height:72px;"
+      placeholder="평가 전반에 대한 관찰 내용, 특이사항을 기록하세요."></textarea>
+  </div>
+
+</main>
+
+<!-- 하단 네비 바 -->
+<div class="nav-bar">
+  <div class="nav-info">완료 <span id="nav-done">0</span> / <span id="nav-total">33</span></div>
+  <span style="font-size:11px;color:var(--t3);max-width:200px;text-align:right;line-height:1.35;">PDF는 전체 평가 완료 후 종합 보고서에서 저장</span>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ═══════════════════════════════════════
+   CLINICAL_ITEMS — GAS 앱 원본 33개 항목 완전 계승
+═══════════════════════════════════════ */
+const ITEMS = [
+  { cat:'REACH',         name:'Reach to midline',                       ages:['6-12m','1-2y','3-5y','6y'], bi:false },
+  { cat:'REACH',         name:'Reach across midline',                   ages:['6-12m','1-2y','3-5y','6y'], bi:false },
+  { cat:'GRASP',         name:'Palmar grasp',                           ages:['6-12m','1-2y','3-5y','6y'], bi:false },
+  { cat:'GRASP',         name:'Radial-digital grasp (9mo)',             ages:['6-12m','1-2y','3-5y','6y'], bi:false },
+  { cat:'GRASP',         name:'Pincer grasp (10mo)',                    ages:['6-12m','1-2y','3-5y','6y'], bi:false },
+  { cat:'GRASP',         name:'Spherical grasp',                        ages:['6-12m','1-2y','3-5y','6y'], bi:false },
+  { cat:'GRASP',         name:'Disk grasp',                             ages:['6-12m','1-2y','3-5y','6y'], bi:false },
+  { cat:'GRASP',         name:'Intrinsic-plus grasp',                   ages:['6-12m','1-2y','3-5y','6y'], bi:false },
+  { cat:'GRASP',         name:'Lateral pinch (3yr)',                    ages:['3-5y','6y'],                bi:false },
+  { cat:'GRASP',         name:'Power grasp (4yr)',                      ages:['3-5y','6y'],                bi:false },
+  { cat:'RELEASE',       name:'Release object freely',                  ages:['6-12m','1-2y','3-5y','6y'], bi:false },
+  { cat:'RELEASE',       name:'Release 1-inch object into container',   ages:['6-12m','1-2y','3-5y','6y'], bi:false },
+  { cat:'RELEASE',       name:'Stack 1-inch block (2-10 blocks)',       ages:['1-2y','3-5y','6y'],         bi:false },
+  { cat:'RELEASE',       name:'Throw small ball (at least 3 feet)',     ages:['6-12m','1-2y','3-5y','6y'], bi:false },
+  { cat:'IN-HAND MANIP.',name:'Manipulate object between two hands',    ages:['6-12m','1-2y','3-5y','6y'], bi:false },
+  { cat:'IN-HAND MANIP.',name:'Use finger-to-palm translation',         ages:['6-12m','1-2y','3-5y','6y'], bi:false },
+  { cat:'IN-HAND MANIP.',name:'Use palm-to-finger translation',         ages:['6-12m','1-2y','3-5y','6y'], bi:false },
+  { cat:'IN-HAND MANIP.',name:'One object (2yr)',                       ages:['1-2y','3-5y','6y'],         bi:false },
+  { cat:'IN-HAND MANIP.',name:'Two to three objects (2yr)',             ages:['1-2y','3-5y','6y'],         bi:false },
+  { cat:'IN-HAND MANIP.',name:'With coin',                              ages:['6-12m','1-2y','3-5y','6y'], bi:false },
+  { cat:'IN-HAND MANIP.',name:'Unscrew bottle top (2yr)',               ages:['1-2y','3-5y','6y'],         bi:false },
+  { cat:'IN-HAND MANIP.',name:'Use shift to separate magazine pages',   ages:['6-12m','1-2y','3-5y','6y'], bi:false },
+  { cat:'IN-HAND MANIP.',name:'Roll piece of clay into a ball',         ages:['6-12m','1-2y','3-5y','6y'], bi:false },
+  { cat:'IN-HAND MANIP.',name:'Pick up marker using rotation (4yr)',    ages:['3-5y','6y'],                bi:false },
+  { cat:'IN-HAND MANIP.',name:'Shift on marker or pencil (5yr)',        ages:['6y'],                       bi:false },
+  { cat:'IN-HAND MANIP.',name:'Rotate pencil to use eraser and back',   ages:['6y'],                       bi:false },
+  { cat:'BILATERAL',     name:'Hold or carry large ball with two hands',ages:['6-12m','1-2y','3-5y','6y'], bi:true  },
+  { cat:'BILATERAL',     name:'Stabilize paper during coloring/writing',ages:['6-12m','1-2y','3-5y','6y'], bi:true  },
+  { cat:'BILATERAL',     name:'Hold paper during scissors use',         ages:['6-12m','1-2y','3-5y','6y'], bi:true  },
+  { cat:'BILATERAL',     name:'Manipulate paper during scissors use',   ages:['6-12m','1-2y','3-5y','6y'], bi:true  },
+  { cat:'TOOL USE',      name:'Use scissors - Line 15cm (3yr)',         ages:['3-5y','6y'],                bi:true  },
+  { cat:'TOOL USE',      name:'Use scissors - Circle (4yr)',            ages:['3-5y','6y'],                bi:true  },
+  { cat:'TOOL USE',      name:'Use scissors - Square (5yr)',            ages:['6y'],                       bi:true  },
+];
+
+const CAT_COLORS = {
+  'REACH':          '#6C5CE7',
+  'GRASP':          '#00B894',
+  'RELEASE':        '#2D9CDB',
+  'IN-HAND MANIP.': '#F0A500',
+  'BILATERAL':      '#D06020',
+  'TOOL USE':       '#D63031',
+};
+
+const AGE_LABELS = {
+  '6-12m': '6–12개월',
+  '1-2y':  '1–2세',
+  '3-5y':  '3–5세',
+  '6y':    '6세 이상',
+};
+
+/* ═══════════════════════════════════════
+   상태
+═══════════════════════════════════════ */
+let currentAge = '6y';
+let dominant   = 'Rt';
+
+// answers[idx] = { rt:'+'|'-'|'+-'|null, lt:'+'|'-'|'+-'|null, bi:'+'|'-'|'+-'|null, comment:'' }
+const answers = {};
+ITEMS.forEach((_, i) => {
+  answers[i] = { rt: null, lt: null, bi: null, comment: '' };
+});
+
+/* ═══════════════════════════════════════
+   초기화
+═══════════════════════════════════════ */
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('f-date').valueAsDate = new Date();
+
+  try {
+    const sess = JSON.parse(sessionStorage.getItem('ot_session') || '{}');
+    if (sess.info) {
+      const i = sess.info;
+      if (i.name)      setVal('f-name',      i.name);
+      if (i.date)      setVal('f-date',      i.date);
+      if (i.diagnosis) setVal('f-diagnosis', i.diagnosis);
+      if (i.therapist) setVal('f-therapist', i.therapist);
+    }
+  } catch(e) {}
+
+  renderItems();
+  updateProgress();
+});
+
+const setVal = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };
+
+/* ═══════════════════════════════════════
+   연령구간 / 우세손 설정
+═══════════════════════════════════════ */
+function setAge(age) {
+  currentAge = age;
+  document.querySelectorAll('.age-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(`age-${age}`).classList.add('active');
+  document.getElementById('age-sub').textContent =
+    `${AGE_LABELS[age]} · ${ITEMS.filter(i=>i.ages.includes(age)).length}개 항목 활성`;
+  renderItems();
+  updateProgress();
+}
+
+function setDominant(side) {
+  dominant = side;
+  document.getElementById('dom-rt').classList.toggle('active', side === 'Rt');
+  document.getElementById('dom-lt').classList.toggle('active', side === 'Lt');
+  // 컬럼 레이블 Rt/Lt 우세 표시 갱신
+  document.querySelectorAll('.dom-col-label').forEach(el => {
+    const s = el.dataset.side;
+    el.textContent = s === dominant ? `${s}. ★우세` : `${s}.`;
+  });
+}
+
+/* ═══════════════════════════════════════
+   항목 렌더링 (연령구간 필터)
+═══════════════════════════════════════ */
+function renderItems() {
+  const body    = document.getElementById('obs-body');
+  const active  = ITEMS.filter((_, i) => ITEMS[i].ages.includes(currentAge));
+
+  document.getElementById('sum-total').textContent  = active.length;
+  document.getElementById('nav-total').textContent  = active.length;
+
+  body.innerHTML = '';
+  let lastCat = null;
+
+  ITEMS.forEach((item, idx) => {
+    if (!item.ages.includes(currentAge)) return;
+
+    // 카테고리 헤더 + 컬럼 레이블
+    if (item.cat !== lastCat) {
+      lastCat = item.cat;
+      const catItems = ITEMS.filter(it => it.cat === item.cat && it.ages.includes(currentAge));
+      const color    = CAT_COLORS[item.cat] || 'var(--accent)';
+      const isBi     = item.bi;
+
+      // 카테고리 헤더
+      const catDiv = document.createElement('div');
+      catDiv.className = 'cat-header';
+      catDiv.innerHTML = `
+        <div class="cat-label" style="color:${color}">${item.cat}</div>
+        <div class="cat-bar" style="background:${color}30"></div>
+        <div class="cat-count" style="color:${color};border-color:${color}30;">${catItems.length}개</div>`;
+      body.appendChild(catDiv);
+
+      // 컬럼 레이블 행
+      const lblDiv = document.createElement('div');
+      lblDiv.className = `col-label-row ${isBi ? 'bilateral-true' : 'bilateral-false'}`;
+      if (isBi) {
+        lblDiv.innerHTML = `
+          <div class="col-label">관찰 항목</div>
+          <div class="col-label">결과 (양손)</div>
+          <div class="col-label">Comment</div>`;
+      } else {
+        lblDiv.innerHTML = `
+          <div class="col-label">관찰 항목</div>
+          <div class="col-label dom-col-label" data-side="Rt">${dominant === 'Rt' ? 'Rt. ★우세' : 'Rt.'}</div>
+          <div class="col-label dom-col-label" data-side="Lt">${dominant === 'Lt' ? 'Lt. ★우세' : 'Lt.'}</div>
+          <div class="col-label">Comment</div>`;
+      }
+      body.appendChild(lblDiv);
+    }
+
+    // 항목 행
+    const row = document.createElement('div');
+    row.className = `obs-row ${item.bi ? 'bilateral-true' : 'bilateral-false'}`;
+    row.id = `row-${idx}`;
+
+    // 연령 출현 힌트 (처음 등장하는 연령 강조)
+    const firstAge = item.ages[0];
+    const ageHint  = firstAge !== '6-12m'
+      ? `<span class="obs-name-age">▸ ${AGE_LABELS[firstAge]}부터</span>`
+      : '';
+
+    const nameCell = `<div class="obs-name">${item.name}${ageHint}</div>`;
+    const cmCell   = `<input class="obs-comment" type="text" id="cmt-${idx}"
+      placeholder="Comment" value="${answers[idx].comment}"
+      oninput="answers[${idx}].comment=this.value">`;
+
+    if (item.bi) {
+      row.innerHTML = nameCell + buildResultGroup(idx, 'bi') + cmCell;
+    } else {
+      row.innerHTML = nameCell + buildResultGroup(idx, 'rt') + buildResultGroup(idx, 'lt') + cmCell;
+    }
+
+    body.appendChild(row);
+
+    // 저장된 값 복원
+    if (item.bi && answers[idx].bi)  restoreBtn(idx, 'bi',  answers[idx].bi);
+    if (!item.bi && answers[idx].rt) restoreBtn(idx, 'rt', answers[idx].rt);
+    if (!item.bi && answers[idx].lt) restoreBtn(idx, 'lt', answers[idx].lt);
+    updateRowState(idx, item);
+  });
+}
+
+function buildResultGroup(idx, side) {
+  return `<div class="result-group" id="grp-${idx}-${side}">
+    <button class="result-btn" data-val="+" onclick="selectResult(${idx},'${side}','+')">+</button>
+    <button class="result-btn" data-val="-" onclick="selectResult(${idx},'${side}','-')">−</button>
+    <button class="result-btn" data-val="+-" onclick="selectResult(${idx},'${side}','+-')">+/−</button>
+  </div>`;
+}
+
+function restoreBtn(idx, side, val) {
+  const grp = document.getElementById(`grp-${idx}-${side}`);
+  if (!grp) return;
+  grp.querySelectorAll('.result-btn').forEach(btn => {
+    if (btn.dataset.val === val) applyBtnStyle(btn, val);
+  });
+}
+
+function applyBtnStyle(btn, val) {
+  btn.className = 'result-btn ' + ({'+':'sel-plus', '-':'sel-minus', '+-':'sel-pm'}[val] || '');
+}
+
+/* ═══════════════════════════════════════
+   결과 선택
+═══════════════════════════════════════ */
+function selectResult(idx, side, val) {
+  const grp = document.getElementById(`grp-${idx}-${side}`);
+  if (!grp) return;
+
+  const prev = answers[idx][side];
+
+  // 같은 값 재탭 → 해제
+  if (prev === val) {
+    answers[idx][side] = null;
+    grp.querySelectorAll('.result-btn').forEach(b => b.className = 'result-btn');
+  } else {
+    answers[idx][side] = val;
+    grp.querySelectorAll('.result-btn').forEach(b => {
+      b.className = 'result-btn' + (b.dataset.val === val ? ' ' + ({'+':'sel-plus', '-':'sel-minus', '+-':'sel-pm'}[val]) : '');
+    });
+  }
+
+  const item = ITEMS[idx];
+  updateRowState(idx, item);
+  updateProgress();
+}
+
+function updateRowState(idx, item) {
+  const row = document.getElementById(`row-${idx}`);
+  if (!row) return;
+  let complete = false;
+  if (item.bi) {
+    complete = answers[idx].bi !== null;
+  } else {
+    complete = answers[idx].rt !== null && answers[idx].lt !== null;
+  }
+  row.classList.toggle('completed', complete);
+}
+
+/* ═══════════════════════════════════════
+   진행률 업데이트
+═══════════════════════════════════════ */
+function updateProgress() {
+  const activeItems = ITEMS.filter(it => it.ages.includes(currentAge));
+  let done = 0;
+
+  activeItems.forEach((item, activeIdx) => {
+    const idx = ITEMS.indexOf(item);
+    if (item.bi && answers[idx].bi !== null) done++;
+    else if (!item.bi && answers[idx].rt !== null && answers[idx].lt !== null) done++;
+  });
+
+  const total = activeItems.length;
+  const pct   = total ? Math.round(done / total * 100) : 0;
+
+  document.getElementById('sum-done').textContent  = done;
+  document.getElementById('nav-done').textContent  = done;
+  document.getElementById('sum-fill').style.width  = `${pct}%`;
+  document.getElementById('progress-fill').style.width = `${pct}%`;
+
+}
+
+/* ═══════════════════════════════════════
+   종합 보고서용 HTML 스냅샷
+═══════════════════════════════════════ */
+const REPORT_SECTION_TITLE = 'HFT 임상관찰 평가';
+
+function buildToolReportHtml() {
+  const name      = document.getElementById('f-name').value.trim()      || '(미입력)';
+  const date      = document.getElementById('f-date').value             || '';
+  const diagnosis = document.getElementById('f-diagnosis').value.trim() || '—';
+  const comment   = document.getElementById('global-comment').value.trim();
+
+  const activeItems = ITEMS.filter(it => it.ages.includes(currentAge));
+  let done = 0;
+  activeItems.forEach(item => {
+    const idx = ITEMS.indexOf(item);
+    if (item.bi && answers[idx].bi !== null) done++;
+    else if (!item.bi && answers[idx].rt !== null && answers[idx].lt !== null) done++;
+  });
+
+  return `
+    <div style="display:flex;gap:16px;padding:12px 18px;flex-wrap:wrap;
+      background:#EDEAFD;border-radius:10px;border:1px solid rgba(108,92,231,.15);margin-bottom:14px;">
+      <div>
+        <div style="font-size:10px;font-weight:700;color:#9896B8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px;">대상자</div>
+        <div style="font-size:16px;font-weight:800;color:#1E1B3A;">${name}</div>
+        <div style="font-size:11px;color:#9896B8;margin-top:2px;">${diagnosis} &nbsp;·&nbsp; ${date}</div>
+      </div>
+      <div style="border-left:1px solid rgba(108,92,231,.15);padding-left:16px;">
+        <div style="font-size:10px;font-weight:700;color:#9896B8;text-transform:uppercase;margin-bottom:2px;">연령구간</div>
+        <div style="font-size:16px;font-weight:800;color:#6C5CE7;">${AGE_LABELS[currentAge]}</div>
+      </div>
+      <div style="border-left:1px solid rgba(108,92,231,.15);padding-left:16px;">
+        <div style="font-size:10px;font-weight:700;color:#9896B8;text-transform:uppercase;margin-bottom:2px;">우세손</div>
+        <div style="font-size:16px;font-weight:800;color:#6C5CE7;">${dominant}.</div>
+      </div>
+      <div style="border-left:1px solid rgba(108,92,231,.15);padding-left:16px;">
+        <div style="font-size:10px;font-weight:700;color:#9896B8;text-transform:uppercase;margin-bottom:2px;">완료</div>
+        <div style="font-size:16px;font-weight:800;color:#00A86B;">${done} / ${activeItems.length}</div>
+      </div>
+    </div>
+    ${comment ? `<div style="padding:10px 14px;background:#f5f5f5;border-radius:8px;
+      border-left:3px solid #6C5CE7;font-size:12px;color:#4A4770;line-height:1.6;margin-bottom:14px;">
+      <strong>Comment:</strong> ${comment}</div>` : ''}`;
+}
+
+/* ═══════════════════════════════════════
+   뒤로 / 토스트
+═══════════════════════════════════════ */
+function goBack() {
+  const done = parseInt(document.getElementById('nav-done').textContent) || 0;
+  if (done > 0) {
+    if (!confirm('입력된 내용이 사라집니다. 뒤로 가시겠어요?')) return;
+  }
+  window.location.href = 'hub.html';
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2400);
+}
+
+window._TOOL_ID = 'clinical';
+/* ═══════════════════════════════════════
+   세션 네비게이션 — hub.html 라우팅 연동
+═══════════════════════════════════════ */
+function getSession() {
+  try { return JSON.parse(sessionStorage.getItem('ot_session') || '{}'); } catch(e) { return {}; }
+}
+
+function persistToolReport() {
+  try {
+    const sess = getSession();
+    if (!sess.reportByTool) sess.reportByTool = {};
+    sess.reportByTool[window._TOOL_ID] = {
+      title: REPORT_SECTION_TITLE,
+      html: typeof buildToolReportHtml === 'function' ? buildToolReportHtml() : ''
+    };
+    sessionStorage.setItem('ot_session', JSON.stringify(sess));
+  } catch (e) {}
+}
+
+function getCurrentToolIndex() {
+  const sess = getSession();
+  const ready = sess.ready || [];
+  const myId  = window._TOOL_ID || '';
+  return ready.indexOf(myId);
+}
+
+function goNextTool() {
+  persistToolReport();
+  const sess = getSession();
+  const ready = sess.ready || [];
+  const cur   = getCurrentToolIndex();
+  if (cur >= 0 && cur < ready.length - 1) {
+    const nextId = ready[cur + 1];
+    // TOOLS 매핑 (hub 없이도 알 수 있도록 인라인)
+    const ROUTE_MAP = {
+      'profiling':'assess-profiling.html','otipm':'assess-otipm.html',
+      'jthft':'assess-jthft.html','macs':'assess-macs.html',
+      'clinical':'assess-clinical.html','sensory':'assess-sensory.html',
+      'mbi':'assess-mbi.html','fim':'assess-fim.html','k-iadl':'assess-k-iadl.html',
+    };
+    const route = ROUTE_MAP[nextId];
+    if (route) window.location.href = route;
+  } else {
+    window.location.href = 'report.html';
+  }
+}
+
+</script>
+<script src="session-sidebar.js" defer></script>
+</body>
+</html>

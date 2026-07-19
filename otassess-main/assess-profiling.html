@@ -1,0 +1,1194 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>작업수행 프로파일링 — OTHub Assess</title>
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════
+   TOKENS
+═══════════════════════════════════════ */
+:root {
+  --bg:          #F0F2FA;
+  --surface:     #FFFFFF;
+  --surface-2:   #F7F8FD;
+  --border:      #E4E7F4;
+  --border-2:    #CDD2EC;
+
+  --accent:      #6C5CE7;
+  --accent-2:    #8B7FF0;
+  --accent-dim:  #EDEAFD;
+  --accent-ring: rgba(108,92,231,.15);
+
+  --teal:        #00B894;
+  --teal-dim:    #E0F8F3;
+  --teal-dark:   #007A5E;
+
+  --coral:       #E17055;
+  --coral-dim:   #FDF0EC;
+  --coral-dark:  #9B4A35;
+
+  --amber:       #F0A500;
+  --amber-dim:   #FEF4DC;
+  --amber-dark:  #7A5000;
+
+  --green:       #00A86B;
+  --green-dim:   #E0F5EE;
+
+  --t1: #1E1B3A;
+  --t2: #4A4770;
+  --t3: #9896B8;
+
+  --r-xs: 6px;
+  --r-sm: 10px;
+  --r:    14px;
+  --r-lg: 20px;
+  --r-xl: 28px;
+
+  --font:  'Pretendard', -apple-system, sans-serif;
+  --touch: 52px;
+
+  /* 영역별 색상 */
+  --self-c:    #6C5CE7;
+  --self-dim:  #EDEAFD;
+  --prod-c:    #00B894;
+  --prod-dim:  #E0F8F3;
+  --leisure-c: #E17055;
+  --leisure-dim:#FDF0EC;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--t1);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ═══════════════════════════════════════
+   TOP BAR
+═══════════════════════════════════════ */
+.topbar {
+  height: 60px; background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center;
+  padding: 0 24px; gap: 12px;
+  position: sticky; top: 0; z-index: 100;
+}
+.topbar-back {
+  width: 40px; height: 40px; border-radius: var(--r-sm);
+  border: 1px solid var(--border); background: transparent;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: var(--t2); transition: all .15s; flex-shrink: 0;
+}
+.topbar-back:hover { background: var(--bg); color: var(--t1); }
+.topbar-back svg { width: 18px; height: 18px; }
+.topbar-info { flex: 1; min-width: 0; }
+.topbar-title { font-size: 15px; font-weight: 800; color: var(--t1); }
+.topbar-sub   { font-size: 11px; color: var(--t3); margin-top: 1px; }
+.topbar-right { display: flex; align-items: center; gap: 8px; margin-left: auto; flex-shrink: 0; }
+.dev-badge {
+  font-size: 11px; font-weight: 700;
+  color: var(--accent); background: var(--accent-dim);
+  padding: 4px 10px; border-radius: 20px;
+}
+
+/* 진행률 */
+.progress-strip { height: 3px; background: var(--border); }
+.progress-fill  {
+  height: 100%; background: var(--coral);
+  transition: width .4s cubic-bezier(.4,0,.2,1);
+  border-radius: 0 2px 2px 0;
+}
+
+/* ═══════════════════════════════════════
+   STEP BAR
+═══════════════════════════════════════ */
+.step-wrap {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 0 24px;
+  display: flex; align-items: center;
+  overflow-x: auto; -webkit-overflow-scrolling: touch;
+}
+.step-wrap::-webkit-scrollbar { display: none; }
+.step-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 14px 14px; white-space: nowrap;
+  cursor: pointer; color: var(--t3);
+  font-size: 13px; font-weight: 500;
+  border-bottom: 2px solid transparent;
+  transition: all .15s; flex-shrink: 0;
+}
+.step-item.active { color: var(--coral); border-bottom-color: var(--coral); }
+.step-item.done   { color: var(--green); }
+.step-num {
+  width: 22px; height: 22px; border-radius: 50%;
+  background: var(--border); color: var(--t3);
+  font-size: 11px; font-weight: 800;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; transition: all .15s;
+}
+.step-item.active .step-num { background: var(--coral); color: #fff; }
+.step-item.done   .step-num { background: var(--green);  color: #fff; }
+.step-sep { width: 20px; height: 1px; background: var(--border); flex-shrink: 0; }
+
+/* ═══════════════════════════════════════
+   LAYOUT
+═══════════════════════════════════════ */
+.page { max-width: 900px; margin: 0 auto; padding: 22px 20px 100px; }
+
+/* ═══════════════════════════════════════
+   CARD
+═══════════════════════════════════════ */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 20px 22px;
+  margin-bottom: 14px;
+}
+.card-head {
+  display: flex; align-items: center; gap: 10px;
+  padding-bottom: 14px; margin-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+.card-dot {
+  width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+}
+.card-title { font-size: 14px; font-weight: 700; color: var(--t1); }
+.card-sub   { font-size: 12px; color: var(--t3); margin-left: auto; }
+
+/* ═══════════════════════════════════════
+   기본정보 폼
+═══════════════════════════════════════ */
+.form-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+.col2 { grid-column: span 2; }
+.col3 { grid-column: span 3; }
+.form-field { display: flex; flex-direction: column; gap: 6px; }
+.form-label {
+  font-size: 11px; font-weight: 700;
+  color: var(--t3); letter-spacing: .05em; text-transform: uppercase;
+}
+.form-input {
+  height: var(--touch); padding: 0 14px;
+  border: 1.5px solid var(--border); border-radius: var(--r-sm);
+  font-family: var(--font); font-size: 15px; color: var(--t1);
+  background: var(--surface-2); outline: none;
+  transition: border-color .15s, box-shadow .15s; width: 100%;
+}
+.form-input:focus {
+  border-color: var(--coral);
+  box-shadow: 0 0 0 4px rgba(225,112,85,.12);
+  background: var(--surface);
+}
+.form-input::placeholder { color: var(--t3); }
+select.form-input {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2 4l4 4 4-4' stroke='%239896B8' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 14px center;
+  padding-right: 36px; cursor: pointer;
+}
+textarea.form-input {
+  height: auto; min-height: 72px;
+  padding: 12px 14px; resize: vertical; line-height: 1.6;
+}
+
+/* ═══════════════════════════════════════
+   영역 헤더 (자조기술 / 생산적활동 / 여가)
+═══════════════════════════════════════ */
+.area-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  margin-bottom: 14px;
+  overflow: hidden;
+}
+.area-header {
+  display: flex; align-items: center; gap: 12px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+}
+.area-icon {
+  width: 36px; height: 36px; border-radius: var(--r-sm);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; flex-shrink: 0;
+}
+.area-name  { font-size: 15px; font-weight: 800; color: var(--t1); }
+.area-hint  { font-size: 11px; color: var(--t3); margin-top: 1px; }
+.area-badge {
+  margin-left: auto; font-size: 11px; font-weight: 700;
+  padding: 4px 10px; border-radius: 20px;
+  background: var(--surface-2); color: var(--t3);
+  border: 1px solid var(--border); flex-shrink: 0;
+}
+.area-body { padding: 16px 20px; }
+
+.btn-add {
+  display: flex; align-items: center; gap: 6px;
+  padding: 0 16px; height: 40px;
+  border-radius: 20px; border: 1.5px dashed var(--border-2);
+  background: transparent; color: var(--t3);
+  font-family: var(--font); font-size: 13px; font-weight: 600;
+  cursor: pointer; transition: all .15s; margin-top: 10px;
+  width: 100%; justify-content: center;
+}
+.btn-add:hover { border-color: var(--coral); color: var(--coral); background: var(--coral-dim); }
+.btn-add:disabled { opacity: .35; cursor: not-allowed; }
+.btn-add svg { width: 14px; height: 14px; }
+
+/* ═══════════════════════════════════════
+   활동 행
+═══════════════════════════════════════ */
+.activity-row {
+  display: grid;
+  grid-template-columns: 1fr 88px 88px 88px 36px;
+  gap: 8px; align-items: end;
+  margin-bottom: 12px;
+  animation: fadeIn .18s ease;
+}
+@keyframes fadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+
+.activity-name-input {
+  font-family: var(--font); font-size: 14px; color: var(--t1);
+  background: var(--surface-2); border: 1.5px solid var(--border);
+  border-radius: var(--r-sm); padding: 0 12px;
+  height: 48px; outline: none;
+  transition: border-color .15s, box-shadow .15s; width: 100%;
+}
+.activity-name-input:focus {
+  border-color: var(--coral);
+  box-shadow: 0 0 0 3px rgba(225,112,85,.12);
+  background: var(--surface);
+}
+.activity-name-input::placeholder { color: var(--t3); }
+
+/* 점수 슬라이더 컬럼 */
+.score-col { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.score-label-top {
+  font-size: 10px; font-weight: 700; letter-spacing: .06em;
+  text-transform: uppercase; color: var(--t3); white-space: nowrap;
+}
+.score-value {
+  font-size: 22px; font-weight: 800; line-height: 1;
+  min-width: 36px; text-align: center;
+}
+.score-slider {
+  -webkit-appearance: none; appearance: none;
+  width: 100%; height: 4px; border-radius: 2px; outline: none; cursor: pointer;
+}
+.score-slider::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 20px; height: 20px;
+  border-radius: 50%; cursor: pointer;
+  box-shadow: 0 1px 4px rgba(0,0,0,.18);
+}
+
+/* 수행도 — accent */
+.slider-perf { background: linear-gradient(to right, var(--accent) 0%, var(--border) 0%); }
+.slider-perf::-webkit-slider-thumb { background: var(--accent); }
+.score-col.perf .score-value { color: var(--accent); }
+
+/* 만족도 — teal */
+.slider-satis { background: linear-gradient(to right, var(--teal) 0%, var(--border) 0%); }
+.slider-satis::-webkit-slider-thumb { background: var(--teal); }
+.score-col.satis .score-value { color: var(--teal); }
+
+/* 중요도 — amber */
+.slider-imp { background: linear-gradient(to right, var(--amber) 0%, var(--border) 0%); }
+.slider-imp::-webkit-slider-thumb { background: var(--amber); }
+.score-col.imp .score-value { color: var(--amber); }
+
+.btn-del {
+  width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;
+  border: 1px solid var(--border); background: var(--surface-2);
+  color: var(--t3); font-size: 14px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all .15s; margin-bottom: 8px; align-self: center;
+}
+.btn-del:hover { background: #fdf0f0; border-color: #e55; color: #e55; }
+
+/* ═══════════════════════════════════════
+   QoOP Top 3
+═══════════════════════════════════════ */
+.top3-empty {
+  text-align: center; padding: 20px;
+  font-size: 13px; color: var(--t3); line-height: 1.6;
+}
+.top3-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 4px; }
+.top3-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 14px; border-radius: var(--r-sm);
+  background: var(--surface-2); border: 1px solid var(--border);
+}
+.top3-rank {
+  width: 26px; height: 26px; border-radius: 50%;
+  background: var(--coral); color: #fff;
+  font-size: 12px; font-weight: 800;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.top3-name   { font-size: 13px; font-weight: 600; flex: 1; }
+.top3-area   { font-size: 11px; color: var(--t3); }
+.top3-scores {
+  display: flex; gap: 6px; font-size: 11px;
+  align-items: center; flex-shrink: 0;
+}
+.score-pill {
+  padding: 2px 8px; border-radius: 10px; font-weight: 700;
+}
+.pill-perf  { background: var(--accent-dim); color: var(--accent); }
+.pill-satis { background: var(--teal-dim);   color: var(--teal-dark); }
+.pill-imp   { background: var(--amber-dim);  color: var(--amber-dark); }
+.diff-badge {
+  padding: 3px 10px; border-radius: 10px;
+  background: #fdf0f0; color: #c03030;
+  font-size: 11px; font-weight: 700;
+}
+
+/* ═══════════════════════════════════════
+   QoOP 5항목 평가
+═══════════════════════════════════════ */
+.qoop-grid {
+  display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px;
+  margin-bottom: 16px;
+}
+.qoop-item {
+  display: flex; flex-direction: column;
+  align-items: center; gap: 6px;
+  background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: var(--r-sm); padding: 12px 8px;
+}
+.qoop-label  { font-size: 11px; font-weight: 700; color: var(--t2); text-align: center; line-height: 1.3; }
+.qoop-value  { font-size: 26px; font-weight: 800; color: var(--accent); line-height: 1; }
+.qoop-desc   { font-size: 10px; color: var(--t3); text-align: center; min-height: 28px; line-height: 1.3; }
+.qoop-slider {
+  -webkit-appearance: none; appearance: none;
+  width: 100%; height: 4px; border-radius: 2px; outline: none; cursor: pointer;
+  background: linear-gradient(to right, var(--accent) 60%, var(--border) 60%);
+}
+.qoop-slider::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 22px; height: 22px;
+  border-radius: 50%; background: var(--accent); cursor: pointer;
+  box-shadow: 0 1px 6px var(--accent-ring);
+}
+
+/* ═══════════════════════════════════════
+   차트 영역
+═══════════════════════════════════════ */
+.chart-wrap {
+  position: relative; height: 260px; margin-top: 14px;
+}
+
+/* ═══════════════════════════════════════
+   하단 네비 바
+═══════════════════════════════════════ */
+.nav-bar {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  background: var(--surface); border-top: 1px solid var(--border);
+  padding: 10px 24px;
+  display: flex; align-items: center; gap: 10px;
+  z-index: 200;
+}
+.btn-prev {
+  height: var(--touch); padding: 0 22px;
+  border-radius: var(--r-sm); border: 1.5px solid var(--border-2);
+  background: transparent; color: var(--t2);
+  font-family: var(--font); font-size: 14px; font-weight: 600;
+  cursor: pointer; transition: all .15s;
+  display: flex; align-items: center; gap: 6px;
+}
+.btn-prev:hover { background: var(--bg); }
+.btn-prev svg { width: 16px; height: 16px; }
+.nav-info {
+  flex: 1; text-align: center; font-size: 12px;
+  color: var(--t3); font-weight: 600;
+}
+.nav-info span { color: var(--coral); font-weight: 800; }
+.btn-next {
+  height: var(--touch); padding: 0 28px;
+  border-radius: var(--r-sm); border: none;
+  background: var(--coral); color: #fff;
+  font-family: var(--font); font-size: 15px; font-weight: 700;
+  cursor: pointer; transition: all .15s;
+  display: flex; align-items: center; gap: 8px;
+}
+.btn-next:hover { opacity: .9; }
+.btn-next:active { transform: scale(.97); }
+.btn-next svg { width: 16px; height: 16px; }
+.btn-pdf {
+  height: var(--touch); padding: 0 24px;
+  border-radius: var(--r-sm); border: none;
+  background: var(--t1); color: #fff;
+  font-family: var(--font); font-size: 14px; font-weight: 700;
+  cursor: pointer; transition: all .15s;
+  display: flex; align-items: center; gap: 8px;
+}
+.btn-pdf:hover { background: var(--t2); }
+.btn-pdf svg { width: 16px; height: 16px; }
+
+/* ═══════════════════════════════════════
+   TOAST
+═══════════════════════════════════════ */
+.toast {
+  position: fixed; top: 76px; left: 50%;
+  transform: translateX(-50%) translateY(-8px);
+  background: var(--t1); color: #fff;
+  padding: 10px 20px; border-radius: 20px;
+  font-size: 13px; font-weight: 600;
+  opacity: 0; pointer-events: none;
+  transition: all .22s; z-index: 600; white-space: nowrap;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ═══════════════════════════════════════
+   반응형
+═══════════════════════════════════════ */
+@media (max-width: 768px) {
+  .page { padding: 16px 14px 90px; }
+  .form-grid { grid-template-columns: 1fr 1fr; }
+  .col3 { grid-column: span 2; }
+  .qoop-grid { grid-template-columns: repeat(3, 1fr); }
+  .activity-row { grid-template-columns: 1fr 76px 76px 76px 32px; }
+  .nav-bar { padding: 10px 14px; }
+}
+@media (max-width: 500px) {
+  .qoop-grid { grid-template-columns: 1fr 1fr; }
+  .activity-row { grid-template-columns: 1fr; gap: 6px; }
+  .score-col { flex-direction: row; gap: 8px; }
+  .btn-del { align-self: flex-end; }
+}
+
+/* ═══════════════════════════════════════
+   인쇄 / PDF
+═══════════════════════════════════════ */
+@media print {
+  @page { size: A4; margin: 14mm 17mm; }
+  .topbar, .progress-strip, .step-wrap, .nav-bar, .toast,
+  .btn-add, .btn-del { display: none !important; }
+  body { background: #fff !important; }
+  .page { max-width: 100%; padding: 0; }
+  .card, .area-card { border: 1px solid #ddd; border-radius: 6px;
+    page-break-inside: avoid; margin-bottom: 10px; }
+  #step-0, #step-1, #step-2 { display: block !important; }
+  .top3-item { page-break-inside: avoid; }
+  .pdf-header { display: flex !important; justify-content: space-between;
+    align-items: flex-start; border-bottom: 2px solid #1E1B3A;
+    padding-bottom: 12px; margin-bottom: 18px; }
+  .pdf-header-title { font-size: 16px; font-weight: 800; }
+  .pdf-header-sub   { font-size: 10px; color: #666; margin-top: 3px; }
+  .pdf-header-right { text-align: right; font-size: 10px; color: #666; line-height: 1.8; }
+  .score-slider, .qoop-slider, .activity-name-input { pointer-events: none; }
+  .sign-area { margin-top: 24px; padding-top: 14px;
+    border-top: 1px solid #ddd; display: flex; justify-content: flex-end; }
+  .sign-box  { text-align: center; min-width: 180px; }
+  .sign-label { font-size: 9px; color: #999; margin-bottom: 22px; }
+  .sign-line  { border-top: 1px solid #1E1B3A; padding-top: 4px;
+    font-size: 9px; color: #555; }
+}
+.pdf-header { display: none; }
+</style>
+</head>
+<body>
+
+<!-- PDF 헤더 -->
+<div class="pdf-header" id="pdf-header">
+  <div>
+    <div class="pdf-header-title">작업수행 프로파일링 보고서</div>
+    <div class="pdf-header-sub">Occupational Performance Profiling + Quality of Occupational Performance (QoOP)</div>
+  </div>
+  <div class="pdf-header-right" id="pdf-meta"></div>
+</div>
+
+<!-- Top Bar -->
+<header class="topbar">
+  <button class="topbar-back" onclick="goBack()">
+    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path d="M19 12H5M12 5l-7 7 7 7" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </button>
+  <div class="topbar-info">
+    <div class="topbar-title">작업수행 프로파일링</div>
+    <div class="topbar-sub">수행도 · 만족도 · 중요도 + QoOP</div>
+  </div>
+  <div class="topbar-right">
+    <span class="dev-badge">OTDev · 함선생</span>
+  </div>
+</header>
+
+<div class="progress-strip">
+  <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+</div>
+
+<!-- Step Bar -->
+<div class="step-wrap">
+  <div class="step-item active" id="snav-0" onclick="goStep(0)">
+    <div class="step-num" id="snum-0">1</div><span>기본 정보</span>
+  </div>
+  <div class="step-sep"></div>
+  <div class="step-item" id="snav-1" onclick="goStep(1)">
+    <div class="step-num" id="snum-1">2</div><span>작업 프로파일링</span>
+  </div>
+  <div class="step-sep"></div>
+  <div class="step-item" id="snav-2" onclick="goStep(2)">
+    <div class="step-num" id="snum-2">3</div><span>QoOP 평가</span>
+  </div>
+</div>
+
+<main class="page">
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  STEP 0: 기본 정보
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<div id="step-0">
+  <div class="card">
+    <div class="card-head">
+      <div class="card-dot" style="background:var(--coral)"></div>
+      <div class="card-title">클라이언트 정보</div>
+    </div>
+    <div class="form-grid">
+      <div class="form-field col2">
+        <label class="form-label">이름 / 등록번호</label>
+        <input class="form-input" id="f-name" type="text" placeholder="예: 홍OO / 24-001">
+      </div>
+      <div class="form-field">
+        <label class="form-label">평가일</label>
+        <input class="form-input" id="f-date" type="date">
+      </div>
+      <div class="form-field">
+        <label class="form-label">성별</label>
+        <select class="form-input" id="f-gender">
+          <option value="">선택</option>
+          <option value="남">남</option>
+          <option value="여">여</option>
+        </select>
+      </div>
+      <div class="form-field">
+        <label class="form-label">생년월일</label>
+        <input class="form-input" id="f-birth" type="date">
+      </div>
+      <div class="form-field col2">
+        <label class="form-label">진단명</label>
+        <input class="form-input" id="f-diagnosis" type="text" placeholder="예: 뇌성마비, ASD">
+      </div>
+      <div class="form-field">
+        <label class="form-label">담당 치료사</label>
+        <input class="form-input" id="f-therapist" type="text" placeholder="이름 (OT)">
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head">
+      <div class="card-dot" style="background:var(--accent)"></div>
+      <div class="card-title">평가 안내</div>
+    </div>
+    <p style="font-size:14px;color:var(--t2);line-height:1.8;margin-bottom:12px;">
+      다음 단계에서 <strong>자조기술 · 생산적활동(학교기술) · 여가</strong> 3개 영역에서 클라이언트에게 의미 있는 작업 활동을 입력합니다.
+    </p>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
+      <div style="padding:12px 14px;border-radius:var(--r-sm);background:var(--self-dim);border:1px solid var(--border);">
+        <div style="font-size:12px;font-weight:700;color:var(--self-c);margin-bottom:4px;">수행도 (Performance)</div>
+        <div style="font-size:11px;color:var(--t3);line-height:1.5;">실제로 얼마나 잘 수행하는가? (1–10)</div>
+      </div>
+      <div style="padding:12px 14px;border-radius:var(--r-sm);background:var(--teal-dim);border:1px solid var(--border);">
+        <div style="font-size:12px;font-weight:700;color:var(--teal-dark);margin-bottom:4px;">만족도 (Satisfaction)</div>
+        <div style="font-size:11px;color:var(--t3);line-height:1.5;">수행에 얼마나 만족하는가? (1–10)</div>
+      </div>
+      <div style="padding:12px 14px;border-radius:var(--r-sm);background:var(--amber-dim);border:1px solid var(--border);">
+        <div style="font-size:12px;font-weight:700;color:var(--amber-dark);margin-bottom:4px;">중요도 (Importance)</div>
+        <div style="font-size:11px;color:var(--t3);line-height:1.5;">얼마나 중요하게 여기는가? (1–10)</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  STEP 1: 프로파일링 입력
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<div id="step-1" style="display:none;">
+
+  <!-- 자조기술 -->
+  <div class="area-card" id="area-self">
+    <div class="area-header">
+      <div class="area-icon" style="background:var(--self-dim);">🪥</div>
+      <div>
+        <div class="area-name">자조기술</div>
+        <div class="area-hint">Self-care · 식사, 목욕, 옷 입기, 개인위생 등</div>
+      </div>
+      <div class="area-badge" id="badge-self">0 / 3</div>
+    </div>
+    <div class="area-body">
+      <div id="activities-self"></div>
+      <button class="btn-add" id="btn-add-self" onclick="addActivity('self')">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path d="M12 5v14M5 12h14" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        활동 추가
+      </button>
+    </div>
+  </div>
+
+  <!-- 생산적활동 -->
+  <div class="area-card" id="area-prod">
+    <div class="area-header">
+      <div class="area-icon" style="background:var(--teal-dim);">📚</div>
+      <div>
+        <div class="area-name">생산적 활동</div>
+        <div class="area-hint">Productivity · 학교기술, 과제, 집안일 등</div>
+      </div>
+      <div class="area-badge" id="badge-prod">0 / 3</div>
+    </div>
+    <div class="area-body">
+      <div id="activities-prod"></div>
+      <button class="btn-add" id="btn-add-prod" onclick="addActivity('prod')">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path d="M12 5v14M5 12h14" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        활동 추가
+      </button>
+    </div>
+  </div>
+
+  <!-- 여가 -->
+  <div class="area-card" id="area-leisure">
+    <div class="area-header">
+      <div class="area-icon" style="background:var(--coral-dim);">🎮</div>
+      <div>
+        <div class="area-name">여가</div>
+        <div class="area-hint">Leisure · 놀이, 취미, 사회참여 등</div>
+      </div>
+      <div class="area-badge" id="badge-leisure">0 / 3</div>
+    </div>
+    <div class="area-body">
+      <div id="activities-leisure"></div>
+      <button class="btn-add" id="btn-add-leisure" onclick="addActivity('leisure')">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path d="M12 5v14M5 12h14" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        활동 추가
+      </button>
+    </div>
+  </div>
+
+</div>
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  STEP 2: QoOP 평가 + 차트
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<div id="step-2" style="display:none;">
+
+  <!-- Top 3 자동 표시 -->
+  <div class="card">
+    <div class="card-head">
+      <div class="card-dot" style="background:var(--coral)"></div>
+      <div class="card-title">중요도 — 만족도 차이 상위 활동</div>
+      <div class="card-sub">자동 계산</div>
+    </div>
+    <div id="top3-container">
+      <div class="top3-empty">프로파일링 단계에서 활동을 입력하면 자동으로 표시됩니다.</div>
+    </div>
+  </div>
+
+  <!-- QoOP 5항목 -->
+  <div class="card">
+    <div class="card-head">
+      <div class="card-dot" style="background:var(--accent)"></div>
+      <div class="card-title">작업수행의 질 (QoOP)</div>
+      <div class="card-sub">각 항목 0–5점</div>
+    </div>
+    <p style="font-size:12px;color:var(--t3);margin-bottom:14px;line-height:1.6;">
+      상위 활동을 기반으로 5개 영역의 작업수행 질을 평가하세요.
+      <br>0 = 현저한 어려움 &nbsp;·&nbsp; 3 = 경도의 어려움 &nbsp;·&nbsp; 5 = 유능함
+    </p>
+    <div class="qoop-grid" id="qoop-grid"></div>
+
+    <!-- 선 그래프 -->
+    <div class="chart-wrap">
+      <canvas id="qoop-chart"></canvas>
+    </div>
+  </div>
+
+</div>
+
+</main>
+
+<!-- 하단 네비 -->
+<div class="nav-bar">
+  <button class="btn-prev" id="btn-prev" onclick="prevStep()" style="display:none;">
+    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path d="M19 12H5M12 5l-7 7 7 7" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    이전
+  </button>
+  <div class="nav-info">단계 <span id="nav-cur">1</span> / 3</div>
+  <button class="btn-next" id="btn-next" onclick="nextStep()">
+    다음 단계
+    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path d="M5 12h14M12 5l7 7-7 7" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </button>
+  <span class="nav-pdf-hint" style="font-size:11px;color:var(--t3);max-width:180px;text-align:right;line-height:1.35;">PDF는 전체 평가 완료 후 종합 보고서에서 저장</span>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script>
+/* ═══════════════════════════════════════
+   상수
+═══════════════════════════════════════ */
+const AREAS = [
+  { id:'self',    label:'자조기술',     color:'var(--self-c)',    dim:'var(--self-dim)'    },
+  { id:'prod',    label:'생산적 활동',  color:'var(--prod-c)',    dim:'var(--prod-dim)'    },
+  { id:'leisure', label:'여가',         color:'var(--leisure-c)', dim:'var(--leisure-dim)' },
+];
+
+const QOOP_DIMS = [
+  { id:'safety',     label:'안전성',        desc:['현저한 위험','중등도 위험','경도 위험','의문스러움','안전함','완전 안전'] },
+  { id:'effort',     label:'신체적 노력',   desc:['현저한 노력','높은 노력','중등도 노력','약간의 노력','거의 없음','전혀 없음'] },
+  { id:'efficiency', label:'효율성',        desc:['현저히 비효율','중등도 비효율','경도 비효율','의문스러움','효율적','매우 효율'] },
+  { id:'independ',   label:'자립 수준',     desc:['완전 의존','최대 도움','중등도 도움','최소 도움','감독 필요','완전 자립'] },
+  { id:'social',     label:'사회적 적절성', desc:['현저히 부적절','중등도 부적절','경도 부적절','의문스러움','적절함','매우 적절'] },
+];
+
+const MAX_PER_AREA = 3;
+
+/* ═══════════════════════════════════════
+   상태
+═══════════════════════════════════════ */
+let currentStep = 0;
+// profData[areaId] = [{ name, perf, satis, imp }, ...]
+const profData = { self: [], prod: [], leisure: [] };
+const qoopVals = { safety:3, effort:3, efficiency:3, independ:3, social:3 };
+let chart = null;
+
+/* ═══════════════════════════════════════
+   초기화
+═══════════════════════════════════════ */
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('f-date').valueAsDate = new Date();
+
+  // sessionStorage 기본정보 복원
+  try {
+    const sess = JSON.parse(sessionStorage.getItem('ot_session') || '{}');
+    if (sess.info) {
+      const i = sess.info;
+      if (i.name)      setVal('f-name',      i.name);
+      if (i.date)      setVal('f-date',      i.date);
+      if (i.gender)    setVal('f-gender',    i.gender);
+      if (i.birth)     setVal('f-birth',     i.birth);
+      if (i.diagnosis) setVal('f-diagnosis', i.diagnosis);
+      if (i.therapist) setVal('f-therapist', i.therapist);
+    }
+  } catch(e) {}
+
+  buildQoopGrid();
+  updateUI();
+});
+
+const setVal = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };
+const getVal = id => document.getElementById(id)?.value?.trim() || '';
+
+/* ═══════════════════════════════════════
+   활동 추가 / 삭제
+═══════════════════════════════════════ */
+function addActivity(areaId) {
+  if (profData[areaId].length >= MAX_PER_AREA) return;
+  const idx = profData[areaId].length;
+  profData[areaId].push({ name:'', perf:5, satis:5, imp:5 });
+  renderActivityRow(areaId, idx);
+  updateAreaBadge(areaId);
+  updateAddBtn(areaId);
+}
+
+function renderActivityRow(areaId, idx) {
+  const container = document.getElementById(`activities-${areaId}`);
+  const area  = AREAS.find(a => a.id === areaId);
+  const d     = profData[areaId][idx];
+
+  const row = document.createElement('div');
+  row.className = 'activity-row';
+  row.id = `act-${areaId}-${idx}`;
+
+  row.innerHTML = `
+    <input class="activity-name-input"
+      id="actname-${areaId}-${idx}"
+      type="text"
+      placeholder="활동명 입력 (예: 혼자 밥 먹기)"
+      value="${d.name}"
+      oninput="onNameInput('${areaId}',${idx},this.value)">
+
+    <div class="score-col perf">
+      <div class="score-label-top">수행도</div>
+      <div class="score-value" id="sv-perf-${areaId}-${idx}">${d.perf}</div>
+      <input type="range" class="score-slider slider-perf"
+        min="1" max="10" step="1" value="${d.perf}"
+        id="sl-perf-${areaId}-${idx}"
+        oninput="onScore('${areaId}',${idx},'perf',this.value)">
+    </div>
+
+    <div class="score-col satis">
+      <div class="score-label-top">만족도</div>
+      <div class="score-value" id="sv-satis-${areaId}-${idx}">${d.satis}</div>
+      <input type="range" class="score-slider slider-satis"
+        min="1" max="10" step="1" value="${d.satis}"
+        id="sl-satis-${areaId}-${idx}"
+        oninput="onScore('${areaId}',${idx},'satis',this.value)">
+    </div>
+
+    <div class="score-col imp">
+      <div class="score-label-top">중요도</div>
+      <div class="score-value" id="sv-imp-${areaId}-${idx}">${d.imp}</div>
+      <input type="range" class="score-slider slider-imp"
+        min="1" max="10" step="1" value="${d.imp}"
+        id="sl-imp-${areaId}-${idx}"
+        oninput="onScore('${areaId}',${idx},'imp',this.value)">
+    </div>
+
+    <button class="btn-del" onclick="delActivity('${areaId}',${idx})" title="삭제">
+      <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path d="M18 6L6 18M6 6l12 12" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+    </button>`;
+
+  container.appendChild(row);
+  syncSliderTrack(`sl-perf-${areaId}-${idx}`,    d.perf,  10, 'var(--accent)');
+  syncSliderTrack(`sl-satis-${areaId}-${idx}`,   d.satis, 10, 'var(--teal)');
+  syncSliderTrack(`sl-imp-${areaId}-${idx}`,     d.imp,   10, 'var(--amber)');
+}
+
+function onNameInput(areaId, idx, val) {
+  profData[areaId][idx].name = val;
+}
+
+function onScore(areaId, idx, type, val) {
+  const v = parseInt(val);
+  profData[areaId][idx][type] = v;
+  const dispEl = document.getElementById(`sv-${type}-${areaId}-${idx}`);
+  if (dispEl) dispEl.textContent = v;
+  const colorMap = { perf:'var(--accent)', satis:'var(--teal)', imp:'var(--amber)' };
+  syncSliderTrack(`sl-${type}-${areaId}-${idx}`, v, 10, colorMap[type]);
+}
+
+function syncSliderTrack(id, val, max, color) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const pct = ((val - 1) / (max - 1) * 100).toFixed(1);
+  el.style.background = `linear-gradient(to right, ${color} ${pct}%, var(--border) ${pct}%)`;
+}
+
+function delActivity(areaId, idx) {
+  profData[areaId].splice(idx, 1);
+  const container = document.getElementById(`activities-${areaId}`);
+  container.innerHTML = '';
+  profData[areaId].forEach((_, i) => renderActivityRow(areaId, i));
+  updateAreaBadge(areaId);
+  updateAddBtn(areaId);
+}
+
+function updateAreaBadge(areaId) {
+  const badge = document.getElementById(`badge-${areaId}`);
+  if (badge) badge.textContent = `${profData[areaId].length} / ${MAX_PER_AREA}`;
+}
+
+function updateAddBtn(areaId) {
+  const btn = document.getElementById(`btn-add-${areaId}`);
+  if (btn) btn.disabled = profData[areaId].length >= MAX_PER_AREA;
+}
+
+/* ═══════════════════════════════════════
+   Top 3 계산
+═══════════════════════════════════════ */
+function getTop3() {
+  const all = [];
+  AREAS.forEach(area => {
+    profData[area.id].forEach(act => {
+      if (!act.name.trim()) return;
+      const diff = Math.abs(act.imp - act.satis);
+      all.push({ ...act, areaId: area.id, areaLabel: area.label, diff });
+    });
+  });
+  return all.sort((a, b) => b.diff - a.diff).slice(0, 3);
+}
+
+function renderTop3() {
+  const top3 = getTop3();
+  const el   = document.getElementById('top3-container');
+  if (!el) return;
+
+  if (top3.length === 0) {
+    el.innerHTML = '<div class="top3-empty">프로파일링 단계에서 활동을 입력하면 자동으로 표시됩니다.</div>';
+    return;
+  }
+
+  el.innerHTML = `<div class="top3-list">
+    ${top3.map((act, i) => `
+      <div class="top3-item">
+        <div class="top3-rank">${i + 1}</div>
+        <div>
+          <div class="top3-name">${act.name}</div>
+          <div class="top3-area">${act.areaLabel}</div>
+        </div>
+        <div class="top3-scores">
+          <span class="score-pill pill-perf">수행 ${act.perf}</span>
+          <span class="score-pill pill-satis">만족 ${act.satis}</span>
+          <span class="score-pill pill-imp">중요 ${act.imp}</span>
+        </div>
+        <div class="diff-badge">차이 ${act.diff}</div>
+      </div>`).join('')}
+  </div>`;
+}
+
+/* ═══════════════════════════════════════
+   QoOP 그리드 빌드
+═══════════════════════════════════════ */
+function buildQoopGrid() {
+  const grid = document.getElementById('qoop-grid');
+  grid.innerHTML = QOOP_DIMS.map(d => `
+    <div class="qoop-item">
+      <div class="qoop-label">${d.label}</div>
+      <div class="qoop-value" id="qv-${d.id}">3</div>
+      <input type="range" class="qoop-slider"
+        min="0" max="5" step="1" value="3"
+        id="qs-${d.id}"
+        oninput="onQoop('${d.id}',this.value)">
+      <div class="qoop-desc" id="qd-${d.id}">${d.desc[3]}</div>
+    </div>`).join('');
+  renderChart();
+}
+
+function onQoop(dimId, val) {
+  const v = parseInt(val);
+  qoopVals[dimId] = v;
+  const dim = QOOP_DIMS.find(d => d.id === dimId);
+  document.getElementById(`qv-${dimId}`).textContent = v;
+  document.getElementById(`qd-${dimId}`).textContent = dim.desc[v];
+  // 슬라이더 트랙 색상
+  const pct = (v / 5 * 100).toFixed(1);
+  document.getElementById(`qs-${dimId}`).style.background =
+    `linear-gradient(to right, var(--accent) ${pct}%, var(--border) ${pct}%)`;
+  updateChart();
+}
+
+/* ═══════════════════════════════════════
+   Chart.js
+═══════════════════════════════════════ */
+function renderChart() {
+  const canvas = document.getElementById('qoop-chart');
+  if (!canvas || typeof Chart === 'undefined') {
+    setTimeout(renderChart, 200); return;
+  }
+  const labels = QOOP_DIMS.map(d => d.label);
+  const vals   = QOOP_DIMS.map(d => qoopVals[d.id]);
+  const accent = '#6C5CE7';
+
+  chart = new Chart(canvas, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: 'QoOP',
+        data: vals,
+        borderColor: accent,
+        backgroundColor: accent + '18',
+        borderWidth: 2.5,
+        pointBackgroundColor: accent,
+        pointRadius: 7,
+        pointHoverRadius: 9,
+        fill: true,
+        tension: 0.3,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        y: {
+          min: 0, max: 5, stepSize: 1,
+          ticks: {
+            stepSize: 1,
+            font: { family: "'Pretendard', sans-serif", size: 11 },
+            color: '#9896B8',
+            callback: v => ['현저한\n어려움','중등도\n어려움','경도\n어려움','의문','유능함','매우\n유능'][v] || v,
+          },
+          grid: { color: '#E4E7F4' },
+        },
+        x: {
+          ticks: { font: { family: "'Pretendard', sans-serif", size: 12 }, color: '#4A4770' },
+          grid: { display: false },
+        }
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: ctx => {
+              const v = ctx.parsed.y;
+              const dim = QOOP_DIMS[ctx.dataIndex];
+              return ` ${v}점 — ${dim ? dim.desc[v] : ''}`;
+            }
+          },
+          titleFont: { family: "'Pretendard', sans-serif", size: 12 },
+          bodyFont:  { family: "'Pretendard', sans-serif", size: 12 },
+        }
+      }
+    }
+  });
+}
+
+function updateChart() {
+  if (!chart) return;
+  chart.data.datasets[0].data = QOOP_DIMS.map(d => qoopVals[d.id]);
+  chart.update('active');
+}
+
+/* ═══════════════════════════════════════
+   스텝 네비게이션
+═══════════════════════════════════════ */
+function goStep(n) {
+  if (n < 0 || n > 2) return;
+
+  // Step 0 → 1 유효성
+  if (currentStep === 0 && n > 0) {
+    const name = getVal('f-name');
+    if (!name) { showToast('이름/등록번호를 입력해 주세요'); document.getElementById('f-name').focus(); return; }
+  }
+
+  document.getElementById(`step-${currentStep}`).style.display = 'none';
+  currentStep = n;
+  document.getElementById(`step-${currentStep}`).style.display = 'block';
+
+  // Step 2 진입 시 Top3 갱신
+  if (n === 2) renderTop3();
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  updateUI();
+}
+
+function nextStep() { goStep(currentStep + 1); }
+function prevStep() { goStep(currentStep - 1); }
+
+function goBack() {
+  if (confirm('허브 화면으로 돌아가면 입력된 내용이 사라집니다. 계속할까요?')) {
+    window.location.href = 'hub.html';
+  }
+}
+
+function updateUI() {
+  const n = currentStep;
+
+  // 스텝 바
+  for (let i = 0; i < 3; i++) {
+    const nav = document.getElementById(`snav-${i}`);
+    const num = document.getElementById(`snum-${i}`);
+    nav.className = 'step-item' + (i === n ? ' active' : i < n ? ' done' : '');
+    num.textContent = i < n ? '✓' : i + 1;
+  }
+
+  // 진행률
+  document.getElementById('progress-fill').style.width = `${(n / 2) * 100}%`;
+
+  // 버튼
+  document.getElementById('btn-prev').style.display = n > 0 ? 'flex' : 'none';
+  document.getElementById('btn-next').style.display = n < 2 ? 'flex' : 'none';
+
+  document.getElementById('nav-cur').textContent = n + 1;
+}
+
+/* ═══════════════════════════════════════
+   종합 보고서용 HTML 스냅샷
+═══════════════════════════════════════ */
+const REPORT_SECTION_TITLE = '작업수행 프로파일링 (Profiling · QoOP)';
+
+function buildToolReportHtml() {
+  const parts = [];
+  for (let i = 0; i < 3; i++) {
+    const el = document.getElementById(`step-${i}`);
+    if (el) {
+      parts.push(
+        `<div style="margin-bottom:20px;border:1px solid #E4E7F4;border-radius:12px;padding:14px;overflow:hidden;">` +
+        `<div style="font-size:11px;font-weight:800;color:#E17055;margin-bottom:10px;">단계 ${i + 1}</div>${el.innerHTML}</div>`
+      );
+    }
+  }
+  let html = parts.join('');
+  try {
+    if (typeof chart !== 'undefined' && chart && typeof chart.toBase64Image === 'function') {
+      const snap = chart.toBase64Image();
+      if (html.includes('qoop-chart')) {
+        html = html.replace(/<canvas[^>]*id="qoop-chart"[^>]*><\/canvas>/i,
+          `<img src="${snap}" style="max-width:100%;height:auto;border-radius:8px;" alt="QoOP" />`);
+      } else {
+        html += `<div style="margin-top:8px;text-align:center;"><img src="${snap}" style="max-width:100%;max-height:260px;border-radius:8px;border:1px solid #E4E7F4;" alt="QoOP" /></div>`;
+      }
+    }
+  } catch (e) {}
+  return html;
+}
+
+/* ═══════════════════════════════════════
+   토스트
+═══════════════════════════════════════ */
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2400);
+}
+
+window._TOOL_ID = 'profiling';
+/* ═══════════════════════════════════════
+   세션 네비게이션 — hub.html 라우팅 연동
+═══════════════════════════════════════ */
+function getSession() {
+  try { return JSON.parse(sessionStorage.getItem('ot_session') || '{}'); } catch(e) { return {}; }
+}
+
+function persistToolReport() {
+  try {
+    const sess = getSession();
+    if (!sess.reportByTool) sess.reportByTool = {};
+    sess.reportByTool[window._TOOL_ID] = {
+      title: REPORT_SECTION_TITLE,
+      html: typeof buildToolReportHtml === 'function' ? buildToolReportHtml() : ''
+    };
+    sessionStorage.setItem('ot_session', JSON.stringify(sess));
+  } catch (e) {}
+}
+
+function getCurrentToolIndex() {
+  const sess = getSession();
+  const ready = sess.ready || [];
+  const myId  = window._TOOL_ID || '';
+  return ready.indexOf(myId);
+}
+
+function goNextTool() {
+  persistToolReport();
+  const sess = getSession();
+  const ready = sess.ready || [];
+  const cur   = getCurrentToolIndex();
+  if (cur >= 0 && cur < ready.length - 1) {
+    const nextId = ready[cur + 1];
+    // TOOLS 매핑 (hub 없이도 알 수 있도록 인라인)
+    const ROUTE_MAP = {
+      'profiling':'assess-profiling.html','otipm':'assess-otipm.html',
+      'jthft':'assess-jthft.html','macs':'assess-macs.html',
+      'clinical':'assess-clinical.html','sensory':'assess-sensory.html',
+      'mbi':'assess-mbi.html','fim':'assess-fim.html','k-iadl':'assess-k-iadl.html',
+    };
+    const route = ROUTE_MAP[nextId];
+    if (route) window.location.href = route;
+  } else {
+    window.location.href = 'report.html';
+  }
+}
+
+</script>
+<script src="session-sidebar.js" defer></script>
+</body>
+</html>

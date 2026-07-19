@@ -1,0 +1,75 @@
+const year = document.querySelector("#year");
+if (year) year.textContent = new Date().getFullYear();
+
+const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+const finePointer = window.matchMedia("(pointer: fine)").matches;
+const parallaxRoot = document.querySelector("[data-parallax-root]");
+
+if (parallaxRoot && finePointer && !reduceMotion) {
+  const cards = [...parallaxRoot.querySelectorAll("[data-depth]")];
+
+  parallaxRoot.addEventListener("pointermove", (event) => {
+    const rect = parallaxRoot.getBoundingClientRect();
+    const x = (event.clientX - rect.left) / rect.width - 0.5;
+    const y = (event.clientY - rect.top) / rect.height - 0.5;
+
+    cards.forEach((card) => {
+      const depth = Number(card.dataset.depth || 0.5);
+      card.style.translate = `${x * depth * 24}px ${y * depth * 18}px`;
+    });
+  });
+
+  parallaxRoot.addEventListener("pointerleave", () => {
+    cards.forEach((card) => {
+      card.style.translate = "0 0";
+    });
+  });
+}
+
+const revealTargets = document.querySelectorAll(
+  ".project-card, .process-list li, .about-copy, .section-heading"
+);
+
+if (!reduceMotion && "IntersectionObserver" in window) {
+  revealTargets.forEach((target) => target.classList.add("reveal-ready"));
+
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("reveal-visible");
+          observer.unobserve(entry.target);
+        }
+      });
+    },
+    { threshold: 0.12 }
+  );
+
+  revealTargets.forEach((target) => observer.observe(target));
+}
+
+const style = document.createElement("style");
+style.textContent = `
+  .reveal-ready {
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity .7s ease, transform .7s cubic-bezier(.2,.7,.2,1);
+  }
+  .reveal-visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+`;
+document.head.appendChild(style);
+
+document.querySelectorAll("[data-placeholder-email]").forEach((link) => {
+  link.addEventListener("click", (event) => {
+    const href = link.getAttribute("href");
+    if (href === "mailto:hello@example.com") {
+      event.preventDefault();
+      const note = document.querySelector(".contact-note");
+      note?.classList.add("contact-note-highlight");
+      note?.scrollIntoView({ block: "nearest" });
+    }
+  });
+});
