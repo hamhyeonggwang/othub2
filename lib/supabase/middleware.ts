@@ -30,19 +30,26 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // OTHub Assess(정적 평가 도구 포함)는 치료사·관리자 회원만 접근 가능
+  // 역할 가드: /assess(정적 평가 도구 포함)는 치료사·관리자, /admin은 관리자만
   const { pathname } = request.nextUrl;
-  if (pathname.startsWith("/assess")) {
+  const needsRole = pathname.startsWith("/assess") || pathname.startsWith("/admin");
+
+  if (needsRole) {
     if (!user) {
-      return NextResponse.redirect(new URL("/login?next=/assess", request.url));
+      const next = pathname.startsWith("/admin") ? "/admin" : "/assess";
+      return NextResponse.redirect(new URL(`/login?next=${next}`, request.url));
     }
     const { data: profile } = await supabase
       .from("othub_profiles")
       .select("role")
       .eq("id", user.id)
       .single();
+    const role = profile?.role;
 
-    if (!profile || (profile.role !== "therapist" && profile.role !== "admin")) {
+    if (pathname.startsWith("/admin") && role !== "admin") {
+      return NextResponse.redirect(new URL("/me", request.url));
+    }
+    if (pathname.startsWith("/assess") && role !== "therapist" && role !== "admin") {
       return NextResponse.redirect(new URL("/me?assess=locked", request.url));
     }
   }

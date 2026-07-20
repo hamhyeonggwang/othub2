@@ -1,0 +1,203 @@
+.admin-tabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 24px 0 28px;
+}
+
+.admin-tab {
+  padding: 9px 18px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--navy);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.admin-tab[data-active="true"] {
+  background: var(--navy);
+  border-color: var(--navy);
+  color: #fff;
+}
+
+.admin-stat-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+  margin-bottom: 28px;
+}
+
+.admin-stat {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 16px 20px;
+}
+
+.admin-stat strong {
+  display: block;
+  font-size: 24px;
+  color: var(--navy);
+}
+
+.admin-stat span {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.admin-table-wrap {
+  overflow-x: auto;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.admin-table th {
+  text-align: left;
+  padding: 12px 16px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+}
+
+.admin-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--line);
+  color: var(--navy);
+  vertical-align: top;
+}
+
+.admin-table tr:last-child td {
+  border-bottom: none;
+}
+
+.admin-btn {
+  display: inline-block;
+  padding: 7px 14px;
+  border-radius: 9px;
+  border: none;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.admin-btn-approve {
+  background: var(--blue);
+  color: #fff;
+}
+
+.admin-btn-danger {
+  background: rgba(220, 38, 38, 0.09);
+  color: #b91c1c;
+}
+
+.admin-btn-ghost {
+  background: rgba(7, 27, 63, 0.06);
+  color: var(--navy);
+}
+
+.admin-btn + .admin-btn,
+form.admin-inline + form.admin-inline {
+  margin-left: 6px;
+}
+
+form.admin-inline {
+  display: inline-block;
+}
+
+.admin-empty {
+  padding: 40px 20px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.admin-badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 999px;
+}
+
+.admin-badge[data-kind="published"] {
+  background: rgba(29, 111, 220, 0.1);
+  color: var(--blue);
+}
+
+.admin-badge[data-kind="draft"] {
+  background: rgba(92, 109, 132, 0.12);
+  color: var(--muted);
+}
+
+/* 콘텐츠 폼 */
+.admin-form {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 22px;
+  margin-bottom: 24px;
+}
+
+.admin-form h3 {
+  margin: 0 0 16px;
+  font-size: 15px;
+  color: var(--navy);
+}
+
+.admin-form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.admin-field label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--navy);
+  margin-bottom: 6px;
+}
+
+.admin-field input,
+.admin-field select,
+.admin-field textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  font-size: 13px;
+  font-family: inherit;
+  color: var(--navy);
+  background: #fff;
+}
+
+.admin-field-wide {
+  grid-column: 1 / -1;
+}
+
+.admin-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--navy);
+  margin-right: 18px;
+}
+
+.admin-check input {
+  width: auto;
+}

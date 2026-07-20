@@ -886,45 +886,6 @@ select.info-input {
     </div>
     <div class="tools-grid">
 
-      <div class="tool-card" id="card-mmse-k" onclick="toggleTool('mmse-k')">
-        <div class="tool-top">
-          <div>
-            <div class="tool-abbr">MMSE-K</div>
-            <div class="tool-name">Mini-Mental State Examination (한국판)</div>
-          </div>
-        </div>
-        <div class="tool-tags">
-          <span class="tool-tag">30점</span>
-          <span class="tool-tag">인지선별</span>
-        </div>
-      </div>
-
-      <div class="tool-card" id="card-mmse-ds" onclick="toggleTool('mmse-ds')">
-        <div class="tool-top">
-          <div>
-            <div class="tool-abbr">MMSE-DS</div>
-            <div class="tool-name">MMSE for Dementia Screening</div>
-          </div>
-        </div>
-        <div class="tool-tags">
-          <span class="tool-tag">치매선별</span>
-          <span class="tool-tag">고민감도</span>
-        </div>
-      </div>
-
-      <div class="tool-card" id="card-moca" onclick="toggleTool('moca')">
-        <div class="tool-top">
-          <div>
-            <div class="tool-abbr">MoCA</div>
-            <div class="tool-name">Montreal Cognitive Assessment</div>
-          </div>
-        </div>
-        <div class="tool-tags">
-          <span class="tool-tag">30점</span>
-          <span class="tool-tag">MCI 민감</span>
-        </div>
-      </div>
-
       <div class="tool-card" id="card-cdt" onclick="toggleTool('cdt')">
         <div class="tool-top">
           <div>
@@ -963,20 +924,6 @@ select.info-input {
         </div>
       </div>
 
-      <div class="tool-card" id="card-fim" onclick="toggleTool('fim')">
-        <div class="tool-top">
-          <div>
-            <div class="tool-abbr">FIM</div>
-            <div class="tool-name">Functional Independence Measure</div>
-          </div>
-        </div>
-        <div class="tool-tags">
-          <span class="tool-tag">126점</span>
-          <span class="tool-tag">7점척도</span>
-          <span class="tool-tag">18항목</span>
-        </div>
-      </div>
-
       <div class="tool-card" id="card-k-iadl" onclick="toggleTool('k-iadl')">
         <div class="tool-top">
           <div>
@@ -1001,20 +948,6 @@ select.info-input {
       <span class="group-icf">ICF d · e</span>
     </div>
     <div class="tools-grid">
-
-      <div class="tool-card coral" id="card-copm" onclick="toggleTool('copm')">
-        <div class="tool-top">
-          <div>
-            <div class="tool-abbr">COPM</div>
-            <div class="tool-name">Canadian Occupational Performance Measure</div>
-          </div>
-        </div>
-        <div class="tool-tags">
-          <span class="tool-tag">자가관리</span>
-          <span class="tool-tag">생산성</span>
-          <span class="tool-tag">여가</span>
-        </div>
-      </div>
 
       <div class="tool-card coral" id="card-whodas" onclick="toggleTool('whodas')">
         <div class="tool-top">
@@ -1094,22 +1027,17 @@ const TOOLS = {
   'clinical': { abbr:'HFT',      name:'HFT 임상관찰 평가',                color:'teal',   route:'assess-clinical.html',   ready:true  },
   'sensory':  { abbr:'SMC',      name:'감각운동협응검사',                  color:'teal',   route:'assess-sensory.html',    ready:true  },
   'mbi':      { abbr:'K-MBI',    name:'Modified Barthel Index',          color:'accent', route:'assess-mbi.html',        ready:true  },
-  'fim':      { abbr:'FIM',      name:'Functional Independence Measure', color:'accent', route:'assess-fim.html',        ready:false },
   'k-iadl':   { abbr:'K-IADL',   name:'수단적 일상생활활동',              color:'accent', route:'assess-k-iadl.html',     ready:true  },
-  'mmse-k':   { abbr:'MMSE-K',   name:'MMSE 한국판',                      color:'accent', route:'assess-mmse-k.html',     ready:false },
-  'mmse-ds':  { abbr:'MMSE-DS',  name:'MMSE Dementia Screening',         color:'accent', route:'assess-mmse-ds.html',    ready:false },
-  'moca':     { abbr:'MoCA',     name:'Montreal Cognitive Assessment',   color:'accent', route:'assess-moca.html',       ready:false },
   'cdt':      { abbr:'CDT',      name:'Clock Drawing Test',              color:'accent', route:'assess-cdt.html',        ready:false },
-  'copm':     { abbr:'COPM',     name:'Canadian OPM',                    color:'coral',  route:'assess-copm.html',       ready:false },
   'whodas':   { abbr:'WHODAS',   name:'WHO Disability Assessment',       color:'coral',  route:'assess-whodas.html',     ready:false },
   'sms':      { abbr:'SMS',      name:'사회성숙도 검사',                  color:'coral',  route:'assess-sms.html',        ready:false },
 };
 
 const PRESETS = {
   school:    ['profiling','jthft','macs','clinical','sensory','mbi'],
-  cognitive: ['mmse-k','mmse-ds','moca','cdt'],
+  cognitive: ['cdt'],
   otipm:     ['profiling','otipm'],
-  adl:       ['mbi','fim','k-iadl'],
+  adl:       ['mbi','k-iadl'],
   all:       Object.keys(TOOLS),
 };
 

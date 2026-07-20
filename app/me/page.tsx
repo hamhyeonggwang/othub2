@@ -82,6 +82,20 @@ export default async function ProfilePage({
         </div>
       )}
 
+      {role === "admin" && (
+        <div className="profile-card">
+          <h2>관리자</h2>
+          <p className="hint">치료사 인증 승인, 콘텐츠·회원·참여 관리를 할 수 있습니다.</p>
+          <Link
+            className="auth-submit"
+            style={{ display: "inline-block", width: "auto", padding: "10px 20px", textDecoration: "none" }}
+            href="/admin"
+          >
+            관리자 대시보드 열기
+          </Link>
+        </div>
+      )}
+
       {(role === "therapist" || role === "admin") && (
         <div className="profile-card">
           <h2>OTHub Assess</h2>

@@ -14,6 +14,7 @@ export interface ContentItem {
   requires_camera: boolean;
   tags: string[];
   peo_tags: string[];
+  status: "draft" | "published";
   view_count: number;
   created_at: string;
 }
