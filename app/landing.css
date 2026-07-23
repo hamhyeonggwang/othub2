@@ -134,8 +134,8 @@ svg { fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: 
 h1, h2 { margin: 0; letter-spacing: -.055em; line-height: 1.08; word-break: keep-all; }
 h1 { max-width: 600px; font-size: clamp(56px, 5vw, 78px); font-weight: 700; }
 h1 em, h2 em { color: var(--blue); font-style: normal; }
-.hero-description { margin: 28px 0 0; color: #4f617a; font-size: 18px; line-height: 1.7; }
-.hero-actions { display: flex; gap: 12px; margin-top: 36px; }
+.hero-description { margin: 16px 0 0; color: #4f617a; font-size: 18px; line-height: 1.7; }
+.hero-actions { display: flex; gap: 12px; margin-top: 52px; }
 .button {
   min-height: 52px;
   display: inline-flex;

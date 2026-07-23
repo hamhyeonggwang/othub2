@@ -38,6 +38,35 @@
   word-break: keep-all;
 }
 
+.timeline {
+  margin: 0 0 8px;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--line);
+}
+.timeline li {
+  display: grid;
+  grid-template-columns: 160px 1fr;
+  gap: 16px;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--line);
+}
+.timeline li span {
+  padding-top: 2px;
+  color: var(--blue);
+  font: 700 12px monospace;
+}
+.timeline li strong {
+  display: block;
+  font-size: 16px;
+  color: var(--navy);
+}
+.timeline li p {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
 .lab-status-legend {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -240,6 +269,10 @@
   .app-frame-wrap {
     aspect-ratio: 9 / 14;
     border-radius: 16px;
+  }
+  .timeline li {
+    grid-template-columns: 1fr;
+    gap: 4px;
   }
 }
 

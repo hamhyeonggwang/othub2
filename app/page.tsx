@@ -504,7 +504,9 @@ export default async function LandingPage() {
           </span>
         </Link>
         <p>함께 만들고 나누는 훈련 웹앱 · 콘텐츠 허브 · 평가 도구</p>
-        <p>© {new Date().getFullYear()} OTHub</p>
+        <p>
+          © {new Date().getFullYear()} OTHub · <Link href="/portfolio">만든 사람</Link>
+        </p>
       </footer>
     </>
   );

@@ -28,6 +28,17 @@ export default function AboutPage() {
             그리고 그 작업이 당신을 만듭니다.
           </h1>
           <p className="lead">그렇게 함께합니다.</p>
+          <div className="hero-actions" style={{ justifyContent: "flex-start" }}>
+            <Link className="button button-primary" href="/hub/apps">
+              도구 둘러보기
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M5 12h14M13 6l6 6-6 6" />
+              </svg>
+            </Link>
+            <Link className="button button-secondary" href="/portfolio">
+              만든 사람 보기
+            </Link>
+          </div>
         </section>
 
         <section className="approach-layout about-section" aria-labelledby="approach-title">
