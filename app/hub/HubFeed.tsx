@@ -8,13 +8,12 @@ import {
   type ContentItemWithStats,
 } from "@/lib/supabase/content-types";
 
-type FilterKey = "all" | "video" | "info" | "web";
+type FilterKey = "all" | "video" | "info";
 
 const TYPE_CHIPS: { key: FilterKey; label: string }[] = [
   { key: "all", label: "전체" },
   { key: "video", label: "영상" },
   { key: "info", label: "정보" },
-  { key: "web", label: "Web" },
 ];
 
 export default function HubFeed({ items }: { items: ContentItemWithStats[] }) {
@@ -24,8 +23,7 @@ export default function HubFeed({ items }: { items: ContentItemWithStats[] }) {
 
   const filtered = useMemo(() => {
     return items.filter((item) => {
-      if (type === "web" && !item.tags.includes("Web")) return false;
-      if (type !== "all" && type !== "web" && item.type !== type) return false;
+      if (type !== "all" && item.type !== type) return false;
       if (peo && !item.peo_tags.includes(peo)) return false;
       if (query.trim()) {
         const q = query.trim().toLowerCase();
