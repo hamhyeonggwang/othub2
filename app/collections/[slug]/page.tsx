@@ -56,7 +56,7 @@ export default async function CollectionPage({
           {tools.map((tool) => (
             <Link key={tool.slug} className="hub-card" href={`/hub/apps/${tool.slug}`}>
               <span className="hub-card-badge">
-                {tool.requires_camera ? "📷 카메라 필요" : "🖱️ 클릭만으로 가능"}
+                {tool.requires_camera ? "카메라 필요" : "클릭만으로 가능"}
               </span>
               <h3>{tool.title}</h3>
               <p>{tool.description}</p>

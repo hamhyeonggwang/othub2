@@ -301,7 +301,7 @@ export default async function LandingPage() {
 
           <div className="hub-grid">
             <Link className="hub-card" href="/hub/apps/cu-kiosk-trainer">
-              <span className="hub-card-badge">🖱️ 클릭만으로 가능</span>
+              <span className="hub-card-badge">클릭만으로 가능</span>
               <h3>CU 편의점 셀프계산대 훈련</h3>
               <p>편의점 셀프계산대에서 바코드 스캔부터 결제까지 단계별로 연습합니다.</p>
               <div className="hub-card-tags">
@@ -311,7 +311,7 @@ export default async function LandingPage() {
             </Link>
 
             <Link className="hub-card" href="/hub/apps/korail-kiosk-trainer">
-              <span className="hub-card-badge">🖱️ 클릭만으로 가능</span>
+              <span className="hub-card-badge">클릭만으로 가능</span>
               <h3>코레일 승차권 키오스크 훈련</h3>
               <p>기차역 발권기에서 노선·시간·좌석을 선택해 승차권을 예매하는 과정을 연습합니다.</p>
               <div className="hub-card-tags">
@@ -321,7 +321,7 @@ export default async function LandingPage() {
             </Link>
 
             <Link className="hub-card" href="/hub/apps/airdrawing">
-              <span className="hub-card-badge">📷 카메라 필요</span>
+              <span className="hub-card-badge">카메라 필요</span>
               <h3>에어 드로잉</h3>
               <p>웹캠 손 인식으로 허공에 그림을 그리며 상지 조절과 시지각 협응을 훈련합니다.</p>
               <div className="hub-card-tags">
@@ -331,7 +331,7 @@ export default async function LandingPage() {
             </Link>
 
             <Link className="hub-card" href="/hub/apps/gazeplay-stars">
-              <span className="hub-card-badge">📷 카메라 필요</span>
+              <span className="hub-card-badge">카메라 필요</span>
               <h3>GazePlay 별자리 그리기</h3>
               <p>시선 이동으로 별을 이어 별자리를 완성하며 안구 운동 조절을 훈련합니다.</p>
               <div className="hub-card-tags">

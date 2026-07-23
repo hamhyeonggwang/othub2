@@ -8,20 +8,24 @@ import {
   type ContentItemWithStats,
 } from "@/lib/supabase/content-types";
 
-const TYPE_CHIPS: { key: "all" | ContentItemWithStats["type"]; label: string }[] = [
+type FilterKey = "all" | "video" | "info" | "web";
+
+const TYPE_CHIPS: { key: FilterKey; label: string }[] = [
   { key: "all", label: "전체" },
   { key: "video", label: "영상" },
   { key: "info", label: "정보" },
+  { key: "web", label: "Web" },
 ];
 
 export default function HubFeed({ items }: { items: ContentItemWithStats[] }) {
-  const [type, setType] = useState<(typeof TYPE_CHIPS)[number]["key"]>("all");
+  const [type, setType] = useState<FilterKey>("all");
   const [peo, setPeo] = useState<string | null>(null);
   const [query, setQuery] = useState("");
 
   const filtered = useMemo(() => {
     return items.filter((item) => {
-      if (type !== "all" && item.type !== type) return false;
+      if (type === "web" && !item.tags.includes("Web")) return false;
+      if (type !== "all" && type !== "web" && item.type !== type) return false;
       if (peo && !item.peo_tags.includes(peo)) return false;
       if (query.trim()) {
         const q = query.trim().toLowerCase();
@@ -66,7 +70,7 @@ export default function HubFeed({ items }: { items: ContentItemWithStats[] }) {
             data-active={peo === p}
             onClick={() => setPeo(peo === p ? null : p)}
           >
-            🎯 {p}
+            {p}
           </button>
         ))}
       </nav>
@@ -84,7 +88,7 @@ export default function HubFeed({ items }: { items: ContentItemWithStats[] }) {
 }
 
 function FeedCard({ item }: { item: ContentItemWithStats }) {
-  const badge = `${item.requires_camera ? "📷 " : ""}${TYPE_LABEL[item.type]}`;
+  const badge = `${item.requires_camera ? "카메라 필요 · " : ""}${TYPE_LABEL[item.type]}`;
 
   return (
     <a

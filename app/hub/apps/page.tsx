@@ -59,7 +59,7 @@ export default async function AppsPage({
           {apps.map((app) => (
             <Link key={app.slug} className="hub-card" href={`/hub/apps/${app.slug}`}>
               <span className="hub-card-badge">
-                {app.requires_camera ? "📷 카메라 필요" : "🖱️ 클릭만으로 가능"}
+                {app.requires_camera ? "카메라 필요" : "클릭만으로 가능"}
               </span>
               <h3>{app.title}</h3>
               <p>{app.description}</p>
@@ -69,8 +69,8 @@ export default async function AppsPage({
                 ))}
               </div>
               <div className="hub-card-engage">
-                <span>❤️ {app.likeCount}</span>
-                <span>💬 {app.commentCount}</span>
+                <span>좋아요 {app.likeCount}</span>
+                <span>댓글 {app.commentCount}</span>
               </div>
             </Link>
           ))}

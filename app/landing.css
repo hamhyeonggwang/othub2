@@ -58,6 +58,21 @@ svg { fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: 
   overflow-y: auto;
 }
 
+.nav-toggle-checkbox { position: absolute; opacity: 0; pointer-events: none; }
+.site-header-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.nav-toggle-btn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border-radius: 10px;
+  color: var(--navy);
+  cursor: pointer;
+}
+.nav-toggle-btn svg { width: 22px; }
+
 .brand { display: inline-flex; align-items: center; gap: 12px; }
 .brand-mark {
   width: 40px;
@@ -429,8 +444,25 @@ footer { width: min(calc(100% - 64px), var(--max)); min-height: 140px; margin: 0
 }
 
 @media (max-width: 760px) {
-  .site-header { width: calc(100% - 36px); height: 76px; }
-  .desktop-nav, .nav-cta, .header-auth { display: none; }
+  .site-header {
+    width: calc(100% - 36px);
+    flex-direction: column;
+    align-items: stretch;
+    padding: 14px 18px;
+    height: auto;
+    max-height: 76px;
+    overflow: hidden;
+    transition: max-height .25s ease;
+  }
+  .site-header:has(.nav-toggle-checkbox:checked) { max-height: 420px; }
+  .nav-toggle-btn { display: flex; }
+  .desktop-nav, .header-auth { display: none; }
+  .nav-toggle-checkbox:checked ~ .desktop-nav,
+  .nav-toggle-checkbox:checked ~ .header-auth {
+    display: flex;
+    flex-direction: column;
+  }
+  .nav-toggle-checkbox:checked ~ .header-auth { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); }
   .brand-mark { width: 35px; height: 35px; border-radius: 10px; }
   .brand strong { font-size: 11px; }
   .hero { min-height: 900px; display: block; padding: 130px 20px 70px; }

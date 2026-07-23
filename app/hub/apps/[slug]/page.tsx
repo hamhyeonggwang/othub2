@@ -56,7 +56,7 @@ export default async function AppDetailPage({
             </div>
             {app.requires_camera && (
               <p className="app-camera-note">
-                📷 이 훈련은 웹캠 접근 권한이 필요합니다. 브라우저에서 카메라
+                이 훈련은 웹캠 접근 권한이 필요합니다. 브라우저에서 카메라
                 사용을 허용해 주세요.
               </p>
             )}

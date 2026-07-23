@@ -27,7 +27,7 @@ export default function LikeBookmarkButtons({
           data-active={likedByMe}
           title={isLoggedIn ? "좋아요" : "로그인 후 좋아요를 누를 수 있어요"}
         >
-          {likedByMe ? "❤️" : "🤍"} {likeCount}
+          좋아요 {likeCount}
         </button>
       </form>
       <form action={bookmarkAction}>
@@ -37,7 +37,7 @@ export default function LikeBookmarkButtons({
           data-active={bookmarkedByMe}
           title={isLoggedIn ? "북마크" : "로그인 후 북마크할 수 있어요"}
         >
-          {bookmarkedByMe ? "🔖" : "📑"} {bookmarkedByMe ? "북마크됨" : "북마크"}
+          {bookmarkedByMe ? "북마크됨" : "북마크"}
         </button>
       </form>
     </div>
