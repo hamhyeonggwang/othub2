@@ -24,16 +24,19 @@ export default async function LandingPage() {
 
           <div className="hero-copy">
             <p className="eyebrow">
-              <span></span> 임상 도구 &amp; 지식 플랫폼
+              <span></span> 평범한 OT의 지식 플랫폼
             </p>
             <h1 id="hero-title">
-              치료실에서 만든 도구를
+              아이디어를
               <br />
-              <em>누구나 바로</em> 사용할 수 있게.
+              만듭니다
+              <br />
+              <em>누구나 바로</em>
+              <br />
+              참여할 수 있도록
             </h1>
             <p className="hero-description">
-              작업치료사가 직접 만들고 검증한 훈련·평가·임상 도구를 한곳에서
-              사용하세요.
+              작업치료사의 작업 플랫폼에 오신 것을 환영합니다
             </p>
             <div className="hero-actions">
               <Link className="button button-primary" href="/hub/apps">
