@@ -3,15 +3,11 @@ import Link from "next/link";
 import LandingEffects from "@/components/LandingEffects";
 import SiteHeader from "@/components/SiteHeader";
 import "./hub/hub.css";
-import { getPublishedContent } from "@/lib/supabase/content";
-import { PROJECT_STATUS, PROJECT_STATUS_LABEL } from "@/lib/supabase/content-types";
 import { COLLECTIONS } from "@/lib/collections";
 
 const barStyle = (h: string) => ({ "--h": h }) as CSSProperties;
 
-export default async function LandingPage() {
-  const labProjects = (await getPublishedContent()).filter((item) => item.type === "project");
-
+export default function LandingPage() {
   return (
     <>
       <LandingEffects />
@@ -51,7 +47,7 @@ export default async function LandingPage() {
             </div>
             <div className="trust-stats" aria-label="OTHub 현황">
               <div>
-                <strong>12</strong>
+                <strong>13</strong>
                 <small>훈련 웹앱</small>
               </div>
               <div>
@@ -294,7 +290,7 @@ export default async function LandingPage() {
               </h2>
             </div>
             <p>
-              12개 훈련 웹앱과 8종 평가 도구 중<br />
+              13개 훈련 웹앱과 8종 평가 도구 중<br />
               추천 도구 몇 가지를 먼저 소개합니다.
             </p>
           </div>
@@ -392,50 +388,8 @@ export default async function LandingPage() {
           ))}
         </section>
 
-        <section className="section" id="lab" aria-labelledby="lab-title">
-          <div className="section-label">03 — OTHUB LAB</div>
-          <div className="section-heading">
-            <div>
-              <h2 id="lab-title">
-                치료실의 문제를
-                <br />
-                <em>새로운 기술</em>로 실험합니다.
-              </h2>
-            </div>
-            <p>
-              아직 다듬는 중인 것들이에요.
-              <br />
-              완성되면 도구로 공개합니다.
-            </p>
-          </div>
-
-          <div className="lab-grid">
-            {labProjects.map((project) => {
-              const status = PROJECT_STATUS[project.slug] ?? "concept";
-              return (
-                <div key={project.id} className="hub-card hub-card-locked">
-                  <span className="lab-status" data-status={status}>
-                    {PROJECT_STATUS_LABEL[status]}
-                  </span>
-                  <h3>{project.title}</h3>
-                  <p>{project.description}</p>
-                </div>
-              );
-            })}
-          </div>
-
-          <div className="hero-actions" style={{ marginTop: "28px" }}>
-            <Link className="button button-secondary" href="/lab">
-              OTHub Lab 전체 보기
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M5 12h14M13 6l6 6-6 6" />
-              </svg>
-            </Link>
-          </div>
-        </section>
-
         <section className="about section" id="about" aria-labelledby="about-title">
-          <div className="section-label">04 — ABOUT</div>
+          <div className="section-label">03 — ABOUT</div>
           <div className="about-layout">
             <div>
               <p className="eyebrow">
@@ -471,24 +425,28 @@ export default async function LandingPage() {
           <div className="contact-glow" aria-hidden="true"></div>
           <div className="contact-inner">
             <p className="eyebrow light">
-              <span></span> 곧 만나요 — 회원제 오픈 예정
+              <span></span> 지금 바로 시작하세요 — 회원제 오픈
             </p>
             <h2 id="contact-title">
-              곧 함께 나누는
+              함께 나누는
               <br />
-              기능이 추가됩니다.
+              기능을 만나보세요.
             </h2>
             <p>
-              좋아요·댓글·북마크로 서로의 노하우를 나누고, 치료사 전용 평가
-              도구도 곧 만나보실 수 있어요. 그때까지는 훈련 웹앱을 편하게
-              써보세요.
+              좋아요·댓글·북마크로 서로의 노하우를 나누고, 치료사 인증을
+              받으면 OTHub Assess까지 이용할 수 있어요.
             </p>
-            <Link className="button button-light" href="/hub/apps">
-              훈련 웹앱 시작하기
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M5 12h14M13 6l6 6-6 6" />
-              </svg>
-            </Link>
+            <div className="hero-actions" style={{ justifyContent: "center" }}>
+              <Link className="button button-light" href="/login">
+                Google로 시작하기
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M5 12h14M13 6l6 6-6 6" />
+                </svg>
+              </Link>
+              <Link className="button button-outline-light" href="/hub/apps">
+                훈련 웹앱 먼저 둘러보기
+              </Link>
+            </div>
             <small className="contact-note">
               문의: <a href="mailto:h2g0614@gmail.com">h2g0614@gmail.com</a>
             </small>

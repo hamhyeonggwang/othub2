@@ -381,6 +381,8 @@ h2 { font-size: clamp(40px, 5vw, 65px); font-weight: 700; }
 .contact h2 { font-size: clamp(43px, 6vw, 72px); }
 .contact p { margin: 25px 0 35px; color: #bed3e6; font-size: 16px; }
 .button-light { color: #0b3d71; background: white; box-shadow: 0 16px 35px rgba(0,0,0,.15); }
+.button-outline-light { color: white; background: transparent; border-color: rgba(255,255,255,.4); }
+.button-outline-light:hover { background: rgba(255,255,255,.1); }
 .contact-note { display: block; margin-top: 16px; color: rgba(207,226,241,.65); font-size: 10px; }
 .contact-note-highlight { color: white; animation: note-highlight .8s ease 2; }
 @keyframes note-highlight { 50% { opacity: .45; } }
