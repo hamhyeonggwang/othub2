@@ -64,6 +64,30 @@ export async function getPublishedContent(): Promise<ContentItemWithStats[]> {
   return withStats((data ?? []) as ContentItem[]);
 }
 
+export async function getMyBookmarks(): Promise<ContentItemWithStats[]> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return [];
+
+  const { data: bookmarks } = await supabase
+    .from("othub_bookmarks")
+    .select("content_id")
+    .eq("user_id", user.id);
+
+  const ids = (bookmarks ?? []).map((b) => b.content_id);
+  if (ids.length === 0) return [];
+
+  const { data } = await supabase
+    .from("othub_content_items")
+    .select("*")
+    .in("id", ids)
+    .eq("status", "published");
+
+  return withStats((data ?? []) as ContentItem[]);
+}
+
 export async function getContentBySlug(
   slug: string
 ): Promise<ContentItemWithStats | null> {

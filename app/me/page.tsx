@@ -3,7 +3,10 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import "../auth/auth.css";
 import "../hub/hub.css";
+import "../assess/assess.css";
 import { getCurrentUserAndProfile } from "@/lib/supabase/profile";
+import { getMyBookmarks } from "@/lib/supabase/content";
+import { getMySessions } from "@/lib/supabase/assess";
 import TherapistRequestForm from "./TherapistRequestForm";
 import SignOutButton from "./SignOutButton";
 import SiteHeader from "@/components/SiteHeader";
@@ -32,6 +35,12 @@ export default async function ProfilePage({
   const isTherapistPending =
     !!profile?.therapist_requested_at && !profile?.approved_at && role === "member";
 
+  const canUseAssess = role === "therapist" || role === "admin";
+  const [bookmarks, sessions] = await Promise.all([
+    getMyBookmarks(),
+    canUseAssess ? getMySessions() : Promise.resolve([]),
+  ]);
+
   return (
     <>
       <SiteHeader />
@@ -54,6 +63,50 @@ export default async function ProfilePage({
         </div>
         <p className="hint">{user.email}</p>
         <SignOutButton />
+      </div>
+
+      <div className="profile-card">
+        <h2>저장한 자료 ({bookmarks.length})</h2>
+        {bookmarks.length === 0 ? (
+          <p className="hint">
+            아직 저장한 자료가 없어요. 콘텐츠 허브나 훈련 웹앱에서 하트를
+            눌러 저장해 보세요.
+          </p>
+        ) : (
+          <div className="hub-grid">
+            {bookmarks.map((item) => {
+              const href =
+                item.type === "app"
+                  ? `/hub/apps/${item.slug}`
+                  : (item.external_url ?? null);
+              if (!href) {
+                return (
+                  <div key={item.id} className="hub-card">
+                    <h3>{item.title}</h3>
+                    <p>{item.description}</p>
+                  </div>
+                );
+              }
+              return item.type === "app" ? (
+                <Link key={item.id} className="hub-card" href={href}>
+                  <h3>{item.title}</h3>
+                  <p>{item.description}</p>
+                </Link>
+              ) : (
+                <a
+                  key={item.id}
+                  className="hub-card-external"
+                  href={href}
+                  target="_blank"
+                  rel="noreferrer noopener"
+                >
+                  <h3>{item.title}</h3>
+                  <p>{item.description}</p>
+                </a>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {params.assess === "locked" && (
@@ -99,14 +152,34 @@ export default async function ProfilePage({
         </div>
       )}
 
-      {(role === "therapist" || role === "admin") && (
+      {canUseAssess && (
         <div className="profile-card">
-          <h2>OTHub Assess</h2>
-          <p className="hint">
-            치료사 회원으로 인증되었습니다. 임상 평가 도구 8종을 세션으로 진행하고
-            결과보고서를 저장할 수 있습니다.
-          </p>
-          <Link className="auth-submit" style={{ display: "inline-block", width: "auto", padding: "10px 20px", textDecoration: "none" }} href="/assess">
+          <h2>평가 세션 ({sessions.length})</h2>
+          {sessions.length === 0 ? (
+            <p className="hint">
+              아직 저장된 평가 세션이 없습니다. OTHub Assess에서 첫 세션을
+              진행해 보세요.
+            </p>
+          ) : (
+            <div className="assess-session-list">
+              {sessions.slice(0, 3).map((s) => (
+                <Link key={s.id} className="assess-session-card" href={`/assess/${s.id}`}>
+                  <div>
+                    <strong>{s.client_code}</strong>
+                    <span>{new Date(s.created_at).toLocaleString("ko-KR")}</span>
+                  </div>
+                  <span className="assess-session-status">
+                    {s.status === "done" ? "완료" : "진행 중"}
+                  </span>
+                </Link>
+              ))}
+            </div>
+          )}
+          <Link
+            className="auth-submit"
+            style={{ display: "inline-block", width: "auto", padding: "10px 20px", textDecoration: "none", marginTop: 16 }}
+            href="/assess"
+          >
             OTHub Assess 열기
           </Link>
         </div>

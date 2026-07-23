@@ -5,6 +5,7 @@ import SiteHeader from "@/components/SiteHeader";
 import "./hub/hub.css";
 import { getPublishedContent } from "@/lib/supabase/content";
 import { PROJECT_STATUS, PROJECT_STATUS_LABEL } from "@/lib/supabase/content-types";
+import { COLLECTIONS } from "@/lib/collections";
 
 const barStyle = (h: string) => ({ "--h": h }) as CSSProperties;
 
@@ -365,28 +366,27 @@ export default async function LandingPage() {
             <em>여러 도구</em>로 해결하세요.
           </h2>
 
-          <div className="collection-card">
-            <div>
-              <p className="eyebrow light">
-                <span></span> COMMUNITY I-ADL
-              </p>
-              <h3>지역사회 I-ADL</h3>
-              <p>
-                편의점·카페·기차역 키오스크 훈련 7종으로 지역사회 일상생활
-                과제를 연습하고, K-IADL 평가로 수행 수준을 확인하세요.
-              </p>
-              <div className="collection-stats">
-                <span>7 Tools</span>
-                <span>K-IADL 평가 포함</span>
+          {COLLECTIONS.map((collection) => (
+            <div key={collection.slug} className="collection-card">
+              <div>
+                <p className="eyebrow light">
+                  <span></span> {collection.eyebrow}
+                </p>
+                <h3>{collection.title}</h3>
+                <p>{collection.description}</p>
+                <div className="collection-stats">
+                  <span>{collection.appSlugs.length} Tools</span>
+                  {collection.assessNote && <span>K-IADL 평가 포함</span>}
+                </div>
+                <Link className="button button-light" href={`/collections/${collection.slug}`}>
+                  {collection.title} 자세히 보기
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M5 12h14M13 6l6 6-6 6" />
+                  </svg>
+                </Link>
               </div>
-              <Link className="button button-light" href="/hub/apps?cat=kiosk">
-                키오스크 훈련 보기
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M5 12h14M13 6l6 6-6 6" />
-                </svg>
-              </Link>
             </div>
-          </div>
+          ))}
         </section>
 
         <section className="section" id="lab" aria-labelledby="lab-title">
@@ -419,6 +419,15 @@ export default async function LandingPage() {
                 </div>
               );
             })}
+          </div>
+
+          <div className="hero-actions" style={{ marginTop: "28px" }}>
+            <Link className="button button-secondary" href="/lab">
+              OTHub Lab 전체 보기
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M5 12h14M13 6l6 6-6 6" />
+              </svg>
+            </Link>
           </div>
         </section>
 

@@ -38,6 +38,23 @@
   word-break: keep-all;
 }
 
+.lab-status-legend {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin: 32px 0 44px;
+  padding: 20px 22px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: #fff;
+}
+.lab-status-legend p {
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
 .hub-back {
   display: inline-flex;
   align-items: center;
