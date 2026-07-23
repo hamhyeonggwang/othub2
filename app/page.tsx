@@ -47,7 +47,7 @@ export default function LandingPage() {
             </div>
             <div className="trust-stats" aria-label="OTHub 현황">
               <div>
-                <strong>13</strong>
+                <strong>14</strong>
                 <small>훈련 웹앱</small>
               </div>
               <div>
@@ -290,7 +290,7 @@ export default function LandingPage() {
               </h2>
             </div>
             <p>
-              13개 훈련 웹앱과 8종 평가 도구 중<br />
+              14개 훈련 웹앱과 8종 평가 도구 중<br />
               추천 도구 몇 가지를 먼저 소개합니다.
             </p>
           </div>
