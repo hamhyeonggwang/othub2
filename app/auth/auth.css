@@ -136,7 +136,11 @@
 .profile-shell {
   max-width: 640px;
   margin: 0 auto;
-  padding: 140px 24px 100px;
+  padding: 56px 24px 100px calc(var(--sidebar-w) + 24px);
+}
+
+@media (max-width: 1080px) {
+  .profile-shell { padding: 140px 24px 100px; }
 }
 
 .profile-card {

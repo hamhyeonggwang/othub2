@@ -21,6 +21,7 @@ import {
 } from "@/app/actions/admin";
 import ContentForm from "./ContentForm";
 import { TYPE_LABEL } from "@/lib/supabase/content-types";
+import SiteHeader from "@/components/SiteHeader";
 
 export const metadata: Metadata = {
   title: "관리자",
@@ -51,7 +52,9 @@ export default async function AdminPage({
   const tab: TabKey = (TABS.find((t) => t.key === params.tab)?.key ?? "requests") as TabKey;
 
   return (
-    <div className="hub-shell">
+    <>
+      <SiteHeader />
+      <div className="hub-shell" id="main">
       <Link className="hub-back" href="/">
         ← OTHub 홈으로
       </Link>
@@ -74,7 +77,8 @@ export default async function AdminPage({
       {tab === "content" && <ContentTab editSlug={params.edit} />}
       {tab === "members" && <MembersTab />}
       {tab === "engagement" && <EngagementTab />}
-    </div>
+      </div>
+    </>
   );
 }
 

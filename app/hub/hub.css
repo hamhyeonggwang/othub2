@@ -1,7 +1,11 @@
 .hub-shell {
   max-width: var(--max);
   margin: 0 auto;
-  padding: 140px 32px 100px;
+  padding: 56px 32px 100px calc(var(--sidebar-w) + 32px);
+}
+
+@media (max-width: 1080px) {
+  .hub-shell { padding: 140px 32px 100px; }
 }
 
 .hub-header {
