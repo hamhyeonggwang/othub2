@@ -1,5 +1,6 @@
-export type ContentType = "app" | "video" | "book" | "tool" | "info";
+export type ContentType = "app" | "video" | "book" | "tool" | "info" | "project";
 export type AppCategory = "kiosk" | "hand" | "gaze";
+export type ProjectStatus = "available" | "beta" | "research" | "concept";
 
 export interface ContentItem {
   id: string;
@@ -41,6 +42,22 @@ export const TYPE_LABEL: Record<ContentType, string> = {
   book: "도서",
   tool: "도구",
   info: "정보",
+  project: "프로젝트",
+};
+
+export const PROJECT_STATUS_LABEL: Record<ProjectStatus, string> = {
+  available: "AVAILABLE",
+  beta: "BETA",
+  research: "RESEARCH",
+  concept: "CONCEPT",
+};
+
+/** slug -> Lab 프로젝트 진행 상태. 새 프로젝트를 등록하면 여기에 추가한다. */
+export const PROJECT_STATUS: Record<string, ProjectStatus> = {
+  "tool-gas": "concept",
+  "tool-icf-classifier": "research",
+  "tool-mbi-fim": "concept",
+  "tool-report": "concept",
 };
 
 export const APP_CATEGORIES: { key: AppCategory | "all"; label: string }[] = [

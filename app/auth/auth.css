@@ -97,6 +97,16 @@
   cursor: not-allowed;
 }
 
+.auth-google {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: #fff;
+  border: 1px solid var(--line);
+  color: var(--navy);
+}
+
 .auth-note {
   margin-top: 16px;
   font-size: 13px;

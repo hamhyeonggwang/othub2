@@ -5,27 +5,25 @@ import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 
-export async function sendMagicLink(formData: FormData) {
-  const email = String(formData.get("email") ?? "").trim();
-  if (!email || !email.includes("@")) {
-    return { error: "올바른 이메일 주소를 입력해 주세요.", sent: false };
-  }
-
+export async function signInWithGoogle() {
   const headerList = await headers();
   const origin =
     headerList.get("origin") ??
     `https://${headerList.get("host")}`;
 
   const supabase = await createClient();
-  const { error } = await supabase.auth.signInWithOtp({
-    email,
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: "google",
     options: {
-      emailRedirectTo: `${origin}/auth/callback`,
+      redirectTo: `${origin}/auth/callback`,
     },
   });
 
-  if (error) return { error: "메일 발송에 실패했습니다. 잠시 후 다시 시도해 주세요.", sent: false };
-  return { error: null, sent: true };
+  if (error || !data.url) {
+    redirect("/login?error=구글 로그인에 실패했습니다. 잠시 후 다시 시도해 주세요.");
+  }
+
+  redirect(data.url);
 }
 
 export async function signOut() {

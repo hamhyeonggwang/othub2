@@ -31,6 +31,7 @@ export default function ContentForm({ editing }: { editing: ContentItem | null }
             <option value="book">도서</option>
             <option value="tool">도구</option>
             <option value="info">정보</option>
+            <option value="project">프로젝트 (Lab)</option>
           </select>
         </div>
         <div className="admin-field admin-field-wide">

@@ -52,7 +52,7 @@ export async function deleteContent(contentId: string) {
   revalidatePath("/hub");
 }
 
-const CONTENT_TYPES = ["app", "video", "book", "tool", "info"] as const;
+const CONTENT_TYPES = ["app", "video", "book", "tool", "info", "project"] as const;
 
 function parseTagList(value: FormDataEntryValue | null): string[] {
   return String(value ?? "")

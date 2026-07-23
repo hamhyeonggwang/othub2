@@ -6,6 +6,7 @@ import "../hub/hub.css";
 import { getCurrentUserAndProfile } from "@/lib/supabase/profile";
 import TherapistRequestForm from "./TherapistRequestForm";
 import SignOutButton from "./SignOutButton";
+import SiteHeader from "@/components/SiteHeader";
 
 export const metadata: Metadata = {
   title: "내 정보",
@@ -32,7 +33,9 @@ export default async function ProfilePage({
     !!profile?.therapist_requested_at && !profile?.approved_at && role === "member";
 
   return (
-    <div className="profile-shell">
+    <>
+      <SiteHeader />
+      <div className="profile-shell" id="main">
       <Link className="hub-back" href="/">
         ← OTHub 홈으로
       </Link>
@@ -108,6 +111,7 @@ export default async function ProfilePage({
           </Link>
         </div>
       )}
-    </div>
+      </div>
+    </>
   );
 }

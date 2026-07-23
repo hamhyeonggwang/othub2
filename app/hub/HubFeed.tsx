@@ -10,10 +10,8 @@ import {
 
 const TYPE_CHIPS: { key: "all" | ContentItemWithStats["type"]; label: string }[] = [
   { key: "all", label: "전체" },
-  { key: "app", label: "웹앱" },
   { key: "video", label: "영상" },
   { key: "info", label: "정보" },
-  { key: "tool", label: "도구" },
 ];
 
 export default function HubFeed({ items }: { items: ContentItemWithStats[] }) {
@@ -87,40 +85,6 @@ export default function HubFeed({ items }: { items: ContentItemWithStats[] }) {
 
 function FeedCard({ item }: { item: ContentItemWithStats }) {
   const badge = `${item.requires_camera ? "📷 " : ""}${TYPE_LABEL[item.type]}`;
-
-  if (item.type === "app") {
-    return (
-      <Link className="hub-card" href={`/hub/apps/${item.slug}`}>
-        <span className="hub-card-badge">{badge}</span>
-        <h3>{item.title}</h3>
-        <p>{item.description}</p>
-        <div className="hub-card-tags">
-          {item.tags.map((tag) => (
-            <span key={tag}>{tag}</span>
-          ))}
-        </div>
-        <div className="hub-card-engage">
-          <span>❤️ {item.likeCount}</span>
-          <span>💬 {item.commentCount}</span>
-        </div>
-      </Link>
-    );
-  }
-
-  if (item.type === "tool") {
-    return (
-      <div className="hub-card hub-card-locked">
-        <span className="hub-card-badge">{badge} · 준비 중</span>
-        <h3>{item.title}</h3>
-        <p>{item.description}</p>
-        <div className="hub-card-tags">
-          {item.tags.map((tag) => (
-            <span key={tag}>{tag}</span>
-          ))}
-        </div>
-      </div>
-    );
-  }
 
   return (
     <a

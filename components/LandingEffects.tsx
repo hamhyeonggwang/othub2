@@ -44,7 +44,7 @@ export default function LandingEffects() {
     }
 
     const revealTargets = document.querySelectorAll(
-      ".project-card, .process-list li, .about-copy, .section-heading"
+      ".project-card, .process-list li, .about-copy, .section-heading, .quickstart-card, .hub-card, .collection-card"
     );
 
     if (!reduceMotion && "IntersectionObserver" in window) {

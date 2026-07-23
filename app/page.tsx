@@ -1,47 +1,20 @@
 import type { CSSProperties } from "react";
 import Link from "next/link";
 import LandingEffects from "@/components/LandingEffects";
-import { getCurrentUserAndProfile } from "@/lib/supabase/profile";
+import SiteHeader from "@/components/SiteHeader";
+import "./hub/hub.css";
+import { getPublishedContent } from "@/lib/supabase/content";
+import { PROJECT_STATUS, PROJECT_STATUS_LABEL } from "@/lib/supabase/content-types";
 
 const barStyle = (h: string) => ({ "--h": h }) as CSSProperties;
-const dotStyle = (x: string, y: string) => ({ "--x": x, "--y": y }) as CSSProperties;
 
 export default async function LandingPage() {
-  const { user, profile } = await getCurrentUserAndProfile();
+  const labProjects = (await getPublishedContent()).filter((item) => item.type === "project");
 
   return (
     <>
       <LandingEffects />
-      <a className="skip-link" href="#main">
-        본문으로 바로가기
-      </a>
-
-      <header className="site-header" id="top">
-        <a className="brand" href="#top" aria-label="OTHub 홈">
-          <span className="brand-mark" aria-hidden="true">
-            OT
-          </span>
-          <span>
-            <strong>OTHub</strong>
-            <small>By OTs, For Everyone</small>
-          </span>
-        </a>
-
-        <nav className="desktop-nav" aria-label="주요 메뉴">
-          <a href="#about">소개</a>
-          <a href="#work">무엇을 할 수 있나요</a>
-          <a href="#approach">만드는 방식</a>
-        </nav>
-
-        <div className="header-auth">
-          <Link className="button button-secondary" href={user ? "/me" : "/login"}>
-            {user ? profile?.display_name || "내 정보" : "로그인"}
-          </Link>
-          <Link className="nav-cta" href="/hub/apps">
-            훈련 웹앱 바로가기
-          </Link>
-        </div>
-      </header>
+      <SiteHeader />
 
       <main id="main">
         <section className="hero" aria-labelledby="hero-title">
@@ -50,61 +23,40 @@ export default async function LandingPage() {
 
           <div className="hero-copy">
             <p className="eyebrow">
-              <span></span> BY OTs · FOR EVERYONE
+              <span></span> 임상 도구 &amp; 지식 플랫폼
             </p>
             <h1 id="hero-title">
-              치료실의 도구를
+              치료실에서 만든 도구를
               <br />
-              <em>모두의 플랫폼</em>으로.
+              <em>누구나 바로</em> 사용할 수 있게.
             </h1>
             <p className="hero-description">
-              작업치료사가 만든 훈련 웹앱과 치료 콘텐츠, 임상 평가 도구를
-              <br className="desktop-only" />
-              누구나 쓸 수 있는 한곳에 모았습니다.
+              작업치료사가 직접 만들고 검증한 훈련·평가·임상 도구를 한곳에서
+              사용하세요.
             </p>
             <div className="hero-actions">
               <Link className="button button-primary" href="/hub/apps">
-                훈련 웹앱 보기
+                도구 찾기
                 <svg viewBox="0 0 24 24" aria-hidden="true">
                   <path d="M5 12h14M13 6l6 6-6 6" />
                 </svg>
               </Link>
-              <a className="button button-secondary" href="#about">
-                OTHub 소개
-              </a>
+              <Link className="button button-secondary" href="/about">
+                OTHub 알아보기
+              </Link>
             </div>
-            <div className="hero-meta" aria-label="핵심 영역">
+            <div className="trust-stats" aria-label="OTHub 현황">
               <div>
-                <strong>01</strong>
-                <span>
-                  훈련
-                  <br />
-                  웹앱
-                </span>
+                <strong>12</strong>
+                <small>훈련 웹앱</small>
               </div>
               <div>
-                <strong>02</strong>
-                <span>
-                  콘텐츠
-                  <br />
-                  허브
-                </span>
+                <strong>8+</strong>
+                <small>평가 도구</small>
               </div>
               <div>
-                <strong>03</strong>
-                <span>
-                  OTHub
-                  <br />
-                  Assess
-                </span>
-              </div>
-              <div>
-                <strong>04</strong>
-                <span>
-                  Human-led
-                  <br />
-                  AI
-                </span>
+                <strong>0</strong>
+                <small>설치 필요</small>
               </div>
             </div>
           </div>
@@ -161,11 +113,11 @@ export default async function LandingPage() {
             <article className="glass-card system-card" data-depth="0.82">
               <div className="system-topline">
                 <div>
-                  <p>OTHub SYSTEM MAP</p>
-                  <strong>From clinic to everyone</strong>
+                  <p>OTHub 이야기</p>
+                  <strong>치료실에서 모두에게로</strong>
                 </div>
                 <span className="live-pill">
-                  <i></i> SYSTEM ONLINE
+                  <i></i> 함께 만드는 중
                 </span>
               </div>
 
@@ -196,32 +148,32 @@ export default async function LandingPage() {
                   <circle cx="457" cy="43" r="5" />
                 </svg>
                 <span className="chart-label">
-                  Designed for
+                  현장에서 쓰기 좋게
                   <br />
-                  <strong>real-world use</strong>
+                  <strong>같이 다듬어요</strong>
                 </span>
               </div>
 
               <div className="system-stats">
                 <div>
                   <span>01</span>
-                  <strong>Practice</strong>
-                  <small>임상에서 도구가 태어납니다</small>
+                  <strong>현장</strong>
+                  <small>치료실에서 도구가 태어납니다</small>
                 </div>
                 <div>
                   <span>02</span>
-                  <strong>Build</strong>
-                  <small>웹앱으로 구현합니다</small>
+                  <strong>제작</strong>
+                  <small>웹앱으로 만들어봅니다</small>
                 </div>
                 <div>
                   <span>03</span>
-                  <strong>Share</strong>
-                  <small>모두에게 공개합니다</small>
+                  <strong>공유</strong>
+                  <small>모두에게 편하게 나눕니다</small>
                 </div>
                 <div>
                   <span>04</span>
-                  <strong>Grow</strong>
-                  <small>사용 경험으로 발전합니다</small>
+                  <strong>성장</strong>
+                  <small>함께 써보며 다듬어갑니다</small>
                 </div>
               </div>
             </article>
@@ -250,7 +202,7 @@ export default async function LandingPage() {
                     <path d="M9 2v3m6-3v3M9 19v3m6-3v3M2 9h3m-3 6h3m14-6h3m-3 6h3" />
                   </svg>
                 </span>
-                <span>AI Systems</span>
+                <span>AI 훈련 게임</span>
               </div>
               <div className="pulse-line">
                 <i></i>
@@ -260,306 +212,246 @@ export default async function LandingPage() {
                 <i></i>
                 <i></i>
               </div>
-              <small>Human-led workflow</small>
+              <small>사람이 중심인 AI</small>
             </article>
           </div>
 
-          <a className="scroll-cue" href="#about" aria-label="다음 섹션으로 이동">
+          <a className="scroll-cue" href="#quickstart" aria-label="다음 섹션으로 이동">
             <span>SCROLL TO EXPLORE</span>
             <i></i>
           </a>
         </section>
 
+        <section className="quickstart-section section" id="quickstart" aria-labelledby="quickstart-title">
+          <div className="quickstart-heading">
+            <h2 id="quickstart-title">무엇을 하러 오셨나요?</h2>
+          </div>
+          <div className="quickstart-grid">
+            <Link className="quickstart-card" href="/hub/apps">
+              <span className="quickstart-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                  <path d="M4 19V9m5 10V5m5 14v-7m5 7V3" />
+                </svg>
+              </span>
+              <h3>훈련하기</h3>
+              <p>생활 속 과제와 기능을 연습합니다.</p>
+              <span className="quickstart-cta">
+                훈련 도구
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M5 12h14M13 6l6 6-6 6" />
+                </svg>
+              </span>
+            </Link>
+
+            <Link className="quickstart-card" href="/assess">
+              <span className="quickstart-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                  <path d="m3 8 9-5 9 5-9 5-9-5Z" />
+                  <path d="M7 11v5c3 3 7 3 10 0v-5" />
+                </svg>
+              </span>
+              <h3>평가하기</h3>
+              <p>평가를 기록하고 결과를 확인합니다.</p>
+              <span className="quickstart-cta">
+                OTHub Assess
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M5 12h14M13 6l6 6-6 6" />
+                </svg>
+              </span>
+            </Link>
+
+            <Link className="quickstart-card" href="/hub">
+              <span className="quickstart-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                  <circle cx="11" cy="11" r="6" />
+                  <path d="m16 16 4 4M8 11h6M11 8v6" />
+                </svg>
+              </span>
+              <h3>자료 찾기</h3>
+              <p>임상에 필요한 근거와 자료를 찾습니다.</p>
+              <span className="quickstart-cta">
+                콘텐츠 탐색
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M5 12h14M13 6l6 6-6 6" />
+                </svg>
+              </span>
+            </Link>
+          </div>
+        </section>
+
+        <section className="section" id="tools" aria-labelledby="tools-title">
+          <div className="section-heading">
+            <div>
+              <div className="section-label">01 — FEATURED TOOLS</div>
+              <h2 id="tools-title">
+                지금 바로
+                <br />
+                <em>써볼 수 있어요</em>
+              </h2>
+            </div>
+            <p>
+              12개 훈련 웹앱과 8종 평가 도구 중<br />
+              추천 도구 몇 가지를 먼저 소개합니다.
+            </p>
+          </div>
+
+          <div className="hub-grid">
+            <Link className="hub-card" href="/hub/apps/cu-kiosk-trainer">
+              <span className="hub-card-badge">🖱️ 클릭만으로 가능</span>
+              <h3>CU 편의점 셀프계산대 훈련</h3>
+              <p>편의점 셀프계산대에서 바코드 스캔부터 결제까지 단계별로 연습합니다.</p>
+              <div className="hub-card-tags">
+                <span>키오스크</span>
+                <span>I-ADL</span>
+              </div>
+            </Link>
+
+            <Link className="hub-card" href="/hub/apps/korail-kiosk-trainer">
+              <span className="hub-card-badge">🖱️ 클릭만으로 가능</span>
+              <h3>코레일 승차권 키오스크 훈련</h3>
+              <p>기차역 발권기에서 노선·시간·좌석을 선택해 승차권을 예매하는 과정을 연습합니다.</p>
+              <div className="hub-card-tags">
+                <span>키오스크</span>
+                <span>이동</span>
+              </div>
+            </Link>
+
+            <Link className="hub-card" href="/hub/apps/airdrawing">
+              <span className="hub-card-badge">📷 카메라 필요</span>
+              <h3>에어 드로잉</h3>
+              <p>웹캠 손 인식으로 허공에 그림을 그리며 상지 조절과 시지각 협응을 훈련합니다.</p>
+              <div className="hub-card-tags">
+                <span>손 인식 AI</span>
+                <span>상지기능</span>
+              </div>
+            </Link>
+
+            <Link className="hub-card" href="/hub/apps/gazeplay-stars">
+              <span className="hub-card-badge">📷 카메라 필요</span>
+              <h3>GazePlay 별자리 그리기</h3>
+              <p>시선 이동으로 별을 이어 별자리를 완성하며 안구 운동 조절을 훈련합니다.</p>
+              <div className="hub-card-tags">
+                <span>시선 추적</span>
+                <span>집중</span>
+              </div>
+            </Link>
+
+            <Link className="hub-card" href="/assess">
+              <span className="hub-card-badge">OTHub ASSESS · 치료사 전용</span>
+              <h3>OTHub Assess</h3>
+              <p>K-MBI, JTHFT, MACS, K-IADL 등 8종 평가를 세션으로 진행하고 결과보고서를 생성합니다.</p>
+              <div className="hub-card-tags">
+                <span>평가 세션</span>
+                <span>결과보고서</span>
+              </div>
+            </Link>
+          </div>
+
+          <div className="hero-actions" style={{ marginTop: "28px" }}>
+            <Link className="button button-secondary" href="/hub/apps">
+              전체 웹앱 보기
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M5 12h14M13 6l6 6-6 6" />
+              </svg>
+            </Link>
+          </div>
+        </section>
+
+        <section className="section" id="collections" aria-labelledby="collections-title">
+          <div className="section-label">02 — COLLECTIONS</div>
+          <h2 id="collections-title" style={{ margin: "0 0 32px" }}>
+            하나의 문제를
+            <br />
+            <em>여러 도구</em>로 해결하세요.
+          </h2>
+
+          <div className="collection-card">
+            <div>
+              <p className="eyebrow light">
+                <span></span> COMMUNITY I-ADL
+              </p>
+              <h3>지역사회 I-ADL</h3>
+              <p>
+                편의점·카페·기차역 키오스크 훈련 7종으로 지역사회 일상생활
+                과제를 연습하고, K-IADL 평가로 수행 수준을 확인하세요.
+              </p>
+              <div className="collection-stats">
+                <span>7 Tools</span>
+                <span>K-IADL 평가 포함</span>
+              </div>
+              <Link className="button button-light" href="/hub/apps?cat=kiosk">
+                키오스크 훈련 보기
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M5 12h14M13 6l6 6-6 6" />
+                </svg>
+              </Link>
+            </div>
+          </div>
+        </section>
+
+        <section className="section" id="lab" aria-labelledby="lab-title">
+          <div className="section-label">03 — OTHUB LAB</div>
+          <div className="section-heading">
+            <div>
+              <h2 id="lab-title">
+                치료실의 문제를
+                <br />
+                <em>새로운 기술</em>로 실험합니다.
+              </h2>
+            </div>
+            <p>
+              아직 다듬는 중인 것들이에요.
+              <br />
+              완성되면 도구로 공개합니다.
+            </p>
+          </div>
+
+          <div className="lab-grid">
+            {labProjects.map((project) => {
+              const status = PROJECT_STATUS[project.slug] ?? "concept";
+              return (
+                <div key={project.id} className="hub-card hub-card-locked">
+                  <span className="lab-status" data-status={status}>
+                    {PROJECT_STATUS_LABEL[status]}
+                  </span>
+                  <h3>{project.title}</h3>
+                  <p>{project.description}</p>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+
         <section className="about section" id="about" aria-labelledby="about-title">
-          <div className="section-label">01 — ABOUT</div>
+          <div className="section-label">04 — ABOUT</div>
           <div className="about-layout">
             <div>
               <p className="eyebrow">
-                <span></span> BY OTs, FOR EVERYONE
+                <span></span> 작업치료사가 만들고, 작업치료사가 씁니다
               </p>
               <h2 id="about-title">
-                작업치료사가 만든
+                편하게 나누고
                 <br />
-                <em>모두를 위한</em> 플랫폼
+                <em>같이 써보는</em> 공간
               </h2>
             </div>
             <div className="about-copy">
               <p className="lead">
-                OTHub는 작업치료사가 임상 현장에서 직접 만들고 검증한 도구를 한곳에
-                모은 플랫폼입니다.
+                OTHub는 작업치료사들이 현장에서 아이디어를 서로 나누고, 함께
+                다듬어가는 공간입니다.
               </p>
               <p>
-                키오스크 훈련과 손 인식 게임은 로그인 없이 누구나 바로 사용할 수
-                있습니다. 치료사 회원에게는 평가 세션과 결과보고서를 관리하는 임상
-                평가 도구(OTHub Assess)를 제공합니다.
+                키오스크 훈련과 손 인식 게임은 로그인 없이 누구나 바로 써볼 수
+                있어요. 치료사 회원이 되면 평가 세션과 결과보고서를 관리하는
+                평가 도구(OTHub Assess)도 편하게 이용할 수 있습니다.
               </p>
               <div className="principles">
-                <span>Participation-centered</span>
-                <span>Evidence-informed</span>
-                <span>Open for everyone</span>
-                <span>Human-led AI</span>
+                <span>다 함께 참여해요</span>
+                <span>현장에서 검증했어요</span>
+                <span>누구에게나 열려있어요</span>
+                <span>사람이 중심인 AI</span>
               </div>
             </div>
-          </div>
-        </section>
-
-        <section className="work section" id="work" aria-labelledby="work-title">
-          <div className="section-heading">
-            <div>
-              <div className="section-label">02 — WHAT YOU CAN DO</div>
-              <h2 id="work-title">
-                오늘 바로 쓸 수 있는
-                <br />
-                <em>도구와 콘텐츠</em>
-              </h2>
-            </div>
-            <p>
-              치료실, 학교, 가정 어디에서든
-              <br />
-              필요한 훈련을 바로 시작하세요.
-            </p>
-          </div>
-
-          <div className="project-grid">
-            <article className="project-card project-featured">
-              <div className="project-visual linkit-visual" aria-hidden="true">
-                <div className="phone-mock">
-                  <div className="phone-top"></div>
-                  <small>TODAY&apos;S TRAINING</small>
-                  <strong>
-                    생활 속 과제를
-                    <br />
-                    연습해요
-                  </strong>
-                  <div className="mission-row">
-                    <i>01</i>
-                    <span>메뉴 고르기</span>
-                    <b>✓</b>
-                  </div>
-                  <div className="mission-row">
-                    <i>02</i>
-                    <span>옵션 선택</span>
-                    <b>→</b>
-                  </div>
-                  <div className="mission-row">
-                    <i>03</i>
-                    <span>결제하기</span>
-                    <b>·</b>
-                  </div>
-                </div>
-              </div>
-              <div className="project-body">
-                <div className="project-meta">
-                  <span>TRAINING WEB APPS · 무료 공개</span>
-                  <small>01</small>
-                </div>
-                <h3>훈련 웹앱 12종</h3>
-                <p>
-                  편의점·카페·기차역 키오스크 훈련 7종과 손 인식·시선 추적 AI 게임
-                  5종. 설치 없이 브라우저에서 바로 실행됩니다.
-                </p>
-                <div className="project-tags">
-                  <span>키오스크</span>
-                  <span>손 인식 AI</span>
-                  <span>시선 추적</span>
-                </div>
-                <div className="hero-actions" style={{ marginTop: "18px" }}>
-                  <Link className="button button-primary" href="/hub/apps">
-                    전체 웹앱 보기
-                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                      <path d="M5 12h14M13 6l6 6-6 6" />
-                    </svg>
-                  </Link>
-                </div>
-              </div>
-            </article>
-
-            <article className="project-card">
-              <div className="project-visual occupation-visual" aria-hidden="true">
-                <div className="flow-panel flow-panel-a">
-                  <small>VIDEO</small>
-                  <strong>
-                    치료 근거
-                    <br />
-                    콘텐츠
-                  </strong>
-                  <i></i>
-                </div>
-                <div className="flow-panel flow-panel-b">
-                  <small>INFO</small>
-                  <strong>
-                    학회·도서
-                    <br />
-                    큐레이션
-                  </strong>
-                  <i></i>
-                </div>
-                <svg viewBox="0 0 500 250">
-                  <path d="M65 144C175 40 321 218 438 89" />
-                  <circle cx="65" cy="144" r="7" />
-                  <circle cx="438" cy="89" r="7" />
-                </svg>
-              </div>
-              <div className="project-body">
-                <div className="project-meta">
-                  <span>CONTENT HUB</span>
-                  <small>02</small>
-                </div>
-                <h3>콘텐츠 허브</h3>
-                <p>
-                  감각통합·상지재활·ICF 등 임상 주제 영상과 학회 정보를
-                  큐레이션합니다. 회원은 좋아요·댓글·북마크로 참여할 수 있습니다.
-                </p>
-                <div className="project-tags">
-                  <span>영상</span>
-                  <span>학회 정보</span>
-                  <span>PEO 필터</span>
-                </div>
-                <div className="hero-actions" style={{ marginTop: "18px" }}>
-                  <Link className="button button-primary" href="/hub">
-                    콘텐츠 허브 보기
-                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                      <path d="M5 12h14M13 6l6 6-6 6" />
-                    </svg>
-                  </Link>
-                </div>
-              </div>
-            </article>
-
-            <article className="project-card">
-              <div className="project-visual icf-visual" aria-hidden="true">
-                <div className="icf-core">ASSESS</div>
-                <span className="node node-one">평가</span>
-                <span className="node node-two">기록</span>
-                <span className="node node-three">보고서</span>
-                <svg viewBox="0 0 400 250">
-                  <circle cx="200" cy="125" r="82" />
-                  <path d="M200 43 87 180M200 43l113 137M87 180h226" />
-                </svg>
-              </div>
-              <div className="project-body">
-                <div className="project-meta">
-                  <span>OTHub ASSESS · 치료사 회원 전용</span>
-                  <small>03</small>
-                </div>
-                <h3>임상 평가 도구</h3>
-                <p>
-                  K-MBI, JTHFT, MACS, K-IADL 등 8종 평가를 세션으로 묶어 진행하고
-                  종합 결과보고서를 생성합니다. 치료사 인증 회원에게 제공됩니다.
-                </p>
-                <div className="project-tags">
-                  <span>평가 세션</span>
-                  <span>결과보고서</span>
-                </div>
-                <div className="hero-actions" style={{ marginTop: "18px" }}>
-                  <Link className="button button-secondary" href="/assess">
-                    OTHub Assess 열기
-                  </Link>
-                </div>
-              </div>
-            </article>
-
-            <article className="project-card project-wide">
-              <div className="project-visual adl-visual" aria-hidden="true">
-                <div className="hand-map">
-                  <i style={dotStyle("19%", "48%")}></i>
-                  <i style={dotStyle("31%", "32%")}></i>
-                  <i style={dotStyle("45%", "26%")}></i>
-                  <i style={dotStyle("56%", "35%")}></i>
-                  <i style={dotStyle("62%", "53%")}></i>
-                  <i style={dotStyle("47%", "65%")}></i>
-                  <svg viewBox="0 0 600 260">
-                    <path d="M98 150c55-7 77-86 129-76 33 7 22 61 53 66 35 6 46-87 87-79 39 8 13 87 54 93 25 4 40-23 76-2" />
-                  </svg>
-                </div>
-                <div className="tracking-panel">
-                  <small>MOTION TRACKING</small>
-                  <strong>Hand &amp; Gaze AI</strong>
-                  <span>웹캠 기반 손 인식 · 시선 추적 · 수행 데이터</span>
-                </div>
-              </div>
-              <div className="project-body">
-                <div className="project-meta">
-                  <span>AI TRAINING GAMES · R&amp;D</span>
-                  <small>04</small>
-                </div>
-                <h3>AI 훈련 게임</h3>
-                <p>
-                  웹캠 기반 손·시선 인식으로 일상생활 과제를 놀이처럼 연습합니다.
-                  별도 장비 없이 브라우저와 카메라만으로 시작할 수 있습니다.
-                </p>
-                <div className="project-tags">
-                  <span>MediaPipe</span>
-                  <span>Web Game</span>
-                  <span>Performance Data</span>
-                </div>
-              </div>
-            </article>
-          </div>
-        </section>
-
-        <section className="approach section" id="approach" aria-labelledby="approach-title">
-          <div className="section-label">03 — APPROACH</div>
-          <div className="approach-layout">
-            <div className="approach-intro">
-              <p className="eyebrow">
-                <span></span> FROM CLINIC TO EVERYONE
-              </p>
-              <h2 id="approach-title">
-                임상에서 시작해
-                <br />
-                <em>모두에게 닿는</em> 설계
-              </h2>
-              <p>
-                모든 도구는 치료실의 실제 필요에서 출발합니다. 임상에서 검증한
-                뒤에야 플랫폼에 올라옵니다.
-              </p>
-            </div>
-
-            <ol className="process-list">
-              <li>
-                <span>01</span>
-                <div>
-                  <strong>Observe</strong>
-                  <p>임상과 일상의 실제 문제를 관찰합니다.</p>
-                </div>
-              </li>
-              <li>
-                <span>02</span>
-                <div>
-                  <strong>Frame</strong>
-                  <p>목적, 사용자, 성공 기준을 명확히 합니다.</p>
-                </div>
-              </li>
-              <li>
-                <span>03</span>
-                <div>
-                  <strong>Design</strong>
-                  <p>사용자 흐름과 데이터, 판단 구조를 설계합니다.</p>
-                </div>
-              </li>
-              <li>
-                <span>04</span>
-                <div>
-                  <strong>Build</strong>
-                  <p>작게 구현하고 실제 사용 환경에 연결합니다.</p>
-                </div>
-              </li>
-              <li>
-                <span>05</span>
-                <div>
-                  <strong>Validate</strong>
-                  <p>근거와 사용 경험으로 효과를 검증합니다.</p>
-                </div>
-              </li>
-              <li>
-                <span>06</span>
-                <div>
-                  <strong>Share</strong>
-                  <p>검증된 도구를 모두에게 공개합니다.</p>
-                </div>
-              </li>
-            </ol>
           </div>
         </section>
 
@@ -567,16 +459,17 @@ export default async function LandingPage() {
           <div className="contact-glow" aria-hidden="true"></div>
           <div className="contact-inner">
             <p className="eyebrow light">
-              <span></span> COMING SOON — 회원제 오픈
+              <span></span> 곧 만나요 — 회원제 오픈 예정
             </p>
             <h2 id="contact-title">
-              곧 회원 기능이
+              곧 함께 나누는
               <br />
-              추가됩니다.
+              기능이 추가됩니다.
             </h2>
             <p>
-              좋아요·댓글·북마크, 그리고 치료사 전용 평가 도구까지. 지금은 훈련
-              웹앱을 자유롭게 사용해 보세요.
+              좋아요·댓글·북마크로 서로의 노하우를 나누고, 치료사 전용 평가
+              도구도 곧 만나보실 수 있어요. 그때까지는 훈련 웹앱을 편하게
+              써보세요.
             </p>
             <Link className="button button-light" href="/hub/apps">
               훈련 웹앱 시작하기
@@ -592,16 +485,16 @@ export default async function LandingPage() {
       </main>
 
       <footer>
-        <a className="brand footer-brand" href="#top">
+        <Link className="brand footer-brand" href="/">
           <span className="brand-mark" aria-hidden="true">
             OT
           </span>
           <span>
             <strong>OTHub</strong>
-            <small>By OTs, For Everyone</small>
+            <small>작업치료사가 만들고, 함께 쓰는</small>
           </span>
-        </a>
-        <p>훈련 웹앱 · 콘텐츠 허브 · 임상 평가 도구</p>
+        </Link>
+        <p>함께 만들고 나누는 훈련 웹앱 · 콘텐츠 허브 · 평가 도구</p>
         <p>© {new Date().getFullYear()} OTHub</p>
       </footer>
     </>
