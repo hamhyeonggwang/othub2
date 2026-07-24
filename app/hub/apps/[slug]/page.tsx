@@ -42,7 +42,7 @@ export default async function AppDetailPage({
       <SiteHeader />
       <div className="hub-shell" id="main">
         <Link className="hub-back" href="/hub/apps">
-          ← 훈련 웹앱 목록으로
+          ← Tool 목록으로
         </Link>
 
         <div className="app-detail-header">

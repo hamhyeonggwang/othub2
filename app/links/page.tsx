@@ -6,7 +6,7 @@ import { getPublishedContent } from "@/lib/supabase/content";
 import { SITE_CATEGORY, SITE_CATEGORY_ORDER } from "@/lib/useful-sites";
 
 export const metadata: Metadata = {
-  title: "유용한 사이트",
+  title: "Link",
   description: "관련 협회·학회·커뮤니티 등 작업치료사에게 유용한 외부 사이트 모음.",
 };
 
@@ -29,7 +29,7 @@ export default async function LinksPage() {
         </Link>
 
         <div className="hub-header">
-          <h1 className="hub-title">유용한 사이트</h1>
+          <h1 className="hub-title">Link</h1>
           <p className="hub-desc">
             작업치료사에게 도움이 되는 협회·학회·커뮤니티 사이트를 모았습니다.
           </p>

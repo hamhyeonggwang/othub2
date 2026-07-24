@@ -5,7 +5,7 @@ import { APP_CATEGORIES, getPublishedContent } from "@/lib/supabase/content";
 import SiteHeader from "@/components/SiteHeader";
 
 export const metadata: Metadata = {
-  title: "훈련 웹앱",
+  title: "Tool",
   description: "키오스크 훈련, 손 인식 AI 게임, 시선 추적 훈련 웹앱을 무료로 이용하세요.",
 };
 
@@ -30,9 +30,9 @@ export default async function AppsPage({
       <div className="hub-shell" id="main">
         <div className="hub-header">
           <Link className="hub-back" href="/hub">
-            ← 콘텐츠 허브로
+            ← Content로
           </Link>
-          <h1 className="hub-title">훈련 웹앱</h1>
+          <h1 className="hub-title">Tool</h1>
           <p className="hub-desc">
             로그인 없이 누구나 바로 사용할 수 있습니다. 키오스크 훈련, 손 인식
             AI 게임, 시선 추적 훈련 총 {allApps.length}종을 제공합니다.

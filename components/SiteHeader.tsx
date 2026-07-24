@@ -32,10 +32,10 @@ export default async function SiteHeader() {
         </div>
 
         <nav className="desktop-nav" aria-label="주요 메뉴">
-          <Link href="/hub/apps">훈련 도구</Link>
-          <Link href="/hub">학습 자료</Link>
-          <Link href="/links">관련 사이트</Link>
-          <Link href="/lab">Lab</Link>
+          <Link href="/hub/apps">Tool</Link>
+          <Link href="/hub">Content</Link>
+          <Link href="/links">Link</Link>
+          <Link href="/lab">Project</Link>
           <Link href="/about">소개</Link>
           <Link href={user ? "/me" : "/login"} className="nav-account-inline">
             {user ? profile?.display_name || "My Hub" : "로그인"}

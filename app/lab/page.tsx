@@ -6,7 +6,7 @@ import { getPublishedContent } from "@/lib/supabase/content";
 import { PROJECT_STATUS, PROJECT_STATUS_LABEL } from "@/lib/supabase/content-types";
 
 export const metadata: Metadata = {
-  title: "OTHub Lab",
+  title: "Project",
   description: "치료실의 문제를 새로운 기술로 실험하는 진행 중인 프로젝트들.",
 };
 
@@ -30,7 +30,7 @@ export default async function LabPage() {
 
         <div className="hub-header">
           <p className="eyebrow">
-            <span></span> OTHUB LAB
+            <span></span> OTHUB PROJECT
           </p>
           <h1 className="hub-title">
             치료실의 문제를
@@ -39,7 +39,7 @@ export default async function LabPage() {
           </h1>
           <p className="hub-desc">
             아직 다듬는 중인 것들이에요. 검증을 마치면 도구로 공개해서{" "}
-            <Link href="/hub/apps">훈련 도구</Link>나 OTHub Assess 같은
+            <Link href="/hub/apps">Tool</Link>이나 OTHub Assess 같은
             정식 도구가 됩니다.
           </p>
         </div>
