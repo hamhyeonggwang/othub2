@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { getAuthUser } from "@/lib/supabase/auth";
 import type { ContentItem, ContentItemWithStats, CommentWithAuthor } from "@/lib/supabase/content-types";
 
 export * from "@/lib/supabase/content-types";
@@ -9,10 +10,7 @@ async function withStats(
   if (items.length === 0) return [];
   const supabase = await createClient();
   const ids = items.map((i) => i.id);
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getAuthUser();
 
   const [{ data: likes }, { data: comments }, { data: myLikes }, { data: myBookmarks }] =
     await Promise.all([
@@ -66,9 +64,7 @@ export async function getPublishedContent(): Promise<ContentItemWithStats[]> {
 
 export async function getMyBookmarks(): Promise<ContentItemWithStats[]> {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getAuthUser();
   if (!user) return [];
 
   const { data: bookmarks } = await supabase
@@ -106,9 +102,7 @@ export async function getContentBySlug(
 
 export async function getComments(contentId: string): Promise<CommentWithAuthor[]> {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getAuthUser();
 
   const { data: comments } = await supabase
     .from("othub_comments")

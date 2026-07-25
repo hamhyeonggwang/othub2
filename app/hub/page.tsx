@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import "./hub.css";
 import { getPublishedContent } from "@/lib/supabase/content";
+import { getCurrentUserAndProfile } from "@/lib/supabase/profile";
 import HubFeed from "./HubFeed";
 import SiteHeader from "@/components/SiteHeader";
 
@@ -11,7 +12,11 @@ export const metadata: Metadata = {
 };
 
 export default async function HubPage() {
-  const items = (await getPublishedContent()).filter(
+  const [allContent] = await Promise.all([
+    getPublishedContent(),
+    getCurrentUserAndProfile(),
+  ]);
+  const items = allContent.filter(
     (item) => item.type !== "app" && item.type !== "project" && !item.tags.includes("Web")
   );
 

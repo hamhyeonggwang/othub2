@@ -3,6 +3,7 @@ import Link from "next/link";
 import "../hub/hub.css";
 import SiteHeader from "@/components/SiteHeader";
 import { getPublishedContent } from "@/lib/supabase/content";
+import { getCurrentUserAndProfile } from "@/lib/supabase/profile";
 import { SITE_CATEGORY, SITE_CATEGORY_ORDER } from "@/lib/useful-sites";
 
 export const metadata: Metadata = {
@@ -11,7 +12,11 @@ export const metadata: Metadata = {
 };
 
 export default async function LinksPage() {
-  const items = (await getPublishedContent()).filter(
+  const [allContent] = await Promise.all([
+    getPublishedContent(),
+    getCurrentUserAndProfile(),
+  ]);
+  const items = allContent.filter(
     (item) => item.tags.includes("Web") && SITE_CATEGORY[item.slug]
   );
 

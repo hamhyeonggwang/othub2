@@ -3,7 +3,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import "../../hub.css";
 import { getContentBySlug, getComments } from "@/lib/supabase/content";
-import { createClient } from "@/lib/supabase/server";
+import { getAuthUser } from "@/lib/supabase/auth";
+import { getCurrentUserAndProfile } from "@/lib/supabase/profile";
 import LikeBookmarkButtons from "@/components/LikeBookmarkButtons";
 import CommentSection from "@/components/CommentSection";
 import SiteHeader from "@/components/SiteHeader";
@@ -25,17 +26,17 @@ export default async function AppDetailPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const app = await getContentBySlug(slug);
+  const [app] = await Promise.all([
+    getContentBySlug(slug),
+    getCurrentUserAndProfile(),
+  ]);
   if (!app || app.type !== "app" || !app.app_path) notFound();
 
   const path = `/hub/apps/${slug}`;
-  const [comments, supabase] = await Promise.all([
+  const [comments, user] = await Promise.all([
     getComments(app.id),
-    createClient(),
+    getAuthUser(),
   ]);
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
 
   return (
     <>

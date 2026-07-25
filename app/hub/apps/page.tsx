@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import "../hub.css";
 import { APP_CATEGORIES, getPublishedContent } from "@/lib/supabase/content";
+import { getCurrentUserAndProfile } from "@/lib/supabase/profile";
 import SiteHeader from "@/components/SiteHeader";
 
 export const metadata: Metadata = {
@@ -17,7 +18,10 @@ export default async function AppsPage({
   const params = await searchParams;
   const activeCat = params.cat ?? "all";
 
-  const allContent = await getPublishedContent();
+  const [allContent] = await Promise.all([
+    getPublishedContent(),
+    getCurrentUserAndProfile(),
+  ]);
   const allApps = allContent.filter((item) => item.type === "app");
   const apps =
     activeCat === "all"

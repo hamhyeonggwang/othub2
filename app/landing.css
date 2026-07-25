@@ -110,6 +110,8 @@ svg { fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: 
   right: max(16px, calc((100vw - var(--max)) / 2));
 }
 
+main { padding-left: var(--sidebar-w); }
+
 .hero {
   min-height: 920px;
   position: relative;
@@ -118,7 +120,7 @@ svg { fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: 
   grid-template-columns: minmax(360px, .84fr) minmax(580px, 1.16fr);
   align-items: center;
   gap: 20px;
-  padding: 56px 48px 90px calc(var(--sidebar-w) + 48px);
+  padding: 56px 48px 90px 48px;
   background:
     linear-gradient(116deg, rgba(255,255,255,.9) 0%, rgba(247,251,255,.86) 42%, rgba(224,239,255,.68) 100%),
     repeating-linear-gradient(90deg, transparent 0 119px, rgba(40,110,185,.035) 120px),
@@ -379,10 +381,12 @@ h2 { font-size: clamp(40px, 5vw, 65px); font-weight: 700; }
 .contact-note-highlight { color: white; animation: note-highlight .8s ease 2; }
 @keyframes note-highlight { 50% { opacity: .45; } }
 
-footer { width: min(calc(100% - 64px), var(--max)); min-height: 140px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; color: #798a9e; font-size: 10px; }
+footer { width: min(calc(100% - 64px), var(--max)); min-height: 140px; margin: 0 auto; padding-left: var(--sidebar-w); display: flex; align-items: center; justify-content: space-between; color: #798a9e; font-size: 10px; }
 .footer-brand .brand-mark { width: 35px; height: 35px; border-radius: 10px; }
 
 @media (max-width: 1080px) {
+  main, footer { padding-left: 0; }
+
   .site-header {
     top: 16px;
     left: 50%;

@@ -69,7 +69,7 @@ export default function LandingPage() {
             <div className="orbit orbit-one" aria-hidden="true"></div>
             <div className="orbit orbit-two" aria-hidden="true"></div>
 
-            <article className="glass-card mini-card clinical-card" data-depth="0.55">
+            <Link href="/hub/apps" className="glass-card mini-card clinical-card" data-depth="0.55">
               <div className="card-heading">
                 <span className="icon-wrap">
                   <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -86,9 +86,9 @@ export default function LandingPage() {
                 <i style={barStyle("72%")}></i>
               </div>
               <small>키오스크 · 손 인식 · 시선 추적</small>
-            </article>
+            </Link>
 
-            <article className="glass-card mini-card research-card" data-depth="0.32">
+            <Link href="/hub" className="glass-card mini-card research-card" data-depth="0.32">
               <div className="card-heading">
                 <span className="icon-wrap">
                   <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -108,9 +108,9 @@ export default function LandingPage() {
                   into practice
                 </p>
               </div>
-            </article>
+            </Link>
 
-            <article className="glass-card system-card" data-depth="0.82">
+            <Link href="/about" className="glass-card system-card" data-depth="0.82">
               <div className="system-topline">
                 <div>
                   <p>OTHub 이야기</p>
@@ -176,9 +176,9 @@ export default function LandingPage() {
                   <small>함께 써보며 다듬어갑니다</small>
                 </div>
               </div>
-            </article>
+            </Link>
 
-            <article className="glass-card mini-card education-card" data-depth="0.45">
+            <Link href="/assess" className="glass-card mini-card education-card" data-depth="0.45">
               <div className="card-heading">
                 <span className="icon-wrap">
                   <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -192,9 +192,9 @@ export default function LandingPage() {
                 8<span>+</span>도구
               </strong>
               <small>치료사 회원 전용 평가 시스템</small>
-            </article>
+            </Link>
 
-            <article className="glass-card mini-card ai-card" data-depth="0.27">
+            <Link href="/hub/apps?cat=hand" className="glass-card mini-card ai-card" data-depth="0.27">
               <div className="card-heading">
                 <span className="icon-wrap">
                   <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -213,7 +213,7 @@ export default function LandingPage() {
                 <i></i>
               </div>
               <small>사람이 중심인 AI</small>
-            </article>
+            </Link>
           </div>
 
           <a className="scroll-cue" href="#quickstart" aria-label="다음 섹션으로 이동">

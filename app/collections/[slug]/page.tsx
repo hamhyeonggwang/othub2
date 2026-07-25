@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import "../../hub/hub.css";
 import SiteHeader from "@/components/SiteHeader";
 import { getPublishedContent } from "@/lib/supabase/content";
+import { getCurrentUserAndProfile } from "@/lib/supabase/profile";
 import { getCollection, COLLECTIONS } from "@/lib/collections";
 
 export function generateStaticParams() {
@@ -30,7 +31,10 @@ export default async function CollectionPage({
   const collection = getCollection(slug);
   if (!collection) notFound();
 
-  const allContent = await getPublishedContent();
+  const [allContent] = await Promise.all([
+    getPublishedContent(),
+    getCurrentUserAndProfile(),
+  ]);
   const tools = collection.appSlugs
     .map((appSlug) => allContent.find((item) => item.slug === appSlug))
     .filter((item): item is NonNullable<typeof item> => Boolean(item));
