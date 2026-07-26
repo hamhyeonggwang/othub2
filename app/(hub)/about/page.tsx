@@ -101,6 +101,20 @@ export default function AboutPage() {
           </ol>
         </section>
 
+        <section className="about-section" aria-labelledby="groups-title">
+          <p className="eyebrow">
+            <span></span> TOGETHER
+          </p>
+          <h2 id="groups-title">함께하는 소모임</h2>
+          <p className="lead">
+            독서모임 RTL, AI스터디 Ctrl+AI 등 OTHub 회원들이 함께 만들어가는
+            소모임이 있어요.
+          </p>
+          <Link className="button button-secondary" href="/groups">
+            소모임 보기
+          </Link>
+        </section>
+
         <section className="about-section" aria-labelledby="maker-title">
           <p className="eyebrow">
             <span></span> WHO
