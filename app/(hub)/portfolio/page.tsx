@@ -12,13 +12,17 @@ const CAREER = [
   {
     period: "2016.06 ~ 현재",
     title: "푸르메재단 넥슨어린이재활병원",
-    desc: "작업치료팀 작업치료사",
+    desc: "작업치료팀, 학령기치료팀 팀장",
   },
-  { period: "2015", title: "국민건강보험공단 일산병원", desc: "" },
+  {
+    period: "2015",
+    title: "국민건강보험공단 일산병원",
+    desc: "소아작업치료팀",
+  },
   {
     period: "2013 ~ 2014",
     title: "연세의료원 재활병원",
-    desc: "소아작업치료팀 작업치료사",
+    desc: "소아작업치료팀",
   },
 ];
 
@@ -38,6 +42,7 @@ const EDUCATION = [
 ];
 
 const AWARDS = [
+  { period: "2023", title: "서울시의료기사연합회 연합회장 표창", desc: "" },
   { period: "2020", title: "대한작업치료사협회 서울지회장 표창", desc: "" },
   { period: "2013", title: "대한작업치료사협회 협회장 표창", desc: "" },
 ];

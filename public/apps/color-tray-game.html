@@ -238,8 +238,14 @@ mpH.setOptions({
 mpH.onResults(onHands);
 
 const vidEl = document.getElementById('webcam');
+let mpBusy = false; // 이전 프레임 추론이 끝나기 전엔 새 프레임을 보내지 않음 — 큐 적체로 인한 점진적 지연 방지
 const mpCam = new Camera(vidEl, {
-  onFrame: async () => { await mpH.send({ image: vidEl }); },
+  onFrame: async () => {
+    if (mpBusy) return;
+    mpBusy = true;
+    try { await mpH.send({ image: vidEl }); }
+    finally { mpBusy = false; }
+  },
   width: 640, height: 480,
 });
 
