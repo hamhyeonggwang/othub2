@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import "../auth/auth.css";
 import LoginForm from "./LoginForm";
+import BrandMark from "@/components/BrandMark";
 
 export const metadata: Metadata = {
   title: "로그인",
@@ -19,7 +20,9 @@ export default async function LoginPage({
     <div className="auth-shell">
       <div className="auth-card">
         <Link className="auth-brand" href="/">
-          <span className="auth-brand-mark">OT</span>
+          <span className="auth-brand-mark">
+            <BrandMark />
+          </span>
           <strong>OTHub</strong>
         </Link>
         <h1>로그인 / 회원가입</h1>

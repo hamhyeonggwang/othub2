@@ -1,6 +1,7 @@
 import type { CSSProperties } from "react";
 import Link from "next/link";
 import LandingEffects from "@/components/LandingEffects";
+import BrandMark from "@/components/BrandMark";
 import "./hub/hub.css";
 import { COLLECTIONS } from "@/lib/collections";
 
@@ -108,72 +109,25 @@ export default function LandingPage() {
               </div>
             </Link>
 
-            <Link href="/about" className="glass-card system-card" data-depth="0.82">
-              <div className="system-topline">
-                <div>
-                  <p>OTHub 이야기</p>
-                  <strong>치료실에서 모두에게로</strong>
-                </div>
-                <span className="live-pill">
-                  <i></i> 함께 만드는 중
-                </span>
-              </div>
-
-              <div className="system-chart" aria-label="임상 도구가 플랫폼으로 연결되는 과정">
-                <svg viewBox="0 0 520 190" role="img" aria-hidden="true">
-                  <defs>
-                    <linearGradient id="lineGradient" x1="0" x2="1">
-                      <stop offset="0" stopColor="#1747a6" />
-                      <stop offset=".55" stopColor="#00a6e9" />
-                      <stop offset="1" stopColor="#64d7ff" />
-                    </linearGradient>
-                    <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0" stopColor="#2cbdf2" stopOpacity=".3" />
-                      <stop offset="1" stopColor="#2cbdf2" stopOpacity="0" />
-                    </linearGradient>
-                  </defs>
-                  <g className="grid-lines">
-                    <path d="M20 35H500M20 80H500M20 125H500M20 170H500" />
-                  </g>
-                  <path
-                    className="area"
-                    d="M20 151C55 143 70 108 108 116s43 31 81 17 45-74 92-71 48 63 91 52 48-74 85-71 30 49 43 48V170H20Z"
-                  />
-                  <path
-                    className="chart-line"
-                    d="M20 151C55 143 70 108 108 116s43 31 81 17 45-74 92-71 48 63 91 52 48-74 85-71 30 49 43 48"
-                  />
-                  <circle cx="457" cy="43" r="5" />
-                </svg>
-                <span className="chart-label">
-                  현장에서 쓰기 좋게
-                  <br />
-                  <strong>같이 다듬어요</strong>
-                </span>
-              </div>
-
-              <div className="system-stats">
-                <div>
-                  <span>01</span>
-                  <strong>현장</strong>
-                  <small>치료실에서 도구가 태어납니다</small>
-                </div>
-                <div>
-                  <span>02</span>
-                  <strong>제작</strong>
-                  <small>웹앱으로 만들어봅니다</small>
-                </div>
-                <div>
-                  <span>03</span>
-                  <strong>공유</strong>
-                  <small>모두에게 편하게 나눕니다</small>
-                </div>
-                <div>
-                  <span>04</span>
-                  <strong>성장</strong>
-                  <small>함께 써보며 다듬어갑니다</small>
+            <Link href="/about" className="glass-card system-card laptop-card" data-depth="0.82">
+              <span className="live-pill laptop-badge">
+                <i></i> 함께 만드는 중
+              </span>
+              <div className="laptop-mock">
+                <div className="laptop-screen">
+                  <video
+                    className="laptop-video"
+                    autoPlay
+                    muted
+                    loop
+                    playsInline
+                    aria-label="OTHub 로고 인트로 영상"
+                  >
+                    <source src="/brand/logo-intro.mp4" type="video/mp4" />
+                  </video>
                 </div>
               </div>
+              <div className="laptop-stand" aria-hidden="true"></div>
             </Link>
 
             <Link href="/assess" className="glass-card mini-card education-card" data-depth="0.45">
@@ -454,8 +408,8 @@ export default function LandingPage() {
 
       <footer>
         <Link className="brand footer-brand" href="/">
-          <span className="brand-mark" aria-hidden="true">
-            OT
+          <span className="brand-mark">
+            <BrandMark />
           </span>
           <span>
             <strong>OTHub</strong>

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { getCurrentUserAndProfile } from "@/lib/supabase/profile";
+import BrandMark from "@/components/BrandMark";
 
 export default async function SiteHeader() {
   const { user, profile } = await getCurrentUserAndProfile();
@@ -15,8 +16,8 @@ export default async function SiteHeader() {
 
         <div className="site-header-top">
           <Link className="brand" href="/" aria-label="OTHub 홈">
-            <span className="brand-mark" aria-hidden="true">
-              OT
+            <span className="brand-mark">
+              <BrandMark />
             </span>
             <span>
               <strong>OTHub</strong>
