@@ -119,7 +119,6 @@ export default function LandingPage() {
                     className="laptop-video"
                     autoPlay
                     muted
-                    loop
                     playsInline
                     aria-label="OTHub 로고 인트로 영상"
                   >
