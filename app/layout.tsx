@@ -3,6 +3,7 @@ import "./globals.css";
 import "./landing.css";
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://othub.kr"),
   title: {
     default: "OTHub — By OTs, For Everyone",
     template: "%s | OTHub",

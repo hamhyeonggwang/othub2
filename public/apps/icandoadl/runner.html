@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>I Can Do ADL — 러너</title>
+<link rel="stylesheet" href="./styles/voxel-ui.css">
+<style>
+  /* ---- 페이지 전용 (Voxel Design System 위에 구성) ---- */
+  *{box-sizing:border-box;}
+  html,body{margin:0; height:100%; background:var(--ui-bg); color:var(--text);
+    font-family:var(--font-body); overflow:hidden;}
+  #stage{position:fixed; inset:0;}
+  #videoWrap{position:absolute; inset:0; background:linear-gradient(180deg,var(--sky-dusk),#1b2333);}
+  #videoWrap video{width:100%; height:100%; object-fit:cover; filter:brightness(.85);}
+  #videoWrap video.mirror{transform:scaleX(-1);}
+  #glcanvas{position:absolute; inset:0; width:100%; height:100%; display:block;}
+  .hidden{display:none !important;}
+
+  /* ---- 오버레이 공통: 게임 타이틀 스크린 톤 ---- */
+  .overlay{
+    position:absolute; inset:0; z-index:20;
+    background:
+      repeating-linear-gradient(0deg, rgba(255,255,255,.015) 0 2px, transparent 2px 4px),
+      #1c1c1c;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    text-align:center; padding:24px; gap:16px;
+  }
+  .overlay h1{font-family:var(--font-display); font-size:34px; margin:0; letter-spacing:1px;
+    text-shadow:3px 3px 0 rgba(0,0,0,.7);}
+  .overlay p{font-size:15px; color:var(--muted); max-width:540px; margin:0; line-height:1.6;}
+  .overlay .count{font-family:var(--font-display); font-size:72px; color:var(--ui-highlight);
+    min-height:84px; text-shadow:4px 4px 0 rgba(0,0,0,.7);}
+  .privacy{font-family:var(--font-body); font-size:12px; color:var(--muted); line-height:1.6;
+    border:2px solid var(--ui-border); background:rgba(0,0,0,.35); padding:8px 14px; box-shadow:0 3px 0 var(--ui-border);}
+
+  /* 시작 버튼 (기존 클래스 유지, 복셀화) */
+  button.big{
+    font-family:var(--font-display); font-size:20px; color:#fff;
+    text-shadow:2px 2px 0 rgba(0,0,0,.55);
+    background:var(--grass); border:3px solid var(--ui-border); border-radius:0;
+    box-shadow:inset 0 3px 0 var(--ui-inset-lt), inset 0 -4px 0 var(--ui-inset-dk), 0 var(--px) 0 var(--ui-border);
+    padding:16px 36px; cursor:pointer; user-select:none;
+  }
+  button.big:hover{filter:brightness(1.13); outline:3px solid var(--ui-highlight); outline-offset:-1px;}
+  button.big:active{transform:translateY(var(--px));
+    box-shadow:inset 0 3px 0 var(--ui-inset-lt), inset 0 -2px 0 var(--ui-inset-dk), 0 0 0 var(--ui-border);}
+  button.big:disabled{opacity:.45; cursor:not-allowed; filter:none; outline:none;}
+  button.big.ghost{background:var(--ui-face-dk);}
+  .startBtns{display:flex; gap:14px; flex-wrap:wrap; justify-content:center;}
+
+  .fileOpen{font-family:var(--font-body); font-size:13px; color:var(--muted); cursor:pointer;
+    border:2px solid var(--ui-border); padding:8px 16px; background:var(--ui-bg2);
+    box-shadow:0 3px 0 var(--ui-border);}
+  .fileOpen:hover{color:var(--text); outline:2px solid var(--ui-highlight); outline-offset:-1px;}
+  .fileOpen input{display:none;}
+
+  /* ---- 과제 선택 메뉴 ---- */
+  #stageMenu{justify-content:flex-start; padding-top:5vh;}
+  #stageMenu h1{font-size:26px;}
+  .menuHint{font-size:14px; color:var(--muted); font-family:var(--font-body);}
+  .menuBack{position:absolute; top:18px; left:18px; font-family:var(--font-display); font-size:14px;
+    background:var(--ui-face-dk); color:#fff; border:3px solid var(--ui-border); text-shadow:2px 2px 0 rgba(0,0,0,.5);
+    box-shadow:0 3px 0 var(--ui-border); padding:8px 14px; cursor:pointer;}
+  .menuBack:hover{outline:3px solid var(--ui-highlight); outline-offset:-1px;}
+  .menuBack:active{transform:translateY(3px); box-shadow:0 0 0 var(--ui-border);}
+  #stageToast{font-family:var(--font-display); font-size:17px; color:var(--ui-highlight);
+    background:rgba(0,0,0,.5); border:3px solid var(--ui-highlight); padding:8px 20px;
+    text-shadow:2px 2px 0 rgba(0,0,0,.7); box-shadow:0 3px 0 var(--ui-border);}
+  #stageGrid{display:grid; grid-template-columns:repeat(auto-fill, minmax(184px, 1fr));
+    gap:14px; width:min(900px, 92vw); max-height:72vh; overflow-y:auto; padding:6px;}
+  .stageCard{display:flex; flex-direction:column; gap:6px; text-align:left; cursor:pointer;
+    background:var(--ui-bg2); border:3px solid var(--ui-border); border-radius:0;
+    box-shadow:0 var(--px) 0 var(--ui-border), inset 0 2px 0 rgba(255,255,255,.08);
+    padding:13px; color:var(--text); font-family:var(--font-body);}
+  .stageCard:hover{outline:3px solid var(--ui-highlight); outline-offset:-1px; filter:brightness(1.1);}
+  .stageCard:active{transform:translateY(3px); box-shadow:0 1px 0 var(--ui-border);}
+  .stageCard.calib{border-color:var(--warn);}
+  .stageCard.doneOnce{filter:saturate(.5) brightness(.8);}
+  .stageCard .scTop{display:flex; align-items:center; gap:9px;}
+  .stageCard .scEmoji{font-size:30px; line-height:1; filter:drop-shadow(2px 2px 0 rgba(0,0,0,.5));}
+  .stageCard .scTitle{font-size:14px; font-weight:700; font-family:var(--font-display);}
+  .stageCard .scType{font-size:11px; color:var(--muted);}
+  .stageCard .scCog{display:flex; flex-wrap:wrap; gap:4px; margin-top:2px;}
+  .stageCard .cog{font-size:10px; font-weight:600; padding:2px 7px; color:var(--muted);
+    background:rgba(0,0,0,.4); border:2px solid var(--ui-border);}
+  .stageCard .scStars{font-size:12px; min-height:14px; color:var(--ui-highlight);}
+
+  /* ---- 리포트 ---- */
+  /* ---- 성장 제안 카드 (P3 — 치료사 승인형 적응) ---- */
+  #suggestCard{max-width:560px; width:90%; text-align:left;
+    background:var(--ui-bg); border:3px solid var(--grass); box-shadow:0 var(--px) 0 var(--ui-border);
+    padding:12px 16px; font-family:var(--font-body);}
+  #suggestCard h3{font-size:13px; margin:0 0 8px; color:var(--text); font-family:var(--font-display);}
+  #suggestCard .c2note{font-size:11px; color:var(--muted); font-weight:400; font-family:var(--font-body);}
+  #suggestList .sg{font-size:12px; color:var(--text); line-height:1.7;}
+  #suggestList .sg .lv{font-family:var(--font-display); color:var(--ui-highlight);}
+  #suggestList .sg .up{color:var(--grass); font-family:var(--font-display);}
+  #suggestList .sg .down{color:var(--warn); font-family:var(--font-display);}
+  #suggestList .sg .why{color:var(--muted);}
+  #suggestList .more{font-size:11px; color:var(--muted); margin-top:2px;}
+  .suggestBtns{display:flex; gap:8px; margin-top:10px;}
+  button.mini.yes{background:var(--grass); color:#fff; text-shadow:1px 1px 0 rgba(0,0,0,.4);}
+
+  /* ---- 훈련 프로파일 (회차 기록 시각화) ---- */
+  #vizBox{max-width:640px; width:90%; text-align:left;
+    background:var(--ui-bg); border:3px solid var(--ui-border); box-shadow:0 var(--px) 0 var(--ui-border);
+    padding:12px 16px; font-family:var(--font-body);}
+  #vizBox h3{font-size:13px; margin:0 0 10px; color:var(--text); font-family:var(--font-display);}
+  #vizBox .c2note{font-size:11px; color:var(--muted); font-weight:400; font-family:var(--font-body);}
+  .profRow{display:flex; align-items:center; gap:10px; margin-bottom:7px;}
+  .profRow .pl{width:92px; font-size:12px; color:var(--text); font-family:var(--font-display); flex-shrink:0;}
+  .profRow .pbar{flex:1; height:14px; background:rgba(0,0,0,.6); border:2px solid var(--ui-border); overflow:hidden;}
+  .profRow .pbar > div{height:100%;
+    background:repeating-linear-gradient(90deg, var(--grass) 0 10px, var(--grass-dk) 10px 13px);}
+  .profRow .pv{width:38px; text-align:right; font-size:12px; font-family:var(--font-display); color:var(--text);}
+  .profRow .pd{width:52px; font-size:11px; font-family:var(--font-display);}
+  .profRow .pd.up{color:var(--grass);}
+  .profRow .pd.down{color:var(--danger);}
+  .profRow .pd.flat{color:var(--muted);}
+  .profRow.nodata .pbar > div{background:var(--ui-face-dk); }
+  #trendWrap{margin:12px 0 4px; display:flex; flex-direction:column; gap:4px;}
+  .trendLabel{font-size:11px; color:var(--muted); font-family:var(--font-display);}
+  #trendCanvas{width:100%; height:64px; background:rgba(0,0,0,.35); border:2px solid var(--ui-border);}
+  #recList{margin-top:10px; border-top:2px solid rgba(255,255,255,.08); padding-top:8px;}
+  #recList .rec{font-size:12px; color:var(--muted); line-height:1.6; padding:2px 0;}
+  #recList .rec::before{content:'▸ '; color:var(--ui-highlight);}
+
+  #reportBox{max-width:640px; width:90%; max-height:32vh; overflow-y:auto; text-align:left;
+    background:var(--ui-bg); border:3px solid var(--ui-border); box-shadow:0 var(--px) 0 var(--ui-border);
+    padding:12px 16px; font-family:var(--font-body);}
+  #reportBox h3{font-size:13px; margin:0 0 8px; color:var(--text); font-family:var(--font-display);}
+  #reportBox .c2note{font-size:11px; color:var(--muted); font-weight:400; font-family:var(--font-body);}
+  #reportBox .repRow{font-size:12px; color:var(--muted); padding:4px 0;
+    border-top:2px solid rgba(255,255,255,.06); line-height:1.5;}
+  #reportBtns{display:flex; gap:10px;}
+  button.mini{font-family:var(--font-display); font-size:12px; padding:8px 14px; color:var(--text);
+    border:3px solid var(--ui-border); background:var(--ui-bg2); cursor:pointer;
+    box-shadow:0 3px 0 var(--ui-border);}
+  button.mini:hover{outline:2px solid var(--ui-highlight); outline-offset:-1px;}
+  button.mini:active{transform:translateY(3px); box-shadow:0 0 0 var(--ui-border);}
+
+  /* ---- 게임 HUD ---- */
+  #hud{position:absolute; top:0; left:0; right:0; z-index:10; padding:12px 16px;
+    display:flex; flex-direction:column; gap:8px; pointer-events:none;}
+  #hudInstruction{
+    align-self:center; background:rgba(12,12,12,.78); border:3px solid var(--ui-border);
+    box-shadow:0 3px 0 var(--ui-border);
+    padding:9px 22px; font-size:18px; font-family:var(--font-display);
+    text-shadow:2px 2px 0 rgba(0,0,0,.6);
+  }
+  #hudBar{align-self:center; width:min(420px,70vw); height:16px;
+    background:rgba(0,0,0,.6); border:3px solid var(--ui-border);
+    box-shadow:0 3px 0 var(--ui-border); overflow:hidden;}
+  #hudProgressFill{height:100%; width:0%; transition:width .2s;
+    background:repeating-linear-gradient(90deg, var(--grass) 0 12px, var(--grass-dk) 12px 15px);}
+  #hudStep{align-self:center; font-size:13px; color:var(--text); font-family:var(--font-display);
+    text-shadow:2px 2px 0 rgba(0,0,0,.7);}
+
+  /* ---- 핫바 (스테이션 목표 / 고르기 스텝) ---- */
+  #hotbar{position:absolute; bottom:14px; left:50%; transform:translateX(-50%); z-index:10;
+    display:flex; gap:6px; pointer-events:none;
+    background:rgba(12,12,12,.5); padding:6px; border:3px solid var(--ui-border);
+    box-shadow:0 3px 0 var(--ui-border);}
+
+  #banner{position:absolute; top:36%; left:0; right:0; z-index:15; text-align:center;
+    font-family:var(--font-display); font-size:42px;
+    text-shadow:4px 4px 0 rgba(0,0,0,.75); pointer-events:none;}
+  #assistBadge{position:absolute; bottom:88px; left:50%; transform:translateX(-50%); z-index:10;
+    background:var(--warn); color:var(--text-dark); font-size:14px; font-family:var(--font-display);
+    padding:8px 18px; border:3px solid var(--ui-border); box-shadow:0 3px 0 var(--ui-border); pointer-events:none;}
+  #trackLost{position:absolute; top:34%; left:50%; transform:translateX(-50%); z-index:14;
+    background:rgba(12,12,12,.85); color:var(--text); text-align:center;
+    border:3px solid var(--danger); box-shadow:0 4px 0 var(--ui-border);
+    padding:14px 26px; pointer-events:none;}
+  #trackLost .tl1{font-family:var(--font-display); font-size:20px; color:var(--danger);
+    text-shadow:2px 2px 0 rgba(0,0,0,.6);}
+  #trackLost .tl2{font-size:13px; color:var(--muted); margin-top:4px; font-family:var(--font-body);}
+
+  #fpsBadge{position:absolute; top:12px; right:14px; z-index:10; font-size:11px; color:var(--muted);
+    background:rgba(12,12,12,.7); padding:4px 8px; border:2px solid var(--ui-border);
+    font-family:var(--font-display);}
+  #btnMute{position:absolute; top:8px; right:74px; z-index:10; width:34px; height:34px;
+    font-size:16px; background:rgba(12,12,12,.7); color:var(--text);
+    border:2px solid var(--ui-border); box-shadow:0 2px 0 var(--ui-border); cursor:pointer;}
+  #btnMute:active{transform:translateY(2px); box-shadow:0 0 0 var(--ui-border);}
+  #placeChip{position:absolute; top:12px; left:14px; z-index:10; font-size:14px;
+    font-family:var(--font-display); color:#fff; padding:7px 14px;
+    border:3px solid var(--ui-border); box-shadow:0 3px 0 var(--ui-border);
+    text-shadow:2px 2px 0 rgba(0,0,0,.6);}
+  #fade{position:absolute; inset:0; z-index:18; background:#141414; opacity:0;
+    transition:opacity .4s; pointer-events:none;}
+  #fade.on{opacity:1;}
+
+  /* ---- 로딩 (월드 생성풍) ---- */
+  #loadingOverlay .loadLines{display:flex; flex-direction:column; gap:6px; min-height:76px;
+    font-family:var(--font-display); font-size:15px; color:var(--muted); text-align:left;}
+  #loadingOverlay .loadLines .on{color:var(--text);}
+  #loadingOverlay .loadLines .ok{color:var(--grass);}
+  #loadBarWrap{width:min(380px,80vw); height:18px; background:rgba(0,0,0,.6);
+    border:3px solid var(--ui-border); box-shadow:0 3px 0 var(--ui-border); overflow:hidden;}
+  #loadFill{height:100%; width:0%; transition:width .3s steps(5);
+    background:repeating-linear-gradient(90deg, var(--grass) 0 14px, var(--grass-dk) 14px 17px);}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="videoWrap" class="hidden"></div>
+  <canvas id="glcanvas"></canvas>
+
+  <div id="hud" class="hidden">
+    <div id="hudInstruction">준비</div>
+    <div id="hudBar"><div id="hudProgressFill"></div></div>
+    <div id="hudStep"></div>
+  </div>
+
+  <div id="hotbar" class="hidden"></div>
+  <div id="placeChip" class="hidden"></div>
+  <div id="banner" class="hidden"></div>
+  <div id="assistBadge" class="hidden"></div>
+  <div id="trackLost" class="hidden">
+    <div class="tl1">손이 안 보여요</div>
+    <div class="tl2">화면 안에 손을 보여 주세요</div>
+  </div>
+  <button id="btnMute" title="소리 켜기/끄기 (M)">🔊</button>
+  <div id="fpsBadge">FPS —</div>
+  <div id="fade"></div>
+
+  <div id="startOverlay" class="overlay">
+    <h1 id="startTitle">I CAN DO ADL</h1>
+    <p id="startDesc">불러오는 중…</p>
+    <div id="suggestCard" class="hidden">
+      <h3>🌱 성장 제안 <span class="c2note">지난 회차 기록 기반 · 치료사 확인 후 적용</span></h3>
+      <div id="suggestList"></div>
+      <div class="suggestBtns">
+        <button id="btnSuggestYes" class="mini yes">좋아요, 바꿔요</button>
+        <button id="btnSuggestNo" class="mini">이번엔 그대로</button>
+      </div>
+    </div>
+    <div class="startBtns">
+      <button id="btnStart" class="big">🌟 전체 하루 시작</button>
+      <button id="btnChoose" class="big ghost">🎯 과제 골라 연습</button>
+    </div>
+    <div class="startBtns">
+      <button id="btnPart1" class="mini">1편: 학교 가는 아침</button>
+      <button id="btnPart2" class="mini">2편: 심부름 다녀오기</button>
+      <button id="btnKioskDrill" class="mini">☕ 키오스크 사용법 연습</button>
+    </div>
+    <label id="btnOpenFile" class="fileOpen">📂 세션 파일 열기<input type="file" id="fileSession" accept=".json,application/json"></label>
+    <p class="privacy">🎥 이 게임은 손 움직임을 인식하기 위해 카메라를 사용해요.<br>영상은 브라우저 안에서만 처리되고, 저장·전송되지 않아요.</p>
+    <div id="vizBox" class="hidden">
+      <h3>훈련 프로파일 <span class="c2note">이 컴퓨터에만 저장 · 영상/개인정보 없음</span></h3>
+      <div id="profileBars"></div>
+      <div id="trendWrap">
+        <span class="trendLabel">회차별 별점</span>
+        <canvas id="trendCanvas" width="520" height="64"></canvas>
+      </div>
+      <div id="recList"></div>
+    </div>
+    <div id="reportBox" class="hidden"></div>
+    <div id="reportBtns" class="hidden">
+      <button id="btnSaveJson" class="mini">📄 리포트 JSON</button>
+      <button id="btnSaveCsv" class="mini">📊 리포트 CSV</button>
+      <button id="btnHistCsv" class="mini">📈 기록 CSV</button>
+      <button id="btnHistClear" class="mini">🗑 기록 지우기</button>
+    </div>
+  </div>
+
+  <div id="stageMenu" class="overlay hidden">
+    <button id="btnMenuBack" class="menuBack">‹ 뒤로</button>
+    <h1>🎯 과제 골라 연습</h1>
+    <p class="menuHint">연습하고 싶은 과제를 골라요. 하나를 끝내면 다시 여기로 돌아와요.</p>
+    <div id="stageToast" class="hidden"></div>
+    <div id="stageGrid"></div>
+  </div>
+
+  <div id="loadingOverlay" class="overlay hidden">
+    <h1>LOADING WORLD</h1>
+    <div class="loadLines">
+      <div id="loadCam">· INITIALIZING CAMERA — 카메라 켜는 중</div>
+      <div id="loadModel">· LOADING TRACKING MODEL — 손 인식 모델</div>
+      <div id="loadReady">· READY</div>
+    </div>
+    <div id="loadBarWrap"><div id="loadFill"></div></div>
+  </div>
+
+  <div id="calibOverlay" class="overlay hidden">
+    <h1 id="calibTitle">캘리브레이션</h1>
+    <p id="calibDesc"></p>
+    <div id="calibCount" class="count"></div>
+  </div>
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.166.1/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.166.1/examples/jsm/",
+    "@mediapipe/tasks-vision": "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/vision_bundle.mjs"
+  }
+}
+</script>
+<script type="module" src="./js/runner-app.js"></script>
+</body>
+</html>
