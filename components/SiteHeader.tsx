@@ -37,6 +37,7 @@ export default async function SiteHeader() {
           <Link href="/hub">Content</Link>
           <Link href="/links">Link</Link>
           <Link href="/lab">Project</Link>
+          <Link href="/groups">Group</Link>
           <Link href="/about">소개</Link>
           <Link href={user ? "/me" : "/login"} className="nav-account-inline">
             {user ? profile?.display_name || "My Hub" : "로그인"}
