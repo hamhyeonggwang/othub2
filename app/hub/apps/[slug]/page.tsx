@@ -8,6 +8,7 @@ import { getCurrentUserAndProfile } from "@/lib/supabase/profile";
 import LikeBookmarkButtons from "@/components/LikeBookmarkButtons";
 import CommentSection from "@/components/CommentSection";
 import SiteHeader from "@/components/SiteHeader";
+import AppFrame from "@/components/AppFrame";
 
 export async function generateMetadata({
   params,
@@ -72,13 +73,11 @@ export default async function AppDetailPage({
           </div>
         </div>
 
-        <div className="app-frame-wrap">
-          <iframe
-            src={app.app_path}
-            title={app.title}
-            allow={app.requires_camera ? "camera" : undefined}
-          />
-        </div>
+        <AppFrame
+          src={app.app_path}
+          title={app.title}
+          requiresCamera={app.requires_camera}
+        />
 
         <CommentSection
           contentId={app.id}

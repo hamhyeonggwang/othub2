@@ -266,6 +266,51 @@
   display: block;
 }
 
+.app-frame-wrap:fullscreen,
+.app-frame-wrap:-webkit-full-screen {
+  aspect-ratio: auto;
+  width: 100vw;
+  height: 100vh;
+  border-radius: 0;
+  border: 0;
+}
+
+.app-fullscreen-btn {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 5;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 999px;
+  background: rgba(10, 20, 35, 0.55);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+.app-fullscreen-btn:hover,
+.app-fullscreen-btn:focus-visible {
+  background: rgba(10, 20, 35, 0.78);
+  transform: translateY(-1px);
+}
+.app-fullscreen-btn svg {
+  width: 15px;
+  height: 15px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
 @media (max-width: 720px) {
   .hub-shell {
     padding: 120px 20px 80px;
