@@ -134,8 +134,14 @@ export default function PortfolioPage() {
         <section className="about-section" aria-labelledby="link-title">
           <h2 id="link-title">링크</h2>
           <p className="lead">
-            브런치 · 인스타그램 ·{" "}
-            <a href="mailto:h2g0614@gmail.com">h2g0614@gmail.com</a>
+            <a href="https://brunch.co.kr/@starlight-daddy" target="_blank" rel="noopener noreferrer">
+              브런치
+            </a>{" "}
+            ·{" "}
+            <a href="https://www.instagram.com/starlight_daddy/" target="_blank" rel="noopener noreferrer">
+              인스타그램
+            </a>{" "}
+            · <a href="mailto:h2g0614@gmail.com">h2g0614@gmail.com</a>
           </p>
         </section>
       </div>
