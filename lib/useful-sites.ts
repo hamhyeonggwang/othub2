@@ -16,6 +16,5 @@ export const SITE_CATEGORY: Record<string, SiteCategory> = {
   "site-kasi": "OT학회",
   "site-jakgeopgongbang": "OT정보커뮤니티",
   "site-otbrain": "OT정보커뮤니티",
-  "site-thankyouot": "OT정보커뮤니티",
   "site-digital-learning": "기타",
 };
