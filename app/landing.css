@@ -170,7 +170,7 @@ h1 em, h2 em { color: var(--blue); font-style: normal; }
 .trust-stats strong { display: block; color: var(--navy); font-size: 32px; font-weight: 800; letter-spacing: -.02em; }
 .trust-stats small { display: block; margin-top: 6px; color: #6b7b90; font-size: 11px; text-transform: uppercase; letter-spacing: .06em; }
 
-.data-space { position: relative; z-index: 3; height: 650px; perspective: 1400px; transform-style: preserve-3d; }
+.data-space { position: relative; z-index: 3; width: 100%; max-width: 660px; margin: 0 auto; height: 650px; perspective: 1400px; transform-style: preserve-3d; }
 .orbit { position: absolute; border: 1px solid rgba(27,126,206,.1); border-radius: 50%; transform: rotate(-15deg); }
 .orbit-one { width: 580px; height: 430px; top: 90px; left: 12px; }
 .orbit-two { width: 430px; height: 300px; top: 165px; left: 100px; transform: rotate(28deg); }

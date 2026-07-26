@@ -108,11 +108,7 @@ export default function AboutPage() {
             <span></span> WHO
           </p>
           <h2 id="maker-title">만든 사람</h2>
-          <p className="lead">
-            작업치료사 함형광이 만들고 운영합니다. 궁금한 점이나 제안은{" "}
-            <a href="mailto:h2g0614@gmail.com">h2g0614@gmail.com</a>으로 보내
-            주세요.
-          </p>
+          <p className="lead">함형광</p>
         </section>
       </div>
     </>
