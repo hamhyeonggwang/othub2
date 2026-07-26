@@ -37,7 +37,7 @@ const ACTIVITIES = [
 ];
 
 const EDUCATION = [
-  { period: "2019 ~", title: "강원대학교 대학원", desc: "작업치료학과 석사과정" },
+  { period: "2019 ~ 2021", title: "강원대학교 대학원", desc: "작업치료학과 석사수료" },
   { period: "2007 ~ 2013", title: "작업치료학과", desc: "학사" },
 ];
 
