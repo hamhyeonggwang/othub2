@@ -9,7 +9,7 @@ const barStyle = (h: string) => ({ "--h": h }) as CSSProperties;
 
 export default function LandingPage() {
   return (
-    <>
+    <div className="ot-landing">
       <LandingEffects />
       <SiteHeader />
 
@@ -469,6 +469,6 @@ export default function LandingPage() {
           © {new Date().getFullYear()} OTHub · <Link href="/portfolio">만든 사람</Link>
         </p>
       </footer>
-    </>
+    </div>
   );
 }

@@ -510,3 +510,148 @@ footer { width: min(calc(100% - 64px), var(--max)); min-height: 140px; margin: 0
   html { scroll-behavior: auto; }
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
+
+/* ================================================================
+   Glassmorphism homepage theme — scoped to .ot-landing so every
+   other route (hub/assess/portfolio/...) keeps the light theme.
+   Vivid gradient canvas + frosted glass surfaces (blur 15-20px,
+   translucent white 8-18%, 1px light border) per the ui-ux-pro-max
+   Glassmorphism spec.
+   ================================================================ */
+.ot-landing {
+  position: relative;
+  min-height: 100vh;
+  color: #dce6f5;
+  background: #0a1a3d;
+}
+/* Fixed backdrop as a pseudo-layer, not background-attachment:fixed —
+   the latter mispaints on very tall pages once compositing layers pile up. */
+.ot-landing::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(1100px 750px at 12% -8%, rgba(139, 0, 255, .32), transparent 60%),
+    radial-gradient(950px 680px at 92% 6%, rgba(0, 128, 255, .38), transparent 55%),
+    radial-gradient(900px 820px at 50% 105%, rgba(32, 178, 170, .32), transparent 60%),
+    linear-gradient(165deg, #050b1f 0%, #0a1a3d 45%, #0d2b52 100%);
+}
+
+/* Header */
+.ot-landing .site-header {
+  background: rgba(15, 23, 48, .55);
+  border-right: 1px solid rgba(255, 255, 255, .12);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, .35);
+  backdrop-filter: blur(20px) saturate(140%);
+  -webkit-backdrop-filter: blur(20px) saturate(140%);
+}
+.ot-landing .nav-toggle-btn { color: #eaf2ff; }
+.ot-landing .brand small { color: #93a6c4; }
+.ot-landing .desktop-nav a { color: #cfe0f7; }
+.ot-landing .desktop-nav a:hover, .ot-landing .desktop-nav a:focus-visible { background: rgba(255, 255, 255, .08); color: #fff; }
+.ot-landing .desktop-nav a::after { background: #6fd3ff; }
+
+/* Typography */
+.ot-landing h1, .ot-landing h2, .ot-landing h3, .ot-landing strong { color: #f5f9ff; }
+.ot-landing h1 em, .ot-landing h2 em { color: #6fd3ff; }
+.ot-landing .eyebrow { color: #8fd8ff; }
+.ot-landing .eyebrow span { background: #6fd3ff; }
+.ot-landing .hero-description { color: #b9c9e3; }
+
+/* Hero */
+.ot-landing .hero { background: transparent; }
+.ot-landing .hero::after { background: linear-gradient(transparent, transparent); }
+.ot-landing .hero-aurora-one { background: radial-gradient(circle, rgba(80, 190, 255, .45), transparent 68%); }
+.ot-landing .hero-aurora-two { background: radial-gradient(circle, rgba(160, 90, 255, .34), transparent 70%); }
+.ot-landing .trust-stats strong { color: #fff; }
+.ot-landing .trust-stats small { color: #93a6c4; }
+
+/* Buttons */
+.ot-landing .button-primary { background: linear-gradient(135deg, #2c6bff, #1fd0e0); box-shadow: 0 15px 35px rgba(46, 140, 255, .35); }
+.ot-landing .button-primary:hover { box-shadow: 0 19px 42px rgba(46, 140, 255, .45); }
+.ot-landing .button-secondary { color: #eaf2ff; border-color: rgba(255, 255, 255, .22); background: rgba(255, 255, 255, .08); backdrop-filter: blur(14px); }
+.ot-landing .button-secondary:hover { background: rgba(255, 255, 255, .16); }
+
+/* Hero glass cards (data-space) */
+.ot-landing .orbit { border-color: rgba(255, 255, 255, .12); }
+.ot-landing .glass-card {
+  border: 1px solid rgba(255, 255, 255, .22);
+  background: rgba(255, 255, 255, .12);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  box-shadow: 0 25px 60px rgba(0, 0, 0, .35), inset 0 1px 1px rgba(255, 255, 255, .35);
+}
+.ot-landing .glass-card::before {
+  background: linear-gradient(120deg, rgba(255, 255, 255, .25), transparent 30%, transparent 70%, rgba(120, 190, 255, .14));
+}
+.ot-landing .card-heading { color: #eaf2ff; }
+.ot-landing .icon-wrap { color: #6fd3ff; background: rgba(255, 255, 255, .12); box-shadow: none; }
+.ot-landing .mini-card > small, .ot-landing .donut-row p { color: #a9bcd8; }
+.ot-landing .donut-row strong { color: #fff; }
+.ot-landing .donut::after { background: rgba(15, 23, 48, .6); }
+.ot-landing .donut span { color: #eaf2ff; }
+.ot-landing .live-pill { color: #cfe9ff; background: rgba(255, 255, 255, .1); border-color: rgba(255, 255, 255, .18); }
+.ot-landing .system-topline p { color: #93a6c4; }
+.ot-landing .system-topline strong { color: #fff; }
+.ot-landing .grid-lines path { stroke: rgba(255, 255, 255, .08); }
+.ot-landing .chart-label { color: #a9bcd8; }
+.ot-landing .chart-label strong { color: #6fd3ff; }
+.ot-landing .system-stats div { background: rgba(255, 255, 255, .06); border-color: rgba(255, 255, 255, .14); }
+.ot-landing .system-stats span { color: #6fd3ff; }
+.ot-landing .system-stats strong { color: #fff; }
+.ot-landing .system-stats small { color: #93a6c4; }
+.ot-landing .scroll-cue { color: #93a6c4; }
+
+/* Quickstart */
+.ot-landing .quickstart-card {
+  background: rgba(255, 255, 255, .08);
+  border: 1px solid rgba(255, 255, 255, .16);
+  backdrop-filter: blur(16px) saturate(150%);
+  -webkit-backdrop-filter: blur(16px) saturate(150%);
+  box-shadow: 0 20px 45px rgba(0, 0, 0, .3);
+}
+.ot-landing .quickstart-card:hover { background: rgba(255, 255, 255, .13); box-shadow: 0 25px 55px rgba(0, 0, 0, .4); }
+.ot-landing .quickstart-icon { background: rgba(255, 255, 255, .12); color: #6fd3ff; }
+.ot-landing .quickstart-card p { color: #a9bcd8; }
+.ot-landing .quickstart-cta { color: #6fd3ff; }
+
+/* Section labels & copy */
+.ot-landing .section-label { color: #8098bd; }
+.ot-landing .section-heading > p { color: #a9bcd8; }
+
+/* Featured tools (hub-card, from hub.css) */
+.ot-landing .hub-card {
+  background: rgba(255, 255, 255, .08);
+  border: 1px solid rgba(255, 255, 255, .16);
+  backdrop-filter: blur(16px) saturate(150%);
+  -webkit-backdrop-filter: blur(16px) saturate(150%);
+  box-shadow: 0 20px 45px rgba(0, 0, 0, .3);
+}
+.ot-landing .hub-card:hover { background: rgba(255, 255, 255, .13); box-shadow: 0 25px 55px rgba(0, 0, 0, .4); }
+.ot-landing .hub-card-badge { color: #cfe9ff; background: rgba(255, 255, 255, .1); }
+.ot-landing .hub-card p { color: #a9bcd8; }
+.ot-landing .hub-card-tags span { color: #6fd3ff; background: rgba(255, 255, 255, .08); }
+
+/* Collections */
+.ot-landing .collection-card {
+  background: rgba(255, 255, 255, .08);
+  border: 1px solid rgba(255, 255, 255, .16);
+  backdrop-filter: blur(18px) saturate(150%);
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
+  box-shadow: 0 25px 60px rgba(0, 0, 0, .35);
+}
+.ot-landing .collection-card p { color: #b9c9e3; }
+.ot-landing .collection-stats span { background: rgba(255, 255, 255, .12); color: #eaf2ff; }
+
+/* About */
+.ot-landing .about-copy p { color: #a9bcd8; }
+.ot-landing .about-copy .lead { color: #eaf2ff; }
+.ot-landing .principles span { color: #cfe9ff; border-color: rgba(255, 255, 255, .18); background: rgba(255, 255, 255, .08); }
+
+/* Contact — already dark; align its border with the glass language */
+.ot-landing .contact { border: 1px solid rgba(255, 255, 255, .12); }
+
+/* Footer */
+.ot-landing footer { color: #93a6c4; border-top: 1px solid rgba(255, 255, 255, .08); }
