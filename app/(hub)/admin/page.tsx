@@ -11,6 +11,8 @@ import {
   getRecentComments,
   getEngagementSummary,
   getAssessStats,
+  getPageViewStats,
+  getTopPages,
 } from "@/lib/supabase/admin";
 import {
   approveTherapist,
@@ -31,6 +33,7 @@ const TABS = [
   { key: "content", label: "콘텐츠" },
   { key: "members", label: "회원" },
   { key: "engagement", label: "참여" },
+  { key: "visits", label: "방문" },
 ] as const;
 
 type TabKey = (typeof TABS)[number]["key"];
@@ -75,6 +78,7 @@ export default async function AdminPage({
       {tab === "content" && <ContentTab editSlug={params.edit} />}
       {tab === "members" && <MembersTab />}
       {tab === "engagement" && <EngagementTab />}
+      {tab === "visits" && <VisitsTab />}
       </div>
     </>
   );
@@ -310,6 +314,65 @@ async function EngagementTab() {
           </table>
         )}
       </div>
+    </>
+  );
+}
+
+async function VisitsTab() {
+  const [stats, topPages] = await Promise.all([getPageViewStats(), getTopPages(7, 10)]);
+
+  return (
+    <>
+      <div className="admin-stat-row">
+        <div className="admin-stat">
+          <strong>{stats.total}</strong>
+          <span>누적 방문(전체 기간)</span>
+        </div>
+        <div className="admin-stat">
+          <strong>{stats.views7d}</strong>
+          <span>방문 (최근 7일)</span>
+        </div>
+        <div className="admin-stat">
+          <strong>{stats.visitors7d}</strong>
+          <span>순 방문자 (최근 7일)</span>
+        </div>
+        <div className="admin-stat">
+          <strong>{stats.views30d}</strong>
+          <span>방문 (최근 30일)</span>
+        </div>
+        <div className="admin-stat">
+          <strong>{stats.visitors30d}</strong>
+          <span>순 방문자 (최근 30일)</span>
+        </div>
+      </div>
+
+      <h3 className="feed-section-title">많이 본 페이지 (최근 7일)</h3>
+      <div className="admin-table-wrap">
+        {topPages.length === 0 ? (
+          <p className="admin-empty">아직 집계된 방문 기록이 없습니다.</p>
+        ) : (
+          <table className="admin-table">
+            <thead>
+              <tr>
+                <th>경로</th>
+                <th>방문 수</th>
+              </tr>
+            </thead>
+            <tbody>
+              {topPages.map((p) => (
+                <tr key={p.path}>
+                  <td>{p.path}</td>
+                  <td>{p.views}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+      <p className="admin-empty" style={{ marginTop: 12 }}>
+        방문자 수는 쿠키 기반 익명 식별이라 브라우저를 바꾸거나 쿠키를 지우면
+        새 방문자로 집계될 수 있습니다.
+      </p>
     </>
   );
 }

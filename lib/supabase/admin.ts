@@ -127,3 +127,46 @@ export async function getAssessStats(): Promise<{ total: number; last7d: number 
   const row = data?.[0];
   return { total: row?.total_sessions ?? 0, last7d: row?.sessions_7d ?? 0 };
 }
+
+export interface PageViewStats {
+  total: number;
+  views7d: number;
+  views30d: number;
+  visitors7d: number;
+  visitors30d: number;
+}
+
+export async function getPageViewStats(): Promise<PageViewStats> {
+  const supabase = await createClient();
+  const { data } = (await supabase.rpc("othub_admin_pageview_stats")) as {
+    data:
+      | {
+          total_views: number;
+          views_7d: number;
+          views_30d: number;
+          visitors_7d: number;
+          visitors_30d: number;
+        }[]
+      | null;
+  };
+  const row = data?.[0];
+  return {
+    total: row?.total_views ?? 0,
+    views7d: row?.views_7d ?? 0,
+    views30d: row?.views_30d ?? 0,
+    visitors7d: row?.visitors_7d ?? 0,
+    visitors30d: row?.visitors_30d ?? 0,
+  };
+}
+
+export async function getTopPages(
+  days = 7,
+  limit = 10
+): Promise<{ path: string; views: number }[]> {
+  const supabase = await createClient();
+  const { data } = (await supabase.rpc("othub_admin_top_pages", {
+    days,
+    page_limit: limit,
+  })) as { data: { path: string; views: number }[] | null };
+  return data ?? [];
+}

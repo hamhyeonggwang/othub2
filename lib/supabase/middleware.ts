@@ -1,6 +1,9 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
+const PAGE_VIEW_SKIP_PREFIXES = ["/api", "/auth"];
+const VISITOR_COOKIE = "othub_vid";
+
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
 
@@ -30,8 +33,30 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // 역할 가드: /assess(정적 평가 도구 포함)는 치료사·관리자, /admin은 관리자만
   const { pathname } = request.nextUrl;
+
+  // 익명 방문자 식별용 쿠키 — 통계 집계 전용, 개인정보 아님(무작위 UUID)
+  let visitorId = request.cookies.get(VISITOR_COOKIE)?.value;
+  if (!visitorId) {
+    visitorId = crypto.randomUUID();
+    supabaseResponse.cookies.set(VISITOR_COOKIE, visitorId, {
+      maxAge: 60 * 60 * 24 * 365,
+      sameSite: "lax",
+      path: "/",
+    });
+  }
+
+  if (!PAGE_VIEW_SKIP_PREFIXES.some((p) => pathname.startsWith(p))) {
+    try {
+      await supabase
+        .from("othub_page_views")
+        .insert({ path: pathname, visitor_id: visitorId });
+    } catch {
+      // 방문 기록 실패가 페이지 로딩을 막지 않도록 무시
+    }
+  }
+
+  // 역할 가드: /assess(정적 평가 도구 포함)는 치료사·관리자, /admin은 관리자만
   const needsRole = pathname.startsWith("/assess") || pathname.startsWith("/admin");
 
   if (needsRole) {
