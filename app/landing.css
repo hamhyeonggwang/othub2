@@ -504,7 +504,15 @@ footer { width: min(calc(100% - 64px), var(--max)); min-height: 140px; margin: 0
   .nav-toggle-checkbox:checked ~ .desktop-nav {
     display: flex;
     flex-direction: column;
+    width: 100%;
+    margin: 12px 0 0;
+    gap: 2px;
   }
+  .nav-toggle-checkbox:checked ~ .desktop-nav a {
+    padding: 12px 4px;
+    width: 100%;
+  }
+  .nav-toggle-checkbox:checked ~ .desktop-nav a::after { display: none; }
   .nav-account-inline {
     margin-top: 12px;
     padding-top: 12px;
