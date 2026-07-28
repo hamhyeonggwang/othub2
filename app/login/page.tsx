@@ -13,9 +13,10 @@ export const metadata: Metadata = {
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; next?: string }>;
 }) {
-  const { error } = await searchParams;
+  const { error, next } = await searchParams;
+  const isAssessGated = next === "/assess";
 
   return (
     <div className="auth-shell">
@@ -30,7 +31,14 @@ export default async function LoginPage({
         <p className="auth-desc">
           구글 계정 하나면 됩니다. 처음이면 자동으로 회원가입됩니다.
         </p>
-        <LoginForm error={error} />
+        {isAssessGated && (
+          <p className="auth-callout">
+            OTHub Assess는 작업치료사 인증이 필요한 기능입니다. 로그인 후
+            면허번호를 등록해 인증을 신청하면, 관리자 승인을 거쳐 이용할 수
+            있어요.
+          </p>
+        )}
+        <LoginForm error={error} next={next} />
       </div>
     </div>
   );

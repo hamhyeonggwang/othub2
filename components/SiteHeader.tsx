@@ -35,6 +35,7 @@ export default async function SiteHeader() {
 
         <nav className="desktop-nav" aria-label="주요 메뉴">
           <Link href="/hub/apps">Tool</Link>
+          <Link href="/assess">Assess</Link>
           <Link href="/hub">Content</Link>
           <Link href="/links">Link</Link>
           <Link href="/lab">Project</Link>

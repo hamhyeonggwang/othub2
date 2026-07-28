@@ -105,8 +105,9 @@ export default async function ProfilePage({
           {params.assess === "locked" && (
             <div className="profile-card" style={{ background: "rgba(220,38,38,0.05)" }}>
               <p className="hint" style={{ margin: 0 }}>
-                OTHub Assess는 치료사 인증 회원만 이용할 수 있습니다. 왼쪽에서 인증을
-                요청해 주세요.
+                OTHub Assess는 작업치료사 인증이 필요한 기능입니다. 왼쪽에서
+                면허번호를 등록해 인증을 신청하면, 관리자 승인 후 이용할 수
+                있습니다.
               </p>
             </div>
           )}

@@ -5,17 +5,23 @@ import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 
-export async function signInWithGoogle() {
+export async function signInWithGoogle(next?: string) {
   const headerList = await headers();
   const origin =
     headerList.get("origin") ??
     `https://${headerList.get("host")}`;
 
+  // 오픈 리다이렉트 방지: 같은 오리진의 절대 경로만 허용한다.
+  const safeNext = next && next.startsWith("/") && !next.startsWith("//") ? next : null;
+  const callbackUrl = safeNext
+    ? `${origin}/auth/callback?next=${encodeURIComponent(safeNext)}`
+    : `${origin}/auth/callback`;
+
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "google",
     options: {
-      redirectTo: `${origin}/auth/callback`,
+      redirectTo: callbackUrl,
     },
   });
 

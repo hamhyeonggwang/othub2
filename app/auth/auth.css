@@ -129,6 +129,16 @@
   line-height: 1.6;
 }
 
+.auth-callout {
+  margin: 0 0 20px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: rgba(33, 191, 243, 0.1);
+  color: var(--navy);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
 /* ── /me 프로필 ── */
 .profile-shell {
   max-width: 960px;

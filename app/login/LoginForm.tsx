@@ -1,8 +1,16 @@
 import { signInWithGoogle } from "@/app/actions/auth";
 
-export default function LoginForm({ error }: { error?: string }) {
+export default function LoginForm({
+  error,
+  next,
+}: {
+  error?: string;
+  next?: string;
+}) {
+  const signIn = signInWithGoogle.bind(null, next);
+
   return (
-    <form action={signInWithGoogle}>
+    <form action={signIn}>
       {error && <div className="auth-error">{error}</div>}
       <button className="auth-submit auth-google" type="submit">
         <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
