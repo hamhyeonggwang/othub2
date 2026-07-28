@@ -98,14 +98,31 @@ svg { fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: 
 }
 .desktop-nav a:hover, .desktop-nav a:focus-visible { background: var(--ice); color: var(--blue); }
 
-.nav-account-inline { display: none; }
+.nav-account-inline { display: none; align-items: center; gap: 10px; }
 
 .header-account {
   position: fixed;
   z-index: 60;
   top: 16px;
   right: max(16px, calc((100vw - var(--max)) / 2));
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
+
+.header-signout {
+  background: rgba(255, 255, 255, 0.64);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--line);
+  color: var(--muted);
+  padding: 9px 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .2s ease, color .2s ease;
+}
+.header-signout:hover { background: white; color: var(--navy); }
 
 main { padding-left: var(--sidebar-w); }
 
@@ -470,7 +487,7 @@ footer { width: min(calc(100% - 64px), var(--max)); min-height: 140px; margin: 0
   }
   .desktop-nav a:hover::after, .desktop-nav a:focus-visible::after { right: 0; }
   .header-account { display: none; }
-  .nav-account-inline { display: inline-flex; }
+  .nav-account-inline { display: flex; }
 
   .hero { min-height: 1080px; grid-template-columns: 1fr; padding: 160px max(32px, calc((100vw - var(--max)) / 2)) 90px; text-align: center; }
   .hero-copy { padding-bottom: 0; }

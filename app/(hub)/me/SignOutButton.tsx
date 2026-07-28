@@ -2,13 +2,13 @@
 
 import { signOut } from "@/app/actions/auth";
 
-export default function SignOutButton() {
+export default function SignOutButton({
+  className = "profile-signout",
+}: {
+  className?: string;
+}) {
   return (
-    <button
-      className="profile-signout"
-      onClick={() => signOut()}
-      type="button"
-    >
+    <button className={className} onClick={() => signOut()} type="button">
       로그아웃
     </button>
   );

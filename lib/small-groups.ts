@@ -33,6 +33,18 @@ export const SMALL_GROUPS: SmallGroup[] = [
     activities:
       "소그룹 모임 운영 및 작업치료사 대상 외부 강의 진행(작업공방, 연세대학교, 동남보건대).",
   },
+  {
+    slug: "the-deulseok",
+    category: "건강증진프로그램",
+    name: "The들썩",
+    mode: "오프라인",
+    focus: "장애인 건강증진 프로그램",
+    since: "2019년 시작",
+    description:
+      "여의도 해오름장애인자립생활센터에서 진행하는 장애인 대상 건강증진 프로그램입니다.",
+    activities:
+      "장소: 여의도 해오름장애인자립생활센터 (https://heorum.org/)",
+  },
 ];
 
 export function getSmallGroup(slug: string): SmallGroup | undefined {

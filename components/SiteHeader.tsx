@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getCurrentUserAndProfile } from "@/lib/supabase/profile";
 import BrandMark from "@/components/BrandMark";
+import SignOutButton from "@/app/(hub)/me/SignOutButton";
 
 export default async function SiteHeader() {
   const { user, profile } = await getCurrentUserAndProfile();
@@ -39,9 +40,12 @@ export default async function SiteHeader() {
           <Link href="/lab">Project</Link>
           <Link href="/groups">Group</Link>
           <Link href="/about">소개</Link>
-          <Link href={user ? "/me" : "/login"} className="nav-account-inline">
-            {user ? profile?.display_name || "My Hub" : "로그인"}
-          </Link>
+          <div className="nav-account-inline">
+            <Link href={user ? "/me" : "/login"}>
+              {user ? profile?.display_name || "My Hub" : "로그인"}
+            </Link>
+            {user && <SignOutButton className="header-signout" />}
+          </div>
         </nav>
       </header>
 
@@ -49,6 +53,7 @@ export default async function SiteHeader() {
         <Link className="button button-secondary" href={user ? "/me" : "/login"}>
           {user ? profile?.display_name || "My Hub" : "로그인"}
         </Link>
+        {user && <SignOutButton className="header-signout" />}
       </div>
     </>
   );
