@@ -8,6 +8,7 @@ import { PROJECT_STATUS, PROJECT_STATUS_LABEL } from "@/lib/supabase/content-typ
 export const metadata: Metadata = {
   title: "Project",
   description: "치료실의 문제를 새로운 기술로 실험하는 진행 중인 프로젝트들.",
+  alternates: { canonical: "/lab" },
 };
 
 const STATUS_EXPLAIN: { status: keyof typeof PROJECT_STATUS_LABEL; desc: string }[] = [

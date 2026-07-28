@@ -7,6 +7,7 @@ import BrandMark from "@/components/BrandMark";
 export const metadata: Metadata = {
   title: "로그인",
   description: "구글 계정으로 OTHub에 로그인하세요.",
+  robots: { index: false, follow: false },
 };
 
 export default async function LoginPage({

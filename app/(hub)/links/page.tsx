@@ -8,6 +8,7 @@ import { SITE_CATEGORY, SITE_CATEGORY_ORDER } from "@/lib/useful-sites";
 export const metadata: Metadata = {
   title: "Link",
   description: "관련 협회·학회·커뮤니티 등 작업치료사에게 유용한 외부 사이트 모음.",
+  alternates: { canonical: "/links" },
 };
 
 export default async function LinksPage() {

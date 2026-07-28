@@ -8,6 +8,7 @@ import { getSessionWithResults } from "@/lib/supabase/assess";
 
 export const metadata: Metadata = {
   title: "평가 결과보고서",
+  robots: { index: false, follow: false },
 };
 
 export default async function AssessSessionPage({

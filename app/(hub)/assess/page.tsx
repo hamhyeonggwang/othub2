@@ -10,6 +10,7 @@ import { ASSESS_TOOLS, TOOL_LABEL } from "@/lib/assess-registry";
 export const metadata: Metadata = {
   title: "OTHub Assess",
   description: "치료사 회원 전용 임상 평가 도구.",
+  robots: { index: false, follow: false },
 };
 
 export default async function AssessHomePage() {

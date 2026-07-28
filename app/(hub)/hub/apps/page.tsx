@@ -7,6 +7,7 @@ import { getCurrentUserAndProfile } from "@/lib/supabase/profile";
 export const metadata: Metadata = {
   title: "Tool",
   description: "키오스크 훈련, 손 인식 AI 게임, 시선 추적 훈련 웹앱을 무료로 이용하세요.",
+  alternates: { canonical: "/hub/apps" },
 };
 
 export default async function AppsPage({

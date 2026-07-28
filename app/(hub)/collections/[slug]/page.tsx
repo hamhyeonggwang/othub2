@@ -18,7 +18,11 @@ export async function generateMetadata({
   const { slug } = await params;
   const collection = getCollection(slug);
   if (!collection) return {};
-  return { title: collection.title, description: collection.description };
+  return {
+    title: collection.title,
+    description: collection.description,
+    alternates: { canonical: `/collections/${slug}` },
+  };
 }
 
 export default async function CollectionPage({

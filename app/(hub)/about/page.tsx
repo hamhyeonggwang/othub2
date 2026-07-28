@@ -6,6 +6,7 @@ import "../hub/hub.css";
 export const metadata: Metadata = {
   title: "OTHub 소개",
   description: "OTHub가 만들어진 이유와, 도구를 만들고 다듬는 방식.",
+  alternates: { canonical: "/about" },
 };
 
 export default function AboutPage() {

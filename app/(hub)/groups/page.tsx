@@ -6,6 +6,7 @@ import { SMALL_GROUPS } from "@/lib/small-groups";
 export const metadata: Metadata = {
   title: "소모임",
   description: "OTHub 회원들이 함께 만들어가는 소모임을 소개합니다.",
+  alternates: { canonical: "/groups" },
 };
 
 export default function GroupsPage() {

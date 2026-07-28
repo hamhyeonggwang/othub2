@@ -1,4 +1,5 @@
 import type { CSSProperties } from "react";
+import type { Metadata } from "next";
 import Link from "next/link";
 import LandingEffects from "@/components/LandingEffects";
 import BrandMark from "@/components/BrandMark";
@@ -7,9 +8,42 @@ import { COLLECTIONS } from "@/lib/collections";
 
 const barStyle = (h: string) => ({ "--h": h }) as CSSProperties;
 
+export const metadata: Metadata = {
+  alternates: {
+    canonical: "/",
+  },
+};
+
+const ORGANIZATION_JSON_LD = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://othub.kr/#organization",
+      name: "OTHub",
+      url: "https://othub.kr",
+      logo: "https://othub.kr/brand/othub-mark.png",
+      description:
+        "작업치료사가 만든 모두를 위한 플랫폼. 훈련 웹앱, 치료 콘텐츠, 임상 평가 도구를 한곳에서.",
+    },
+    {
+      "@type": "WebSite",
+      "@id": "https://othub.kr/#website",
+      url: "https://othub.kr",
+      name: "OTHub",
+      inLanguage: "ko",
+      publisher: { "@id": "https://othub.kr/#organization" },
+    },
+  ],
+};
+
 export default function LandingPage() {
   return (
     <div className="ot-landing">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(ORGANIZATION_JSON_LD) }}
+      />
       <LandingEffects />
 
       <main id="main">

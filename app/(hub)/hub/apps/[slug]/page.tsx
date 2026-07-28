@@ -17,7 +17,11 @@ export async function generateMetadata({
   const { slug } = await params;
   const app = await getContentBySlug(slug);
   if (!app || app.type !== "app") return {};
-  return { title: app.title, description: app.description ?? undefined };
+  return {
+    title: app.title,
+    description: app.description ?? undefined,
+    alternates: { canonical: `/hub/apps/${slug}` },
+  };
 }
 
 export default async function AppDetailPage({
