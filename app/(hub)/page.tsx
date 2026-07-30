@@ -84,7 +84,7 @@ export default function LandingPage() {
                 <small>훈련 웹앱</small>
               </div>
               <div>
-                <strong>8+</strong>
+                <strong>5</strong>
                 <small>평가 도구</small>
               </div>
               <div>
@@ -174,7 +174,7 @@ export default function LandingPage() {
                 <span>OTHub Assess</span>
               </div>
               <strong className="big-number">
-                8<span>+</span>도구
+                5도구
               </strong>
               <small>치료사 회원 전용 평가 시스템</small>
             </Link>
@@ -275,7 +275,7 @@ export default function LandingPage() {
               </h2>
             </div>
             <p>
-              14개 훈련 웹앱과 8종 평가 도구 중<br />
+              14개 훈련 웹앱과 5종 평가 도구 중<br />
               추천 도구 몇 가지를 먼저 소개합니다.
             </p>
           </div>
@@ -324,7 +324,7 @@ export default function LandingPage() {
             <Link className="hub-card" href="/assess">
               <span className="hub-card-badge">OTHub ASSESS · 치료사 전용</span>
               <h3>OTHub Assess</h3>
-              <p>K-MBI, JTHFT, MACS, K-IADL 등 8종 평가를 세션으로 진행하고 결과보고서를 생성합니다.</p>
+              <p>K-MBI, JTHFT, MACS, K-IADL 등 5종 평가를 세션으로 진행하고 결과보고서를 생성합니다.</p>
               <div className="hub-card-tags">
                 <span>평가 세션</span>
                 <span>결과보고서</span>

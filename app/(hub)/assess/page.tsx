@@ -5,7 +5,7 @@ import "../hub/hub.css";
 import "./assess.css";
 import { getCurrentUserAndProfile } from "@/lib/supabase/profile";
 import { getMySessions } from "@/lib/supabase/assess";
-import { ASSESS_TOOLS, TOOL_LABEL } from "@/lib/assess-registry";
+import { VISIBLE_ASSESS_TOOLS, TOOL_LABEL } from "@/lib/assess-registry";
 
 export const metadata: Metadata = {
   title: "OTHub Assess",
@@ -33,9 +33,8 @@ export default async function AssessHomePage() {
           <div>
             <h2>OTHub Assess</h2>
             <p>
-              작업수행 프로파일링, OTIPM, JTHFT, MACS, HFT 임상관찰,
-              감각운동협응, K-MBI, K-IADL 등 8종 평가를 세션으로 진행하고
-              결과보고서를 저장합니다.
+              작업수행 프로파일링, JTHFT, MACS, K-MBI, K-IADL 등 5종 평가를
+              세션으로 진행하고 결과보고서를 저장합니다.
             </p>
           </div>
           <a className="button button-primary" href="/assess/hub.html">
@@ -46,9 +45,9 @@ export default async function AssessHomePage() {
           </a>
         </div>
 
-        <h3 className="feed-section-title">평가 도구 {ASSESS_TOOLS.length}종</h3>
+        <h3 className="feed-section-title">평가 도구 {VISIBLE_ASSESS_TOOLS.length}종</h3>
         <div className="hub-card-tags" style={{ marginBottom: 40 }}>
-          {ASSESS_TOOLS.map((tool) => (
+          {VISIBLE_ASSESS_TOOLS.map((tool) => (
             <span key={tool.id}>{tool.label}</span>
           ))}
         </div>

@@ -753,12 +753,6 @@ select.info-input {
     <button class="preset-btn" onclick="applyPreset('school')">
       <span class="preset-dot"></span>학령기 기본
     </button>
-    <button class="preset-btn" onclick="applyPreset('cognitive')">
-      <span class="preset-dot"></span>인지평가
-    </button>
-    <button class="preset-btn" onclick="applyPreset('otipm')">
-      <span class="preset-dot"></span>수행분석
-    </button>
     <button class="preset-btn" onclick="applyPreset('adl')">
       <span class="preset-dot"></span>ADL 전체
     </button>
@@ -844,58 +838,6 @@ select.info-input {
         <div class="tool-tags">
           <span class="tool-tag">Level I–V</span>
           <span class="tool-tag">카드 선택</span>
-        </div>
-      </div>
-
-      <div class="tool-card teal" id="card-clinical" onclick="toggleTool('clinical')">
-        <div class="tool-top">
-          <div>
-            <div class="tool-abbr">HFT</div>
-            <div class="tool-name">임상관찰 평가</div>
-          </div>
-        </div>
-        <div class="tool-tags">
-          <span class="tool-tag">연령구간</span>
-          <span class="tool-tag">33항목</span>
-        </div>
-      </div>
-
-      <div class="tool-card teal" id="card-sensory" onclick="toggleTool('sensory')">
-        <div class="tool-top">
-          <div>
-            <div class="tool-abbr">SMC</div>
-            <div class="tool-name">감각운동협응검사</div>
-          </div>
-        </div>
-        <div class="tool-tags">
-          <span class="tool-tag">BBT</span>
-          <span class="tool-tag">BPIT</span>
-          <span class="tool-tag">Grip</span>
-        </div>
-      </div>
-
-    </div>
-  </div>
-
-  <!-- ── 그룹 2: 인지평가 ── -->
-  <div class="tools-group">
-    <div class="group-header">
-      <div class="group-color-bar" style="background:var(--accent)"></div>
-      <span class="group-title">인지 평가</span>
-      <span class="group-icf">ICF b1</span>
-    </div>
-    <div class="tools-grid">
-
-      <div class="tool-card" id="card-cdt" onclick="toggleTool('cdt')">
-        <div class="tool-top">
-          <div>
-            <div class="tool-abbr">CDT</div>
-            <div class="tool-name">Clock Drawing Test</div>
-          </div>
-        </div>
-        <div class="tool-tags">
-          <span class="tool-tag">4점</span>
-          <span class="tool-tag">시공간</span>
         </div>
       </div>
 
@@ -1021,25 +963,35 @@ select.info-input {
 /* ─── 데이터 ─── */
 const TOOLS = {
   'profiling':{ abbr:'Profiling',name:'작업수행 프로파일링',               color:'coral',  route:'assess-profiling.html',  ready:true  },
-  'otipm':    { abbr:'OTIPM',    name:'수행분석 (Motor·Process·Social)',   color:'accent', route:'assess-otipm.html',      ready:true  },
+  'otipm':    { abbr:'OTIPM',    name:'수행분석 (Motor·Process·Social)',   color:'accent', route:'assess-otipm.html',      ready:true,  hidden:true },
   'jthft':    { abbr:'JTHFT',    name:'Jebsen-Taylor Hand Function Test', color:'teal',   route:'assess-jthft.html',      ready:true  },
   'macs':     { abbr:'MACS',     name:'Manual Ability Classification',    color:'teal',   route:'assess-macs.html',       ready:true  },
-  'clinical': { abbr:'HFT',      name:'HFT 임상관찰 평가',                color:'teal',   route:'assess-clinical.html',   ready:true  },
-  'sensory':  { abbr:'SMC',      name:'감각운동협응검사',                  color:'teal',   route:'assess-sensory.html',    ready:true  },
   'mbi':      { abbr:'K-MBI',    name:'Modified Barthel Index',          color:'accent', route:'assess-mbi.html',        ready:true  },
   'k-iadl':   { abbr:'K-IADL',   name:'수단적 일상생활활동',              color:'accent', route:'assess-k-iadl.html',     ready:true  },
-  'cdt':      { abbr:'CDT',      name:'Clock Drawing Test',              color:'accent', route:'assess-cdt.html',        ready:false },
-  'whodas':   { abbr:'WHODAS',   name:'WHO Disability Assessment',       color:'coral',  route:'assess-whodas.html',     ready:false },
-  'sms':      { abbr:'SMS',      name:'사회성숙도 검사',                  color:'coral',  route:'assess-sms.html',        ready:false },
+  'whodas':   { abbr:'WHODAS',   name:'WHO Disability Assessment',       color:'coral',  route:'assess-whodas.html',     ready:false, hidden:true },
+  'sms':      { abbr:'SMS',      name:'사회성숙도 검사',                  color:'coral',  route:'assess-sms.html',        ready:false, hidden:true },
 };
 
+// hidden:true인 도구는 선택 목록·프리셋에서 뺀다 (데이터는 유지 — 재노출 시 플래그만 해제)
 const PRESETS = {
-  school:    ['profiling','jthft','macs','clinical','sensory','mbi'],
-  cognitive: ['cdt'],
-  otipm:     ['profiling','otipm'],
-  adl:       ['mbi','k-iadl'],
-  all:       Object.keys(TOOLS),
+  school: ['profiling','jthft','macs','mbi'],
+  adl:    ['mbi','k-iadl'],
+  all:    Object.keys(TOOLS).filter(k => !TOOLS[k].hidden),
 };
+
+/* ─── 숨김 도구 카드 처리 (TOOLS.hidden=true) ─── */
+(function hideTools() {
+  Object.keys(TOOLS).forEach(id => {
+    if (!TOOLS[id].hidden) return;
+    const card = document.getElementById('card-' + id);
+    if (card) card.style.display = 'none';
+  });
+  document.querySelectorAll('.tools-group').forEach(group => {
+    const cards = Array.from(group.querySelectorAll('.tool-card'));
+    const anyVisible = cards.some(c => c.style.display !== 'none');
+    if (cards.length && !anyVisible) group.style.display = 'none';
+  });
+})();
 
 /* ─── 상태 ─── */
 let selected = new Set();
@@ -1070,7 +1022,7 @@ function applyPreset(name) {
   updateSummaryBar();
   showToast(name === 'all' ? '전체 선택됐어요' : '프리셋이 적용됐어요');
   document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
-  const idx = ['school','cognitive','otipm','adl','all'].indexOf(name);
+  const idx = ['school','adl','all'].indexOf(name);
   if (idx !== -1) document.querySelectorAll('.preset-btn')[idx].classList.add('active');
 }
 
