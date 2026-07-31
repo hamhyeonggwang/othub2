@@ -58,6 +58,7 @@ export const PROJECT_STATUS: Record<string, ProjectStatus> = {
   "tool-icf-classifier": "research",
   "tool-mbi-fim": "concept",
   "tool-report": "concept",
+  "otd-worktracker": "available",
 };
 
 export const APP_CATEGORIES: { key: AppCategory | "all"; label: string }[] = [

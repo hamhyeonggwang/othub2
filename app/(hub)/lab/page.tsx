@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import Image from "next/image";
 import "../hub/hub.css";
 import { getPublishedContent } from "@/lib/supabase/content";
 import { getCurrentUserAndProfile } from "@/lib/supabase/profile";
@@ -65,8 +66,17 @@ export default async function LabPage() {
           )}
           {projects.map((project) => {
             const status = PROJECT_STATUS[project.slug] ?? "concept";
-            return (
-              <div key={project.id} className="hub-card hub-card-locked">
+            const cardBody = (
+              <>
+                {project.thumb_url && (
+                  <Image
+                    className="hub-card-thumb"
+                    src={project.thumb_url}
+                    alt=""
+                    width={48}
+                    height={48}
+                  />
+                )}
                 <span className="lab-status" data-status={status}>
                   {PROJECT_STATUS_LABEL[status]}
                 </span>
@@ -77,6 +87,22 @@ export default async function LabPage() {
                     <span key={tag}>{tag}</span>
                   ))}
                 </div>
+              </>
+            );
+
+            return project.external_url ? (
+              <a
+                key={project.id}
+                className="hub-card"
+                href={project.external_url}
+                target="_blank"
+                rel="noreferrer noopener"
+              >
+                {cardBody}
+              </a>
+            ) : (
+              <div key={project.id} className="hub-card hub-card-locked">
+                {cardBody}
               </div>
             );
           })}

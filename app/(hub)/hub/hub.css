@@ -215,6 +215,15 @@
   box-shadow: var(--shadow);
 }
 
+.hub-card-thumb {
+  display: block;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  object-fit: cover;
+  margin-bottom: 14px;
+}
+
 .hub-card-badge {
   display: inline-flex;
   align-items: center;
