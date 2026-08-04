@@ -11,6 +11,7 @@ export const SITE_CATEGORY_ORDER: SiteCategory[] = [
 export const SITE_CATEGORY: Record<string, SiteCategory> = {
   "site-kaot": "관련협회",
   "site-kasdr": "관련협회",
+  "site-wfot": "관련협회",
   "site-ksot": "OT학회",
   "site-ksotcs": "OT학회",
   "site-kasi": "OT학회",
