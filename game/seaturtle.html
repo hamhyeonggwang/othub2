@@ -1,0 +1,2332 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>물결을 따라 · Sea Turtle</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
+<style>
+  :root{ --ivory:#EAF2F2; --teal:#3FB0A8; }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;overflow:hidden;background:#06131b;
+    font-family:Pretendard,-apple-system,'Noto Sans KR',sans-serif;color:var(--ivory)}
+  #scene{position:fixed;inset:0}
+
+  #ambient{position:fixed;top:20px;left:22px;z-index:10;pointer-events:none;
+    font-size:13px;line-height:1.7;text-shadow:0 1px 14px rgba(4,16,24,.7);
+    opacity:0;transition:opacity 1.2s ease}
+  #ambient .place{font-weight:600;opacity:.92}
+  #ambient .flow{opacity:.6}
+
+  #msg{position:fixed;left:50%;bottom:13%;transform:translateX(-50%);z-index:10;
+    pointer-events:none;font-size:16px;letter-spacing:.02em;text-align:center;
+    opacity:0;transition:opacity 1.8s ease;text-shadow:0 2px 18px rgba(4,16,24,.75);
+    max-width:min(560px,82vw)}
+
+  #mute{position:fixed;top:18px;right:20px;z-index:11;width:38px;height:38px;
+    border-radius:50%;border:1px solid rgba(234,242,242,.26);background:rgba(10,26,34,.34);
+    backdrop-filter:blur(6px);color:var(--ivory);cursor:pointer;font-size:15px;
+    display:none;align-items:center;justify-content:center;transition:opacity .3s;opacity:.55}
+  #mute:hover{opacity:1}
+
+  #camwrap{position:fixed;left:20px;bottom:20px;width:172px;border-radius:16px;overflow:hidden;
+    border:1px solid rgba(234,242,242,.14);z-index:10;background:#000;display:none;opacity:.66;
+    transition:opacity .4s}
+  #camwrap:hover{opacity:1}
+  #cam{width:100%;display:block;transform:scaleX(-1)}
+  #skel{position:absolute;inset:0;width:100%;height:100%}
+
+  #gate{position:fixed;inset:0;z-index:20;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;gap:26px;text-align:center;
+    background:radial-gradient(circle at 50% 42%,#123441,#040d14 74%)}
+  #gate h1{font-family:'Noto Serif KR',serif;font-size:36px;font-weight:700;letter-spacing:-.02em}
+  #gate p{max-width:400px;line-height:1.9;font-size:14.5px;opacity:.72;padding:0 24px}
+  .btn{pointer-events:auto;border:0;border-radius:18px;padding:14px 28px;font-size:15px;
+    font-weight:600;font-family:inherit;cursor:pointer;background:var(--teal);color:#04140f;
+    transition:transform .2s ease}
+  .btn:hover{transform:translateY(-2px)}
+  .btn.ghost{background:transparent;color:var(--ivory);border:1px solid rgba(234,242,242,.3)}
+  #status{font-size:13px;opacity:.62;min-height:20px;line-height:1.6;max-width:420px;padding:0 20px}
+
+  #dur{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+  .chip{pointer-events:auto;border:1px solid rgba(234,242,242,.2);background:transparent;
+    color:var(--ivory);border-radius:999px;padding:8px 17px;font-size:13px;font-family:inherit;
+    cursor:pointer;opacity:.55;transition:opacity .2s ease,border-color .2s ease}
+  .chip:hover{opacity:.85}
+  .chip.on{opacity:1;border-color:var(--teal);color:#A8E6E0}
+  #durLabel{font-size:12px;opacity:.42;letter-spacing:.04em}
+
+  #tune{position:fixed;inset:0;display:none;flex-direction:column;align-items:center;
+    justify-content:center;gap:18px;z-index:15;background:rgba(5,17,24,.66);
+    backdrop-filter:blur(3px);text-align:center}
+  #tune .lead{font-size:21px;font-weight:600}
+  #tune .sub{font-size:14px;opacity:.6}
+  #dots{display:flex;gap:9px}
+  #dots span{width:8px;height:8px;border-radius:50%;background:rgba(234,242,242,.2);
+    transition:background .5s ease,transform .5s ease}
+  #dots span.on{background:var(--teal);transform:scale(1.35)}
+
+  #close{position:fixed;inset:0;z-index:18;display:none;flex-direction:column;
+    align-items:center;justify-content:center;gap:22px;text-align:center;
+    pointer-events:none;opacity:0;transition:opacity 4s ease;background:rgba(4,14,22,.24)}
+  #close .line{font-family:'Noto Serif KR',serif;font-size:25px;line-height:1.85;
+    text-shadow:0 2px 22px rgba(3,10,16,.75)}
+  #close .sub{font-size:13.5px;opacity:.58;line-height:1.8}
+</style>
+</head>
+<body>
+
+<div id="scene"></div>
+
+<div id="ambient">
+  <div class="place" id="aPlace"></div>
+  <div class="flow" id="aFlow"></div>
+</div>
+
+<div id="msg"></div>
+<button id="mute" aria-label="소리 끄기">♪</button>
+
+<div id="camwrap">
+  <video id="cam" autoplay playsinline muted></video>
+  <canvas id="skel"></canvas>
+</div>
+
+<div id="tune">
+  <div class="lead">물과 연결되는 중입니다</div>
+  <div class="sub">잠시 후 거북이 헤엄칩니다</div>
+  <div id="dots"><span></span><span></span><span></span></div>
+</div>
+
+<div id="gate">
+  <h1>물결을 따라</h1>
+  <p>팔을 저으면 거북이 물을 가릅니다.<br>바다 속을 천천히 지나갑니다.</p>
+  <div id="durLabel">헤엄치는 시간</div>
+  <div id="dur">
+    <button class="chip" data-min="5">5분</button>
+    <button class="chip on" data-min="10">10분</button>
+    <button class="chip" data-min="20">20분</button>
+    <button class="chip" data-min="0">시간 없이</button>
+  </div>
+  <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center">
+    <button class="btn" id="btnCam">바다로 들어가기</button>
+    <button class="btn ghost" id="btnKey">키보드로 둘러보기</button>
+  </div>
+  <div id="status"></div>
+</div>
+
+<div id="close">
+  <div class="line" id="closeLine">밤바다가 되었습니다</div>
+  <div class="sub">물이 어두워졌습니다.<br>거북은 계속 헤엄치고 있습니다.</div>
+  <button class="btn ghost" id="btnAgain">다시 아침 바다로</button>
+</div>
+
+<script type="module">
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
+import { FilesetResolver, PoseLandmarker }
+  from 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14';
+
+/* ═══════════════════════════════════════════════════════════
+   1. 시각 및 유영 설정값
+   물속이므로 중력 대신 부력이다. 위아래 계수가 대칭이고,
+   저항이 커서 모든 반응이 공기 중보다 느리고 부드럽다.
+   ═══════════════════════════════════════════════════════════ */
+const CFG = {
+  inputDeadzone : 0.16,
+  inputSmooth   : 0.16,
+  inputMaxRate  : 2.2,
+  baselineFollow: 0.28,   // 기준선이 팔 높이를 따라가는 기본 속도.
+                          //   자세를 유지할 의무를 없애는 핵심 값. 0이면 절대 위치 방식.
+  baselineHold  : 8,      // 편차가 클수록 기준선을 느리게 만든다.
+                          //   의도한 큰 동작은 살고, 피로로 인한 처짐만 흡수된다.
+  pitchGain     : 1.15,
+  bankGain      : 1.20,
+  bankSign      : 1,      // 선회 방향 반전 스위치
+  strokeGain    : 1.5,    // 팔 젓는 속도 → 물살 반응
+
+  cruiseSpeed   : 20,     // 물속이라 느리다
+  minSpeed      : 15,
+  maxSpeed      : 32,
+  speedEase     : 0.7,    // 물의 저항 — 속도가 천천히 변한다
+  turnRate      : 0.34,
+  turnEase      : 1.2,
+  riseRate      : 16,     // 중성부력이라 위아래가 같다
+  sinkRate      : 16,
+  glideBoost    : 4,
+  altitudeEase  : 0.55,
+  vspeedEase    : 1.6,    // 물의 감쇠
+  driftAmp      : 1.1,    // 아무것도 하지 않아도 물결에 실려 오르내린다
+  safeHeight    : 46,     // 바닥 위 이 아래에서 완만한 복귀력
+  floorHeight   : 22,     // 산호 위. 이 아래로는 확실히 띄운다
+  surfaceBand   : 12,     // 수면 이만큼 아래부터 물의 저항이 생긴다
+  surfaceEase   : 1.1,    // 저항의 세기. 끝까지 올라가면 등딱지가 수면 위로 나온다
+
+  flipperResponse: 0.7,
+  flipperSpan    : 0.80,
+
+  camBack : 92, camUp : 26, camEase : 1.6,
+  lookAhead: 70, lookDrop: 6, lookEase: 2.2,
+
+  discoveryCount : 12,    // 바다에 떠 있는 해파리 수
+  discoveryRadius: 28,    // 이 거리 안을 지날 때만 반응한다
+  messageInterval: 18,
+  roamRadius     : 1600,   // 먼바다까지 나갈 수 있다. 벽이 아니라 아주 느린 조류다.
+  reefEdge       : 780
+};
+
+const SURFACE_Y = 470;   // 수면 높이
+
+// 모두 풍경을 서술하는 문장이다. 무엇을 하라고 지시하거나 잘하고 있다고
+// 격려하지 않는다 — 격려는 누군가 지켜보고 평가한다는 뜻이 된다.
+const MSG = [
+  '물살이 등딱지를 스칩니다',
+  '위쪽에서 빛이 흔들립니다',
+  '모래바닥이 천천히 흐릅니다',
+  '작은 물고기 떼가 지나갑니다',
+  '멀리 산호가 보입니다',
+  '물이 조금 차가워집니다',
+  '수면이 은빛으로 일렁입니다',
+  '해초가 한쪽으로 눕습니다',
+  '아래쪽이 푸르게 흐려집니다',
+  '먼 물속에서 무언가 움직입니다'
+];
+const MSG_DISCOVERY = ['해파리가 곁을 스쳐 갑니다','물살에 해파리가 밀려납니다','투명한 것이 지나갑니다'];
+
+/* ═══════════════════════════════════════════════════════════
+   2. Three.js 초기화
+   ═══════════════════════════════════════════════════════════ */
+const renderer = new THREE.WebGLRenderer({antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.setSize(innerWidth, innerHeight);
+document.getElementById('scene').appendChild(renderer.domElement);
+
+const scene  = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(60, innerWidth/innerHeight, 1, 4000);
+
+// 물은 공기보다 훨씬 빨리 뿌예진다 — 안개가 곧 물의 밀도다
+scene.fog = new THREE.Fog(0x49A3B4, 330, 1850);
+
+const hemi = new THREE.HemisphereLight(0xD8F6F8, 0x33616B, 1.25);
+scene.add(hemi);
+const sun = new THREE.DirectionalLight(0xEEFBF6, .65);
+sun.position.set(120, 620, 60);
+scene.add(sun);
+
+// 물빛 — 위쪽은 밝고 아래로 갈수록 깊어진다
+const sky = new THREE.Mesh(
+  new THREE.SphereGeometry(2600, 24, 16),
+  new THREE.ShaderMaterial({
+    side: THREE.BackSide, depthWrite:false, fog:false,
+    uniforms:{
+      cTop   :{value:new THREE.Color(0x8FD4DC)},
+      cMid   :{value:new THREE.Color(0x49A3B4)},
+      cBottom:{value:new THREE.Color(0x1E5E72)}
+    },
+    vertexShader:`varying vec3 vP;
+      void main(){ vP = position;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }`,
+    fragmentShader:`uniform vec3 cTop; uniform vec3 cMid; uniform vec3 cBottom; varying vec3 vP;
+      void main(){
+        float h = normalize(vP).y * 0.5 + 0.5;
+        vec3 c = h < 0.5 ? mix(cBottom, cMid, h*2.0) : mix(cMid, cTop, (h-0.5)*2.0);
+        gl_FragColor = vec4(c, 1.0); }`
+  })
+);
+sky.renderOrder = -1;
+scene.add(sky);
+
+// 점 스프라이트 텍스처. PointsMaterial은 맵이 없으면 각 점을 정사각형으로 그린다.
+//   ring=true  → 물방울: 가운데가 비고 테두리가 밝다 (빛이 통과하기 때문)
+//   ring=false → 부유물·플랑크톤: 가장자리가 부드러운 둥근 점
+function makeDotTex(ring){
+  const c = document.createElement('canvas'); c.width = c.height = 64;
+  const g = c.getContext('2d');
+  const grd = g.createRadialGradient(32,32,0, 32,32,32);
+  if(ring){
+    grd.addColorStop(0.00,'rgba(255,255,255,0.10)');
+    grd.addColorStop(0.58,'rgba(255,255,255,0.05)');
+    grd.addColorStop(0.80,'rgba(255,255,255,0.95)');
+    grd.addColorStop(0.93,'rgba(255,255,255,0.30)');
+    grd.addColorStop(1.00,'rgba(255,255,255,0.00)');
+  } else {
+    grd.addColorStop(0.00,'rgba(255,255,255,1.00)');
+    grd.addColorStop(0.40,'rgba(255,255,255,0.55)');
+    grd.addColorStop(1.00,'rgba(255,255,255,0.00)');
+  }
+  g.fillStyle = grd; g.fillRect(0,0,64,64);
+  return new THREE.CanvasTexture(c);
+}
+const TEX_DOT = makeDotTex(false), TEX_BUBBLE = makeDotTex(true);
+
+// 발광 플랑크톤 — 밤에만 드러난다
+const plankton = (()=>{
+  const N = 900, pos = new Float32Array(N*3);
+  for(let i=0;i<N;i++){
+    const a = Math.random()*Math.PI*2, r = Math.sqrt(Math.random())*1400;
+    pos[i*3]   = Math.cos(a)*r;
+    pos[i*3+1] = 40 + Math.random()*400;
+    pos[i*3+2] = Math.sin(a)*r;
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(pos,3));
+  const m = new THREE.PointsMaterial({color:0x9FF0E4, size:3.4, map:TEX_DOT,
+    transparent:true, opacity:0, depthWrite:false,
+    blending:THREE.AdditiveBlending});
+  const p = new THREE.Points(g, m);
+  scene.add(p);
+  return p;
+})();
+
+// 부유물 — 카메라 주변 상자 안을 순환시켜 어디서나 같은 밀도로 떠 있게 한다.
+// 물속과 공중을 가르는 것은 색이 아니라 "사이에 무언가 떠 있다"는 사실이다.
+const SNOW_N = 620, SNOW_BOX = 340;
+const snow = (()=>{
+  const pos = new Float32Array(SNOW_N*3);
+  for(let i=0;i<SNOW_N*3;i++) pos[i] = (Math.random()-.5)*SNOW_BOX;
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(pos,3));
+  const m = new THREE.PointsMaterial({color:0xE6F4EE, size:2.2, map:TEX_DOT,
+    transparent:true, opacity:.26, depthWrite:false});
+  const p = new THREE.Points(g, m);
+  p.frustumCulled = false;
+  scene.add(p);
+  return p;
+})();
+const snowBase = Float32Array.from(snow.geometry.attributes.position.array);
+
+function stepSnow(dt, t){
+  const a = snow.geometry.attributes.position, arr = a.array;
+  const cx = camera.position.x, cy = camera.position.y, cz = camera.position.z;
+  const H = SNOW_BOX/2;
+  for(let i=0;i<SNOW_N;i++){
+    // 아주 느리게 가라앉으며 좌우로 흔들린다
+    snowBase[i*3+1] -= 1.6*dt;
+    const bx = snowBase[i*3] + Math.sin(t*0.35 + i)*3.0;
+    const by = snowBase[i*3+1];
+    const bz = snowBase[i*3+2] + Math.cos(t*0.28 + i*1.3)*3.0;
+    arr[i*3]   = cx + (((bx - cx) % SNOW_BOX) + SNOW_BOX*1.5) % SNOW_BOX - H;
+    arr[i*3+1] = cy + (((by - cy) % SNOW_BOX) + SNOW_BOX*1.5) % SNOW_BOX - H;
+    arr[i*3+2] = cz + (((bz - cz) % SNOW_BOX) + SNOW_BOX*1.5) % SNOW_BOX - H;
+  }
+  a.needsUpdate = true;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   3. 바다 — 바닥 · 해초 · 바위 · 수면 · 빛기둥 · 물고기
+   ═══════════════════════════════════════════════════════════ */
+// 얕은 모래밭 → 산호 능선 → 드롭오프.
+// 끝없음은 넓이가 아니라 "바닥이 사라지는 것"에서 온다.
+function floorH(x,z){
+  const m = 150 * Math.exp(-((x*x+z*z)/(2*250*250)));          // 가운데 산호 언덕
+  const base = m
+    + 30*Math.sin(x*0.0040)*Math.cos(z*0.0049)
+    + 12*Math.sin(x*0.0131+1.7)*Math.cos(z*0.0118)
+    + 4 *Math.sin(x*0.030)*Math.sin(z*0.027);
+  const r = Math.hypot(x, z);
+  const t = Math.min(Math.max((r - 700) / 560, 0), 1);
+  return base - 1600 * t*t*(3 - 2*t);                          // 벽처럼 떨어진다
+}
+const REEF_EDGE = 780;        // 이 밖은 벽과 먼바다
+const groundLevel = (x,z) => floorH(x,z);
+
+let causticU = null;          // 바닥 빛무늬 셰이더 유니폼
+const SIZE = 2600, SEG = 180;
+{
+  const geo = new THREE.PlaneGeometry(SIZE, SIZE, SEG, SEG);
+  geo.rotateX(-Math.PI/2);
+  const pos = geo.attributes.position, colors = [];
+  const cSand = new THREE.Color(0xE2D9B0);   // 밝은 모래
+  const cRock = new THREE.Color(0x9CB795);   // 이끼 낀 바위
+  const cReef = new THREE.Color(0xD8A79C);   // 산호
+  const cDeep = new THREE.Color(0x25333E);   // 드롭오프 아래
+  for(let i=0;i<pos.count;i++){
+    const x = pos.getX(i), z = pos.getZ(i);
+    const h = floorH(x,z); pos.setY(i,h);
+    let c;
+    if(h < 0){                                   // 벽을 타고 내려가며 어두워진다
+      c = cSand.clone().lerp(cDeep, THREE.MathUtils.clamp(-h/520, 0, 1));
+    } else {
+      const t = THREE.MathUtils.clamp(h/140, 0, 1);
+      c = t < .5 ? cSand.clone().lerp(cRock, t*2) : cRock.clone().lerp(cReef, (t-.5)*2);
+    }
+    colors.push(c.r, c.g, c.b);
+  }
+  geo.setAttribute('color', new THREE.Float32BufferAttribute(colors,3));
+  geo.computeVertexNormals();
+
+  // 물결이 햇빛을 모아 바닥에 그리는 무늬. 물속 장면을 물속으로 만드는 가장 강한 단서다.
+  const floorMat = new THREE.MeshLambertMaterial({vertexColors:true, flatShading:true});
+  floorMat.onBeforeCompile = (sh)=>{
+    sh.uniforms.uTime      = { value: 0 };
+    sh.uniforms.uCaustic   = { value: new THREE.Color(0x8FE0D8) };
+    sh.uniforms.uTurtle    = { value: new THREE.Vector3() };   // 거북의 월드 위치
+    sh.uniforms.uShadowOff = { value: new THREE.Vector2() };   // 높이 1당 그림자가 어긋나는 양
+    sh.uniforms.uShadowStr = { value: 0.55 };
+    sh.uniforms.uSurfY     = { value: SURFACE_Y };
+    causticU = sh.uniforms;
+    sh.vertexShader = 'varying vec3 vWorld;\n' + sh.vertexShader.replace(
+      '#include <begin_vertex>',
+      `#include <begin_vertex>
+       vWorld = (modelMatrix * vec4(transformed,1.0)).xyz;`);
+    sh.fragmentShader =
+      'varying vec3 vWorld; uniform float uTime; uniform vec3 uCaustic;\n'
+      + 'uniform vec3 uTurtle; uniform vec2 uShadowOff; uniform float uShadowStr;\n'
+      + 'uniform float uSurfY;\n'
+      + sh.fragmentShader.replace('#include <fog_fragment>',
+      `// 모래 잔물결 — 낮은 곳(모래밭)에서만 도드라진다
+       float sandF = (1.0 - smoothstep(12.0, 62.0, vWorld.y))
+                   * smoothstep(-70.0, -6.0, vWorld.y);
+       float rip = sin(dot(vWorld.xz, vec2(0.923,0.385)) * 0.34) * 0.55
+                 + sin(dot(vWorld.xz, vec2(0.966,0.259)) * 0.61 + 1.3) * 0.30
+                 + sin(dot(vWorld.xz, vec2(0.819,0.574)) * 1.05 + 2.4) * 0.15;
+       gl_FragColor.rgb *= 1.0 + rip * 0.09 * sandF;
+
+       // 빛무늬 — 수면 잔물결이 렌즈처럼 빛을 모으는 자리가 밝아진다.
+       // 축 정렬 사인의 곱은 바둑판이 된다. 실제 빛무늬는 굴절 사상의 야코비안이
+       // 0에 가까워지는 접힘선이 실처럼 얽힌 그물이다.
+       vec2 lp = vec2(vWorld.x, -vWorld.z);
+       float hxx = 0.0, hzz = 0.0, hxz = 0.0;
+       vec2 wd; float wk, wa, ww, wp, wc;
+       wd=vec2(-0.454, 0.891); wk=0.02992; wa=1.50; ww=sqrt(30.0*wk);
+         wp=wk*dot(wd,lp)-ww*uTime; wc=-wa*wk*wk*sin(wp);
+         hxx+=wc*wd.x*wd.x; hzz+=wc*wd.y*wd.y; hxz+=wc*wd.x*wd.y;
+       wd=vec2( 0.731, 0.682); wk=0.04488; wa=0.90; ww=sqrt(30.0*wk);
+         wp=wk*dot(wd,lp)-ww*uTime; wc=-wa*wk*wk*sin(wp);
+         hxx+=wc*wd.x*wd.x; hzz+=wc*wd.y*wd.y; hxz+=wc*wd.x*wd.y;
+       wd=vec2(-0.924,-0.383); wk=0.07140; wa=0.55; ww=sqrt(30.0*wk);
+         wp=wk*dot(wd,lp)-ww*uTime; wc=-wa*wk*wk*sin(wp);
+         hxx+=wc*wd.x*wd.x; hzz+=wc*wd.y*wd.y; hxz+=wc*wd.x*wd.y;
+       wd=vec2(-0.174, 0.985); wk=0.11424; wa=0.32; ww=sqrt(30.0*wk);
+         wp=wk*dot(wd,lp)-ww*uTime; wc=-wa*wk*wk*sin(wp);
+         hxx+=wc*wd.x*wd.x; hzz+=wc*wd.y*wd.y; hxz+=wc*wd.x*wd.y;
+       // 깊을수록 초점거리가 길어져 무늬가 커지고 복잡해진다
+       float Dc = clamp((uSurfY - vWorld.y) * 0.33, 30.0, 170.0);
+       float Jc = (1.0 + Dc*hxx) * (1.0 + Dc*hzz) - (Dc*hxz)*(Dc*hxz);
+       float ca = clamp(0.30/max(abs(Jc), 0.07) - 0.30, 0.0, 1.6);
+
+       // 거북의 그림자. 높이에 따라 크기·흐림·농도·어긋남이 함께 변한다.
+       // 물속에서는 굴절 때문에 높이의 1.135배보다 멀리 어긋날 수 없다.
+       float hh   = max(uTurtle.y - vWorld.y, 1.0);
+       vec2  sc   = uTurtle.xz + uShadowOff * hh;
+       float R    = 26.0 * (1.0 + hh * 0.011);
+       float soft = 1.0 - smoothstep(R * 0.30, R, length(vWorld.xz - sc));
+       float sh   = soft * clamp(1.0 - hh/460.0, 0.0, 1.0) * uShadowStr;
+
+       ca *= smoothstep(-340.0, -20.0, vWorld.y);   // 깊어질수록 빛이 닿지 않는다
+       ca *= (1.0 - soft * 0.85);              // 그림자 안에서는 빛무늬도 끊긴다
+       // 초점 밖은 살짝 어두워야 빛이 모였다는 것이 읽힌다 — 더하기만 하면 얼룩이 된다
+       gl_FragColor.rgb *= 1.0 - 0.10 * (1.0 - min(ca, 1.0));
+       gl_FragColor.rgb += ca * uCaustic;
+       gl_FragColor.rgb *= (1.0 - sh);
+       #include <fog_fragment>`);
+  };
+  scene.add(new THREE.Mesh(geo, floorMat));
+}
+
+// 해초 — 나무보다 훨씬 크게 흔들린다. 물의 존재를 보여주는 요소.
+const swayUniforms = [];      // 흔들리는 재질들의 시간 유니폼
+{
+  const kelpMat = new THREE.MeshLambertMaterial({color:0x74AE79, flatShading:true,
+    side:THREE.DoubleSide});
+  // 잎사귀 — 끝이 뾰족하지 않고 둥글게 마무리된다.
+  // 십자로 겹쳐 어느 각도에서도 납작해 보이지 않게 한다.
+  function makeKelpGeo(){
+    //        y      반폭
+    const ST = [[-13, 1.7], [-7, 2.7], [-1, 3.0], [5, 2.7], [10, 2.0], [13, 1.2], [13.9, 0.55]];
+    const v = [];
+    const strip = (rot) => {
+      const c = Math.cos(rot), sn = Math.sin(rot);
+      const P = (x,y) => [x*c, y, x*sn];
+      for(let i=0;i<ST.length-1;i++){
+        const [y0,w0] = ST[i], [y1,w1] = ST[i+1];
+        v.push(...P(-w0,y0), ...P( w0,y0), ...P( w1,y1));
+        v.push(...P(-w0,y0), ...P( w1,y1), ...P(-w1,y1));
+      }
+    };
+    strip(0); strip(Math.PI/2);
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.Float32BufferAttribute(v,3));
+    g.computeVertexNormals();
+    return g;
+  }
+
+  kelpMat.onBeforeCompile = (sh)=>{
+    sh.uniforms.uTime = { value: 0 };
+    swayUniforms.push(sh.uniforms.uTime);
+    sh.vertexShader = 'uniform float uTime;\n' + sh.vertexShader.replace(
+      '#include <begin_vertex>',
+      `#include <begin_vertex>
+       float ph = instanceMatrix[3][0]*0.019 + instanceMatrix[3][2]*0.015;
+       float sway = sin(uTime*0.45 + ph) + 0.45*sin(uTime*0.75 + ph*1.6);
+       float up = clamp((position.y + 13.0)/26.0, 0.0, 1.0);
+       transformed.x += sway * 8.5 * up * up;
+       transformed.z += sway * 4.0 * up * up;
+       transformed.y -= abs(sway) * 1.6 * up * up;   // 휘면서 살짝 낮아진다`
+    );
+  };
+  const kelp = new THREE.InstancedMesh(makeKelpGeo(), kelpMat, 260);
+  const d = new THREE.Object3D();
+  for(let i=0;i<260;i++){
+    const a=Math.random()*Math.PI*2, rr=Math.sqrt(Math.random())*REEF_EDGE;
+    const x=Math.cos(a)*rr, z=Math.sin(a)*rr;
+    d.position.set(x, floorH(x,z)+12, z);
+    d.rotation.y = Math.random()*Math.PI*2;
+    d.scale.set(.6+Math.random()*.8, .7+Math.random()*1.5, .6+Math.random()*.8);
+    d.updateMatrix(); kelp.setMatrixAt(i, d.matrix);
+  }
+  scene.add(kelp);
+
+  // ── 산호초 ──────────────────────────────────────────────
+  // 균일하게 흩뿌리면 자갈밭이 된다. 산호초의 본질은 "덩어리와 그 사이의 빈 모래"다.
+  // 높은 지형에 군집을 만들고, 물고기는 그 위에 머문다.
+  const reefs = [];
+  for(let i=0;i<16;i++){
+    let x, z, h, tries = 0;
+    do {
+      const a = Math.random()*Math.PI*2, r = 150 + Math.sqrt(Math.random())*(REEF_EDGE-190);
+      x = Math.cos(a)*r; z = Math.sin(a)*r; h = floorH(x,z);
+    } while(h < 25 && ++tries < 30);       // 솟은 자리를 고른다
+    reefs.push({ x, z, r: 45 + Math.random()*60 });
+  }
+  const nearReef = (i) => {
+    const rf = reefs[i % reefs.length];
+    const a = Math.random()*Math.PI*2, d = Math.sqrt(Math.random())*rf.r;
+    return [rf.x + Math.cos(a)*d, rf.z + Math.sin(a)*d];
+  };
+
+  // 물이 붉은빛을 먼저 삼키므로 산호는 형광이 아니라 황토·자주·올리브로 가라앉는다
+  const CORAL = [0xC08E6E, 0xA8766E, 0xB59A62, 0x8E7E86, 0xA9885A, 0x7E8A6C];
+  const col = new THREE.Color();
+
+  // 덩이 산호 — 납작하게 눌린 바위 형태
+  const head = new THREE.InstancedMesh(
+    new THREE.IcosahedronGeometry(5, 0),
+    new THREE.MeshLambertMaterial({flatShading:true}), 120);
+  for(let i=0;i<120;i++){
+    const [x,z] = nearReef(i);
+    d.position.set(x, floorH(x,z)+1.2, z);
+    d.rotation.set(Math.random()*3, Math.random()*3, Math.random()*3);
+    d.scale.set(.6+Math.random()*1.5, .45+Math.random()*.8, .6+Math.random()*1.5);
+    d.updateMatrix(); head.setMatrixAt(i, d.matrix);
+    head.setColorAt(i, col.setHex(CORAL[(Math.random()*CORAL.length)|0]));
+  }
+  head.instanceColor.needsUpdate = true;
+  scene.add(head);
+
+  // 가지 산호 — 여러 개가 모여 덤불처럼 보인다
+  const finger = new THREE.InstancedMesh(
+    new THREE.ConeGeometry(1.0, 11, 5),
+    new THREE.MeshLambertMaterial({flatShading:true}), 260);
+  for(let i=0;i<260;i++){
+    const [x,z] = nearReef(i>>1);
+    d.position.set(x, floorH(x,z)+5, z);
+    d.rotation.set((Math.random()-.5)*.7, Math.random()*3, (Math.random()-.5)*.7);
+    d.scale.set(.6+Math.random()*.8, .5+Math.random()*1.3, .6+Math.random()*.8);
+    d.updateMatrix(); finger.setMatrixAt(i, d.matrix);
+    finger.setColorAt(i, col.setHex(CORAL[(Math.random()*CORAL.length)|0]));
+  }
+  finger.instanceColor.needsUpdate = true;
+  scene.add(finger);
+
+  // 모래밭에 드문드문 놓인 돌 — 산호초 밖에도 무언가는 있어야 한다
+  const rubble = new THREE.InstancedMesh(
+    new THREE.IcosahedronGeometry(4, 0),
+    new THREE.MeshLambertMaterial({color:0x9AA396, flatShading:true}), 40);
+  for(let i=0;i<40;i++){
+    const a=Math.random()*Math.PI*2, rr=Math.sqrt(Math.random())*REEF_EDGE;
+    const x=Math.cos(a)*rr, z=Math.sin(a)*rr;
+    d.position.set(x, floorH(x,z)+1, z);
+    d.rotation.set(Math.random()*3, Math.random()*3, Math.random()*3);
+    d.scale.set(.4+Math.random()*.8, .3+Math.random()*.5, .4+Math.random()*.8);
+    d.updateMatrix(); rubble.setMatrixAt(i, d.matrix);
+  }
+  scene.add(rubble);
+
+  // ── 웅장한 것들 ─────────────────────────────────────────
+  // 잔가지와 자갈만 있으면 규모가 느껴지지 않는다.
+  // 거북보다 큰 구조물이 있어야 물속이 넓어 보인다.
+
+  // 큰 바위 — 거북(길이 18)보다 큰 것들
+  const boulder = new THREE.InstancedMesh(
+    new THREE.IcosahedronGeometry(5, 0),
+    new THREE.MeshLambertMaterial({color:0x8A9188, flatShading:true}), 46);
+  for(let i=0;i<46;i++){
+    const [x,z] = i < 30 ? nearReef(i) : [
+      Math.cos(Math.random()*6.28)*Math.sqrt(Math.random())*REEF_EDGE,
+      Math.sin(Math.random()*6.28)*Math.sqrt(Math.random())*REEF_EDGE];
+    d.position.set(x, floorH(x,z) + 2, z);
+    d.rotation.set(Math.random()*3, Math.random()*3, Math.random()*3);
+    d.scale.set(2.2+Math.random()*4.3, 1.5+Math.random()*3.0, 2.2+Math.random()*4.3);
+    d.updateMatrix(); boulder.setMatrixAt(i, d.matrix);
+  }
+  scene.add(boulder);
+
+  // 탁자 산호 — 얕은 바다에서 가장 눈에 띄는 형태. 아래로 그늘을 드리운다.
+  const tableTop = new THREE.InstancedMesh(
+    new THREE.CylinderGeometry(1, 1, 0.26, 10),
+    new THREE.MeshLambertMaterial({flatShading:true}), 34);
+  const tableLeg = new THREE.InstancedMesh(
+    new THREE.CylinderGeometry(0.20, 0.34, 1, 6),
+    new THREE.MeshLambertMaterial({flatShading:true}), 34);
+  for(let i=0;i<34;i++){
+    const [x,z] = nearReef(i);
+    const g0 = floorH(x,z), R = 7 + Math.random()*9, H = 4 + Math.random()*7;
+    d.position.set(x, g0 + H/2, z);
+    d.rotation.set(0, Math.random()*3, 0);
+    d.scale.set(R*0.30, H, R*0.30);
+    d.updateMatrix(); tableLeg.setMatrixAt(i, d.matrix);
+    d.position.set(x, g0 + H, z);
+    d.rotation.set((Math.random()-.5)*.18, Math.random()*3, (Math.random()-.5)*.18);
+    d.scale.set(R, 1 + Math.random()*1.4, R*(0.8+Math.random()*0.35));
+    d.updateMatrix(); tableTop.setMatrixAt(i, d.matrix);
+    const c2 = col.setHex(CORAL[(Math.random()*CORAL.length)|0]);
+    tableTop.setColorAt(i, c2); tableLeg.setColorAt(i, c2);
+  }
+  tableTop.instanceColor.needsUpdate = true;
+  tableLeg.instanceColor.needsUpdate = true;
+  scene.add(tableTop, tableLeg);
+
+  // 기둥 산호 — 바닥에서 솟아오른 탑
+  const pillar = new THREE.InstancedMesh(
+    new THREE.CylinderGeometry(0.62, 1.15, 1, 7),
+    new THREE.MeshLambertMaterial({flatShading:true}), 72);
+  for(let i=0;i<72;i++){
+    const [x,z] = nearReef(i>>1);
+    const H = 12 + Math.random()*24;
+    d.position.set(x, floorH(x,z) + H/2, z);
+    d.rotation.set((Math.random()-.5)*.22, Math.random()*3, (Math.random()-.5)*.22);
+    d.scale.set(2.0+Math.random()*2.6, H, 2.0+Math.random()*2.6);
+    d.updateMatrix(); pillar.setMatrixAt(i, d.matrix);
+    pillar.setColorAt(i, col.setHex(CORAL[(Math.random()*CORAL.length)|0]));
+  }
+  pillar.instanceColor.needsUpdate = true;
+  scene.add(pillar);
+
+  // 부채 산호 — 물살에 천천히 흔들린다
+  function makeFanGeo(){
+    const v = [], N = 13;
+    for(let i=0;i<N;i++){
+      const a0 = -1.15 + 2.30*(i/N), a1 = -1.15 + 2.30*((i+1)/N);
+      const r0 = 0.84 + 0.16*Math.sin(i*2.1), r1 = 0.84 + 0.16*Math.sin((i+1)*2.1);
+      v.push(0, 0, 0,
+             Math.sin(a0)*r0, Math.cos(a0)*r0, 0,
+             Math.sin(a1)*r1, Math.cos(a1)*r1, 0);
+    }
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.Float32BufferAttribute(v,3));
+    g.computeVertexNormals();
+    return g;
+  }
+  const fanMat = new THREE.MeshLambertMaterial({
+    side:THREE.DoubleSide, flatShading:true, vertexColors:true});
+  fanMat.onBeforeCompile = (sh)=>{
+    sh.uniforms.uTime = { value: 0 };
+    swayUniforms.push(sh.uniforms.uTime);
+    sh.vertexShader = 'uniform float uTime;\n' + sh.vertexShader.replace(
+      '#include <begin_vertex>',
+      `#include <begin_vertex>
+       float ph = instanceMatrix[3][0]*0.021 + instanceMatrix[3][2]*0.017;
+       float sway = sin(uTime*0.5 + ph) + 0.4*sin(uTime*0.85 + ph*1.5);
+       float up = clamp(position.y, 0.0, 1.0);
+       transformed.z += sway * 0.09 * up * up;`
+    );
+  };
+  const fan = new THREE.InstancedMesh(makeFanGeo(), fanMat, 48);
+  for(let i=0;i<48;i++){
+    const [x,z] = nearReef(i);
+    const S = 6 + Math.random()*7;
+    d.position.set(x, floorH(x,z) + 0.5, z);
+    d.rotation.set(0, Math.random()*Math.PI*2, 0);
+    d.scale.set(S, S*(0.9+Math.random()*0.5), S);
+    d.updateMatrix(); fan.setMatrixAt(i, d.matrix);
+    fan.setColorAt(i, col.setHex(CORAL[(Math.random()*CORAL.length)|0]));
+  }
+  fan.instanceColor.needsUpdate = true;
+  scene.add(fan);
+
+  // 성게 — 바위와 산호 틈에 박혀 있다
+  const urchin = new THREE.InstancedMesh(
+    new THREE.IcosahedronGeometry(1.9, 0),
+    new THREE.MeshLambertMaterial({color:0x3A2B42, flatShading:true}), 80);
+  for(let i=0;i<80;i++){
+    const [x,z] = nearReef(i);
+    d.position.set(x, floorH(x,z)+1.4, z);
+    d.rotation.set(Math.random()*3, Math.random()*3, Math.random()*3);
+    d.scale.setScalar(.6+Math.random()*.8);
+    d.updateMatrix(); urchin.setMatrixAt(i, d.matrix);
+  }
+  scene.add(urchin);
+
+  // 불가사리 — 모래바닥에 납작하게 붙어 있다
+  function makeStarGeo(){
+    const v = [], N = 5;
+    for(let i=0;i<N*2;i++){
+      const a0 = (i/(N*2))*Math.PI*2, a1 = ((i+1)/(N*2))*Math.PI*2;
+      const r0 = i%2 ? 1.35 : 3.4, r1 = i%2 ? 3.4 : 1.35;
+      v.push(0, .55, 0,
+             Math.cos(a0)*r0, 0, Math.sin(a0)*r0,
+             Math.cos(a1)*r1, 0, Math.sin(a1)*r1);
+    }
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.Float32BufferAttribute(v,3));
+    g.computeVertexNormals();
+    return g;
+  }
+  const STAR = [0xC97B52, 0xB98A5E, 0xA9615C, 0xCE9A6A];
+  const star = new THREE.InstancedMesh(
+    makeStarGeo(),
+    new THREE.MeshLambertMaterial({flatShading:true, side:THREE.DoubleSide}), 70);
+  for(let i=0;i<70;i++){
+    let x, z, h, tries = 0;
+    do {
+      const a=Math.random()*Math.PI*2, rr=Math.sqrt(Math.random())*REEF_EDGE;
+      x=Math.cos(a)*rr; z=Math.sin(a)*rr; h=floorH(x,z);
+    } while(h > 30 && ++tries < 20);      // 모래밭을 고른다
+    d.position.set(x, h+0.4, z);
+    d.rotation.set(0, Math.random()*Math.PI*2, 0);
+    d.scale.setScalar(.7+Math.random()*.7);
+    d.updateMatrix(); star.setMatrixAt(i, d.matrix);
+    star.setColorAt(i, col.setHex(STAR[(Math.random()*STAR.length)|0]));
+  }
+  star.instanceColor.needsUpdate = true;
+  scene.add(star);
+
+  window.__reefs = reefs;      // 물고기 무리가 산호초 위에 자리 잡도록 넘겨준다
+}
+
+// 수면 ─────────────────────────────────────────────────────
+// 파동 6개를 서로 다른 방향·파장으로 겹친다. 방향이 축에 정렬되지 않고
+// 파장 비가 정수배가 아니어서 같은 무늬가 되풀이되지 않는다.
+// 진행 속도는 분산관계 ω=√(g·k)를 따른다 — 긴 파도가 더 빨리 간다.
+// 반짝임은 위치가 아니라 "수면의 기울기가 해를 향하는가"로 정한다.
+const surfaceMat = new THREE.ShaderMaterial({
+  side: THREE.DoubleSide, transparent:true, depthWrite:false,
+  uniforms:{
+    uTime   :{value:0},
+    uColor  :{value:new THREE.Color(0xDCF4F2)},
+    uWindow :{value:new THREE.Color(0xF2FCFF)},
+    uOpacity:{value:.55},
+    uCam    :{value:new THREE.Vector3()},
+    uSun    :{value:new THREE.Vector3(0.19,0.97,0.09)},
+    uSurfY  :{value:0}
+  },
+  vertexShader:`
+    uniform float uTime;
+    varying vec3 vPos; varying vec2 vSlope; varying float vH;
+
+    // 긴 너울만 정점에서 계산한다. 정점 간격이 26.7이므로
+    // 파장 140 이하는 표본이 모자라 이가 빠진다 — 그건 프래그먼트로 넘긴다.
+    // h = Σ aᵢ sin(kᵢ(dᵢ·p) − ωᵢt), 기울기는 그 도함수. ω=√(g·k)로 긴 파도가 더 빠르다.
+    void waves(vec2 p, float t, out float h, out vec2 slope){
+      h = 0.0; slope = vec2(0.0);
+      vec2 d; float k, a, w, ph;
+      d=vec2( 0.939, 0.342); k=0.01208; a=3.40; w=sqrt(30.0*k);
+        ph=k*dot(d,p)-w*t; h+=a*sin(ph); slope+=a*k*d*cos(ph);
+      d=vec2( 0.408, 0.913); k=0.01904; a=2.35; w=sqrt(30.0*k);
+        ph=k*dot(d,p)-w*t; h+=a*sin(ph); slope+=a*k*d*cos(ph);
+      d=vec2(-0.454, 0.891); k=0.02992; a=1.50; w=sqrt(30.0*k);
+        ph=k*dot(d,p)-w*t; h+=a*sin(ph); slope+=a*k*d*cos(ph);
+      d=vec2( 0.731, 0.682); k=0.04488; a=0.90; w=sqrt(30.0*k);
+        ph=k*dot(d,p)-w*t; h+=a*sin(ph); slope+=a*k*d*cos(ph);
+    }
+
+    void main(){
+      vec3 p = position;
+      float h; vec2 sl;
+      waves(p.xy, uTime, h, sl);
+      p.z += h; vH = h; vSlope = sl;
+      vec4 wp = modelMatrix * vec4(p,1.0);
+      vPos = wp.xyz;
+      gl_Position = projectionMatrix * viewMatrix * wp; }`,
+  fragmentShader:`
+    uniform vec3 uColor; uniform vec3 uWindow; uniform float uOpacity;
+    uniform vec3 uCam; uniform vec3 uSun; uniform float uSurfY; uniform float uTime;
+    varying vec3 vPos; varying vec2 vSlope; varying float vH;
+
+    // 잔물결 — 정점으로는 표현할 수 없는 짧은 파장. 기울기에만 기여한다.
+    vec2 ripple(vec2 p, float t){
+      vec2 sl = vec2(0.0);
+      vec2 d; float k, a, w, ph;
+      d=vec2(-0.924,-0.383); k=0.0714; a=0.55; w=sqrt(30.0*k);
+        ph=k*dot(d,p)-w*t; sl+=a*k*d*cos(ph);
+      d=vec2(-0.174, 0.985); k=0.1142; a=0.32; w=sqrt(30.0*k);
+        ph=k*dot(d,p)-w*t; sl+=a*k*d*cos(ph);
+      d=vec2( 0.600,-0.800); k=0.1848; a=0.20; w=sqrt(30.0*k);
+        ph=k*dot(d,p)-w*t; sl+=a*k*d*cos(ph);
+      d=vec2(-0.650, 0.760); k=0.2856; a=0.13; w=sqrt(30.0*k);
+        ph=k*dot(d,p)-w*t; sl+=a*k*d*cos(ph);
+      d=vec2( 0.985, 0.174); k=0.4488; a=0.075; w=sqrt(30.0*k);
+        ph=k*dot(d,p)-w*t; sl+=a*k*d*cos(ph);
+      return sl;
+    }
+
+    void main(){
+      // 평면은 x축으로 -90° 눕혀져 있어 로컬 y가 월드 -z가 된다.
+      // 로컬 좌표계로 되돌려 잔물결을 이어 붙인다.
+      vec2 lp = vec2(vPos.x, -vPos.z);
+      vec2 sl = vSlope + ripple(lp, uTime);
+      vec3 n = normalize(vec3(-sl.x, 1.0, sl.y));
+
+      float depth = uSurfY - uCam.y;
+      float above = step(depth, 0.0);
+
+      // ── 물 밖: 해를 향한 반짝임의 길. 기울기가 시선과 해를 이등분할 때만 빛난다.
+      vec3 vdir = normalize(uCam - vPos);
+      vec3 hv   = normalize(vdir + uSun);
+      float glint = pow(max(dot(n, hv), 0.0), 220.0)
+                  + 0.35 * pow(max(dot(n, hv), 0.0), 40.0);
+
+      // ── 물 안: 스넬의 창. 경계는 파도 기울기에 따라 너울거린다.
+      float hh  = max(abs(depth), 1.0);
+      vec2  rel = vPos.xz - uCam.xz;
+      float rw  = length(rel) / (1.135 * hh);
+      float wob = dot(normalize(rel + vec2(1e-4)), vec2(-sl.x, sl.y)) * 2.4;
+      float win = 1.0 - smoothstep(0.70 + wob, 1.08 + wob, rw);
+      float rim = exp(-pow((rw - 0.94 - wob) * 5.5, 2.0));   // 창 가장자리의 밝은 테
+      win = mix(win, 1.0, above);
+
+      vec3 c = mix(uColor * 0.70, uWindow, win);
+      c += rim * 0.32 * (1.0 - above);
+      c += glint * (0.55 + 0.75 * above);
+      c += (n.y - 0.985) * -1.4 * 0.18;        // 물결 면의 미세한 명암
+
+      float a = mix(uOpacity * (0.76 + 0.52*win), 0.90, above);
+      gl_FragColor = vec4(c, clamp(a, 0.0, 1.0)); }`
+});
+{
+  const g = new THREE.PlaneGeometry(3200, 3200, 120, 120);
+  const surface = new THREE.Mesh(g, surfaceMat);
+  surface.rotation.x = -Math.PI/2;
+  surface.position.y = SURFACE_Y;
+  surface.renderOrder = 2;
+  surface.frustumCulled = false;
+  scene.add(surface);
+  surfaceMat.uniforms.uSurfY.value = SURFACE_Y;
+}
+
+// 빛기둥 — 수면에서 비스듬히 내려온다. 십자로 겹쳐 어느 각도에서도 보이게.
+const shafts = [];
+const shaftMat = new THREE.MeshBasicMaterial({color:0xCFF0F2, transparent:true,
+  opacity:.055, depthWrite:false, blending:THREE.AdditiveBlending, side:THREE.DoubleSide});
+{
+  const g = new THREE.PlaneGeometry(34, 520);
+  for(let i=0;i<8;i++){
+    const grp = new THREE.Group();
+    const a = new THREE.Mesh(g, shaftMat);
+    const b = new THREE.Mesh(g, shaftMat); b.rotation.y = Math.PI/2;
+    grp.add(a,b);
+    grp.position.set((Math.random()-.5)*1900, SURFACE_Y-270, (Math.random()-.5)*1900);
+    grp.rotation.z = (Math.random()-.5)*0.28;
+    grp.userData.drift = .8 + Math.random()*1.4;
+    scene.add(grp); shafts.push(grp);
+  }
+}
+
+// 물고기 떼 — 무리 지어 천천히 돈다
+// 물고기 — 옆으로 납작한 몸통에 갈라진 꼬리와 등지느러미.
+// 원뿔은 반지름 분할이 4면 그냥 사각뿔이 된다. 물고기로 보이려면 최소한
+// (1) 좌우로 눌린 단면 (2) 갈라진 꼬리 (3) 등지느러미 세 가지가 필요하다.
+function makeFishGeo(){
+  //        z     반높이  반폭
+  const ST = [
+    [ 2.6, 0.06, 0.05],
+    [ 1.6, 0.55, 0.30],
+    [ 0.4, 0.85, 0.42],
+    [-0.8, 0.60, 0.28],
+    [-1.8, 0.22, 0.10]
+  ];
+  const v = [];
+  const ring = ([z,hy,hx]) => [[0,hy,z], [hx,0,z], [0,-hy,z], [-hx,0,z]];
+  for(let i=0;i<ST.length-1;i++){
+    const A = ring(ST[i]), B = ring(ST[i+1]);
+    for(let j=0;j<4;j++){
+      const k = (j+1)%4;
+      v.push(...A[j], ...B[j], ...B[k]);
+      v.push(...A[j], ...B[k], ...A[k]);
+    }
+  }
+  // 갈라진 꼬리
+  v.push(0,0,-1.8,  0, 1.00,-3.6,  0, 0.15,-2.9);
+  v.push(0,0,-1.8,  0,-0.15,-2.9,  0,-1.00,-3.6);
+  // 등지느러미
+  v.push(0, 0.80, 0.9,  0, 1.55,-0.4,  0, 0.45,-1.3);
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(v,3));
+  g.computeVertexNormals();
+  return g;
+}
+
+const FISH_N = 130, fishData = [];
+const fish = new THREE.InstancedMesh(
+  makeFishGeo(),
+  new THREE.MeshLambertMaterial({color:0xD9CE9A, side:THREE.DoubleSide,
+                                 flatShading:true}), FISH_N);
+{
+  const schools = 9;
+  for(let i=0;i<FISH_N;i++){
+    const s = i % schools;
+    fishData.push({
+      school: s,
+      r: 12 + Math.random()*26,
+      a: Math.random()*Math.PI*2,
+      w: (0.35 + Math.random()*0.4) * (s%2 ? 1 : -1),
+      y: (Math.random()-.5)*14
+    });
+  }
+  // 물고기는 열린 물이 아니라 구조물 위에 머문다 — 구조가 생물을 불러 모으는 것이 산호초다
+  fishData.schools = [];
+  const RF = window.__reefs || [];
+  for(let s=0;s<schools;s++){
+    const rf = RF.length ? RF[s % RF.length] : null;
+    const x = rf ? rf.x + (Math.random()-.5)*70 : (Math.random()-.5)*1700;
+    const z = rf ? rf.z + (Math.random()-.5)*70 : (Math.random()-.5)*1700;
+    fishData.schools.push({x, y: floorH(x,z)+40+Math.random()*90, z,
+      vx:(Math.random()-.5)*5, vz:(Math.random()-.5)*5});
+  }
+  scene.add(fish);
+}
+
+// 가오리 — 넓은 가슴지느러미를 파도처럼 흔들며 모래 위를 미끄러진다.
+// 물속 풍경에서 가장 눈에 남는 움직임이라 두 마리만으로도 바다가 살아난다.
+const rays = [];
+{
+  // 날개폭 방향 u(−1~1), 시위 방향 v(−1~1)로 매개변수화한다.
+  // 시위 길이가 끝에서 0이 되므로 날개 끝이 뾰족해진다 — 타원으로 만들면 접시가 된다.
+  const NU = 17, NV = 9, SPAN = 15;
+  const chord  = u => 9.5 * (1 - Math.pow(Math.abs(u), 1.6));   // 끝에서 0
+  const center = u => -1 - 3.0*u*u;                             // 뒤로 젖혀진 날개
+  const rayPt = (u,v) => [
+    SPAN*u,
+    1.0 * (1-v*v) * Math.sqrt(Math.max(0,1-u*u)),
+    center(u) + chord(u)*v
+  ];
+  const mat = new THREE.MeshLambertMaterial({color:0x54646E, side:THREE.DoubleSide,
+                                             flatShading:true});
+  for(let r=0;r<2;r++){
+    const base = [], idx = [];
+    for(let i=0;i<NU;i++){
+      const u = -1 + 2*(i/(NU-1));
+      for(let j=0;j<NV;j++) base.push(...rayPt(u, -1 + 2*(j/(NV-1))));
+    }
+    const tailStart = base.length/3;
+    for(let k=0;k<5;k++){
+      const t = k/4, w = 0.85*(1-t) + 0.10;
+      base.push(-w, 0, -10.5 - t*18,  w, 0, -10.5 - t*18);
+    }
+    for(let i=0;i<NU-1;i++)
+      for(let j=0;j<NV-1;j++){
+        const a=i*NV+j, b=a+1, c=a+NV+1, e=a+NV;
+        idx.push(a,b,c, a,c,e);
+      }
+    for(let k=0;k<4;k++){
+      const a=tailStart+k*2;
+      idx.push(a, a+1, a+3,  a, a+3, a+2);
+    }
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.Float32BufferAttribute(new Float32Array(base),3));
+    g.setIndex(idx);
+    g.computeVertexNormals();
+    const m = new THREE.Mesh(g, mat);
+    rays.push({ mesh:m, geo:g, base:Float32Array.from(base), NU, NV,
+                cx:(Math.random()-.5)*900, cz:(Math.random()-.5)*900,
+                rad: 200+Math.random()*180, a: Math.random()*6.28,
+                w:(r?1:-1)*0.055, phase: Math.random()*6.28 });
+    scene.add(m);
+  }
+}
+
+function stepRays(dt, t){
+  for(const ry of rays){
+    ry.a += ry.w * dt;
+    const x = ry.cx + Math.cos(ry.a)*ry.rad, z = ry.cz + Math.sin(ry.a)*ry.rad;
+    const y = floorH(x,z) + 34 + Math.sin(t*0.25 + ry.phase)*10;
+    ry.mesh.position.set(x, y, z);
+    const sg = ry.w > 0 ? 1 : -1;
+    ry.mesh.rotation.y = Math.atan2(-Math.sin(ry.a)*sg, Math.cos(ry.a)*sg);
+
+    // 가슴지느러미가 바깥으로 갈수록 크게 물결친다
+    const a = ry.geo.attributes.position, arr = a.array;
+    for(let i=0;i<ry.NU;i++){
+      const u = -1 + 2*(i/(ry.NU-1));
+      const lift = Math.sin(Math.abs(u)*3.1 - t*2.1 + ry.phase) * 3.2 * u*u;
+      for(let j=0;j<ry.NV;j++){
+        const k = (i*ry.NV + j)*3;
+        arr[k+1] = ry.base[k+1] + lift;
+      }
+    }
+    a.needsUpdate = true;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   4. 거북 모델
+   좌표 메모: 거북은 로컬 +z를 향한다. 거북의 왼쪽 지느러미는 +x이고
+   화면 왼쪽에 보이며, 사용자의 왼팔에 대응한다.
+   지느러미는 뿌리(어깨)가 원점에 오도록 만들어 z축으로 젓는다.
+   ═══════════════════════════════════════════════════════════ */
+const turtle = new THREE.Group();
+
+const MAT = {
+  // 푸른바다거북의 "green"은 체지방 색에서 온 이름이고, 등딱지는 갈색이다.
+  shell   : new THREE.MeshLambertMaterial({color:0x2E241A, flatShading:true}),  // 갑판 사이 홈
+  scuteA  : new THREE.MeshLambertMaterial({flatShading:true, vertexColors:true}), // 중앙 갑판
+  scuteB  : new THREE.MeshLambertMaterial({flatShading:true, vertexColors:true}), // 측면 갑판
+  margin  : new THREE.MeshLambertMaterial({flatShading:true, vertexColors:true}), // 연변갑판
+  rim     : new THREE.MeshLambertMaterial({color:0x3A2D20, flatShading:true,
+                                           side:THREE.DoubleSide}),               // 테두리 벽
+  belly   : new THREE.MeshLambertMaterial({color:0xD6CDA4, flatShading:true}),
+  skin    : new THREE.MeshLambertMaterial({color:0x5E5642, flatShading:true}),
+  // 지느러미와 피부는 같은 살이다. 색이 다르면 붙여놓은 부품으로 보인다.
+  flipper : new THREE.MeshLambertMaterial({color:0x635B47, side:THREE.DoubleSide,
+                                           flatShading:true}),
+  eye     : new THREE.MeshLambertMaterial({color:0x1E241C, flatShading:true})
+};
+
+// ── 등딱지 형태 ───────────────────────────────────────────
+// 푸른바다거북의 등딱지는 앞이 넓고 뒤로 좁아지는 하트형이다.
+// z는 앞(+)에서 뒤(−)로, 각 지점의 반폭과 높이 비율을 표로 둔다.
+const CARA = [
+  //  z     반폭   높이비
+  //  z    반폭   높이비   — 실측 폭/길이 0.75~0.77에 맞춘다
+  [ 7.4,  1.45, .30],
+  [ 5.5,  4.50, .82],
+  [ 3.0,  5.75, .98],
+  [ 0.5,  6.10, 1.0],
+  [-2.0,  5.75, .96],
+  [-4.5,  4.75, .84],
+  [-6.5,  3.15, .58],
+  [-8.6,  0.80, .18]
+];
+// 등딱지 높이. 배딱지 1.6과 합쳐 몸 두께가 길이의 약 31% — 실제 푸른바다거북 비율.
+// 낮추면 쿠키, 높이고 단면을 둥글게 하면 빵이 된다. 관건은 높이가 아니라 단면의 어깨다.
+const CARA_H = 3.85;   // 배딱지 1.90과 합쳐 몸 높이/길이 = 36% (실측 39%)
+
+function caraLerp(z){                       // 임의의 z에서 반폭과 높이비
+  if(z >= CARA[0][0]) return [CARA[0][1], CARA[0][2]];
+  for(let i=0;i<CARA.length-1;i++){
+    if(z <= CARA[i][0] && z >= CARA[i+1][0]){
+      const t = (CARA[i][0] - z) / (CARA[i][0] - CARA[i+1][0]);
+      return [CARA[i][1] + (CARA[i+1][1]-CARA[i][1])*t,
+              CARA[i][2] + (CARA[i+1][2]-CARA[i][2])*t];
+    }
+  }
+  return [CARA[CARA.length-1][1], CARA[CARA.length-1][2]];
+}
+// u는 −1(왼쪽 가장자리)에서 +1(오른쪽 가장자리). 윗면은 위로 볼록, 아랫면은 얕게 아래로.
+function caraPt(z, u, upper){
+  const [w, hp] = caraLerp(z);
+  const x = u * w;
+  // 가운데는 완만하고 바깥 3분의 1에서 확실히 꺾여 내려간다.
+  //   (1-u²)^0.55  → 반구가 되어 빵처럼 보인다
+  //   sqrt(1-u³)   → 고원이 되어 쿠키처럼 보인다
+  const a = Math.abs(u);
+  const dome = Math.pow(Math.max(1 - Math.pow(a, 2.6), 0), 0.75);
+  const flat = Math.pow(Math.max(1 - Math.pow(a, 3.2), 0), 0.50);   // 배딱지는 거의 평평
+  // 테두리(u=±1)에서 윗면과 아랫면이 y=0으로 만나면 칼날이 된다.
+  // 뒤에서는 테두리를 거의 옆에서 보므로 여기 두께가 없으면 종이처럼 보인다.
+  const rimT = 0.40 * hp;
+  const y = upper ?  rimT + (CARA_H*hp - rimT) * dome
+                  : -rimT - (1.90 *hp - rimT) * flat;
+  return [x, y, z];
+}
+function makeShellGeo(upper){
+  const NZ = 20, NU = 15, v = [];
+  const zAt = i => 7.4 + (-8.6 - 7.4) * (i/(NZ-1));
+  const uAt = j => -1 + 2*(j/(NU-1));
+  for(let i=0;i<NZ-1;i++){
+    for(let j=0;j<NU-1;j++){
+      const A = caraPt(zAt(i),   uAt(j),   upper);
+      const B = caraPt(zAt(i),   uAt(j+1), upper);
+      const C = caraPt(zAt(i+1), uAt(j+1), upper);
+      const D = caraPt(zAt(i+1), uAt(j),   upper);
+      if(upper) v.push(...A,...B,...C,  ...A,...C,...D);
+      else      v.push(...A,...C,...B,  ...A,...D,...C);
+    }
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(v,3));
+  g.computeVertexNormals();
+  return g;
+}
+
+// 테두리 벽과 앞뒤 마감 — 윗면과 아랫면 사이를 이어 닫힌 입체로 만든다.
+// 이것이 없으면 앞뒤에 구멍이 남고, 뒤에서 보면 등딱지 속이 들여다보인다.
+function makeShellRimGeo(){
+  const NZ = 20, NU = 15, v = [];
+  const zAt = i => 7.4 + (-8.6 - 7.4) * (i/(NZ-1));
+  // 통의 양쪽 옆면은 감기 방향이 반대여야 법선이 둘 다 바깥을 향한다.
+  for(let i=0;i<NZ-1;i++)
+    for(const sg of [1, -1]){
+      const A = caraPt(zAt(i),   sg, true),  B = caraPt(zAt(i+1), sg, true);
+      const C = caraPt(zAt(i+1), sg, false), D = caraPt(zAt(i),   sg, false);
+      if(sg > 0) quad(v, A, D, C, B);
+      else       quad(v, A, B, C, D);
+    }
+  // 앞뒤 마감면도 서로 반대로 감는다.
+  for(const zi of [0, NZ-1]){
+    const z = zAt(zi), front = zi === 0;
+    for(let j=0;j<NU-1;j++){
+      const u0 = -1 + 2*(j/(NU-1)), u1 = -1 + 2*((j+1)/(NU-1));
+      const A = caraPt(z,u0,true),  B = caraPt(z,u1,true);
+      const C = caraPt(z,u1,false), D = caraPt(z,u0,false);
+      if(front) quad(v, A, D, C, B);
+      else      quad(v, A, B, C, D);
+    }
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(v,3));
+  g.computeVertexNormals();
+  return g;
+}
+
+// ── 갑판(scute) ───────────────────────────────────────────
+// 중앙 5장 + 측면 4쌍. 등딱지 위로 살짝 띄워 사이 틈이 홈처럼 보이게 한다.
+// 뒤에서 보는 카메라가 내내 마주하는 면이므로 이 무늬가 종을 알려준다.
+// 갑판 하나. 앞바깥 모서리를 초점으로 호박빛이 퍼지고 반대쪽으로 갈수록 짙어진다 —
+// 실제 푸른바다거북 갑판의 방사 무늬가 이 형태다.
+const _sA = new THREE.Color(), _sB = new THREE.Color(), _sC = new THREE.Color();
+// edgeFn(t) → [안쪽 u, 바깥 u]. t는 갑판 안에서의 앞뒤 위치.
+// 폭을 t에 따라 바꾸면 육각형이 되고, 중앙판과 측면판이 서로 맞물린다.
+// 직사각형 격자로 만들면 무늬가 규칙적이어서 거북이 아니라 빵이 된다.
+function makeScuteGeo(zA, zB, edgeFn, hot, cold){
+  const v = [], c = [], N = 6;
+  const zi = t => zA + (zB-zA)*t;
+  // 표면보다 0.08만 올린다. 크게 띄우면 얹은 타일처럼 보인다 — 실제 갑판은 표면 그 자체다.
+  const lift = (z,u) => { const p = caraPt(z,u,true); p[1] += 0.08; return p; };
+  _sA.setHex(hot); _sB.setHex(cold);
+  const tint = (ti, tj) => {          // 초점(ti=0, tj=1)에서 멀어질수록 어두워진다
+    const d = Math.min(Math.hypot(ti, 1-tj) / 1.25, 1);
+    _sC.copy(_sA).lerp(_sB, Math.pow(d, 0.75));
+    return [_sC.r, _sC.g, _sC.b];
+  };
+  const uAt = (ti, tj) => { const e = edgeFn(ti); return e[0] + (e[1]-e[0])*tj; };
+  for(let i=0;i<N;i++){
+    for(let j=0;j<N;j++){
+      const P = [[i/N, j/N], [i/N, (j+1)/N], [(i+1)/N, (j+1)/N], [(i+1)/N, j/N]];
+      const G = P.map(([a,b]) => lift(zi(a), uAt(a,b)));
+      const T = P.map(([a,b]) => tint(a, b));
+      v.push(...G[0],...G[1],...G[2],  ...G[0],...G[2],...G[3]);
+      c.push(...T[0],...T[1],...T[2],  ...T[0],...T[2],...T[3]);
+    }
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(v,3));
+  g.setAttribute('color',    new THREE.Float32BufferAttribute(c,3));
+  g.computeVertexNormals();
+  return g;
+}
+
+{
+  const shell = new THREE.Mesh(makeShellGeo(true), MAT.shell);
+  turtle.add(shell);
+  const plastron = new THREE.Mesh(makeShellGeo(false), MAT.belly);
+  turtle.add(plastron);
+  turtle.add(new THREE.Mesh(makeShellRimGeo(), MAT.rim));
+
+  const PI = Math.PI;
+  const CEN = [[6.3,3.7],[3.5,1.05],[0.85,-1.75],[-1.95,-4.45],[-4.65,-7.0]];
+
+  // 중앙 갑판의 바깥 가장자리를 z의 함수로 정의한다.
+  // 측면 갑판이 이 곡선을 그대로 따라가야 사이가 실금으로 남는다 —
+  // 각자 따로 정의하면 틈이 벌어져 조약돌을 늘어놓은 꼴이 된다.
+  function cenHalf(z){
+    for(const [a,b] of CEN)
+      if(z <= a && z >= b)
+        return 0.325 * (0.70 + 0.30*Math.sin(PI * (a - z)/(a - b)));
+    return 0.325 * 0.70;                       // 갑판 사이의 홈
+  }
+
+  // 중앙 갑판 5장 — 가운데가 넓고 앞뒤로 좁아지는 육각형
+  for(const [zA,zB] of CEN){
+    const ef = t => { const w = cenHalf(zA + (zB-zA)*t); return [-w, w]; };
+    turtle.add(new THREE.Mesh(makeScuteGeo(zA, zB, ef, 0xA5783F, 0x5A452C), MAT.scuteA));
+  }
+
+  // 측면 갑판 4쌍 — 중앙판이 좁아진 자리로 파고들어 맞물린다
+  const LAT = [[5.7,3.15],[2.85,0.25],[-0.05,-2.85],[-3.15,-6.15]];
+  for(const [zA,zB] of LAT){
+    const ef = sx => t => {
+      const z = zA + (zB-zA)*t;
+      return [sx*(cenHalf(z) + 0.030), sx*0.905];
+    };
+    turtle.add(new THREE.Mesh(makeScuteGeo(zA, zB, ef( 1), 0x9A6D3C, 0x51402A),
+                              MAT.scuteB));
+    turtle.add(new THREE.Mesh(makeScuteGeo(zA, zB, ef(-1), 0x9A6D3C, 0x51402A),
+                              MAT.scuteB));
+  }
+
+  // 목덜미판과 꼬리판 — 앞뒤 끝을 덮는다. 없으면 검은 민머리가 남는다.
+  turtle.add(new THREE.Mesh(
+    makeScuteGeo(7.35, 6.45, t => [-0.86, 0.86], 0x8E6A3C, 0x4E3B27), MAT.margin));
+  turtle.add(new THREE.Mesh(
+    makeScuteGeo(-7.15, -8.35, t => [-0.86, 0.86], 0x8E6A3C, 0x4E3B27), MAT.margin));
+
+  // 연변갑판 — 테두리를 두르는 좁은 판들
+  // 뒤쪽 연변갑판은 테두리 밖으로 조금 내밀어 톱니를 만든다.
+  // 푸른바다거북 후연의 물결 모양이 뒷모습 실루엣의 서명이다.
+  const MG = [[6.6,4.9],[4.75,3.05],[2.9,1.2],[1.05,-0.8],[-0.95,-2.8],
+              [-2.95,-4.7],[-4.85,-6.5],[-6.65,-8.2]];
+  MG.forEach(([zA,zB], i) => {
+    const jag = zA < -0.5 ? 1.075 : 1.0;          // 뒤쪽만 뾰족하게
+    const ef = sx => t => [sx*0.935, sx*(1.0 + (jag-1.0)*Math.sin(Math.PI*t))];
+    turtle.add(new THREE.Mesh(makeScuteGeo(zA, zB, ef( 1), 0x7A5B36, 0x55402A),
+                              MAT.margin));
+    turtle.add(new THREE.Mesh(makeScuteGeo(zA, zB, ef(-1), 0x7A5B36, 0x55402A),
+                              MAT.margin));
+  });
+
+  // 목과 머리
+  const neck = new THREE.Mesh(new THREE.CylinderGeometry(1.35, 1.75, 3.2, 7), MAT.skin);
+  neck.rotation.x = Math.PI/2;
+  neck.position.set(0, .2, 7.5);
+  turtle.add(neck);
+
+  const head = new THREE.Mesh(new THREE.SphereGeometry(1.78, 8, 6), MAT.skin);
+  head.scale.set(.92, .86, 1.20);
+  head.position.set(0, .32, 9.0);
+  turtle.add(head);
+
+  for(const sx of [-1, 1]){
+    const eye = new THREE.Mesh(new THREE.SphereGeometry(.38, 6, 5), MAT.eye);
+    eye.position.set(sx*1.02, .74, 9.8);
+    turtle.add(eye);
+  }
+
+  // 부리 — 짧고 뭉툭하다. 긴 원뿔로 만들면 새 부리가 된다.
+  const beak = new THREE.Mesh(new THREE.CylinderGeometry(.52, 1.15, 1.7, 6), MAT.beak);
+  beak.rotation.x = Math.PI/2;
+  beak.position.set(0, -.12, 10.5);
+  turtle.add(beak);
+
+  // 꼬리 — 암컷·아성체 비율. 등딱지 밖으로 조금만 나오고 끝이 뭉툭하다.
+  const tail = new THREE.Mesh(new THREE.CylinderGeometry(.38, 1.25, 2.8, 6), MAT.skin);
+  tail.rotation.x = -Math.PI/2;
+  tail.position.set(0, -.55, -9.4);
+  turtle.add(tail);
+}
+
+// 지느러미 판을 만드는 도구
+// 함수 선언으로 둔다 — const 화살표 함수면 선언 줄보다 먼저 실행되는
+// 등딱지 구역에서 쓸 수 없다(TDZ).
+function quad(v, A,B,C,D){ v.push(...A,...B,...C,  ...A,...C,...D); }
+
+// 지느러미는 두께가 있는 입체로 만든다.
+// 한 겹의 평면이면 닫힌 몸통에 종이를 꽂아 놓은 것처럼 보여, 아무리 형태를 다듬어도
+// 몸과 따로 노는 물체로 읽힌다. 뿌리에서 두껍고 끝과 가장자리로 갈수록 얇아진다.
+//   st = { x, le, te, cam(캠버), th(두께) }
+function makeLimbGeo(ST){
+  const sec = t => {
+    const mid = (t.le + t.te) / 2;
+    const off = (t.le - t.te) * 0.10;        // 최대 두께 지점은 앞쪽에 있다
+    return [
+      [t.x, t.cam*0.35,           t.le ],    // 앞날 (얇다)
+      [t.x, t.cam + t.th*0.5,     mid+off],  // 윗면
+      [t.x, t.cam*0.15,           t.te ],    // 뒷날 (얇다)
+      [t.x, t.cam - t.th*0.5,     mid    ]   // 아랫면
+    ];
+  };
+  const S = ST.map(sec), v = [];
+  for(let i=0;i<S.length-1;i++)
+    for(let k=0;k<4;k++){
+      const k2 = (k+1)%4;
+      quad(v, S[i][k], S[i+1][k], S[i+1][k2], S[i][k2]);
+    }
+  // 끝을 막는다 — 앞날·뒷날을 잇는 대각선에서 부채꼴로 두 장.
+  // 두 장의 감기 방향이 같아야 한다.
+  const E = S[S.length-1];
+  v.push(...E[0],...E[2],...E[1]);
+  v.push(...E[0],...E[2],...E[3]);
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(v,3));
+  g.computeVertexNormals();
+  return g;
+}
+
+// 앞지느러미 안마디 — 어깨에서 이미 뒤로 눕기 시작한다 (후퇴각 약 17°)
+const makeArmGeo = () => makeLimbGeo([
+  { x:-2.2, le: 3.6, te:-2.2, cam:.48, th:1.60 },   // 몸 안에 묻히는 위팔
+  { x:-1.0, le: 3.3, te:-2.5, cam:.47, th:1.30 },
+  { x:0,   le: 3.0, te:-2.8, cam:.46, th:1.05 },
+  { x:4.5, le: 1.9, te:-4.3, cam:.42, th:0.72 },
+  { x:9,   le: 0.2, te:-5.6, cam:.32, th:0.42 }
+]);
+
+// 손목에서 한 번 더 꺾인다 (후퇴각 약 34°) — 두 번의 꺾임이 부메랑 실루엣을 만든다
+const makeBladeGeo = () => makeLimbGeo([
+  { x:0,   le: 0.2, te:-5.6, cam:.30, th:0.40 },
+  { x:3.5, le:-1.5, te:-6.9, cam:.24, th:0.28 },
+  { x:7.0, le:-3.6, te:-8.0, cam:.16, th:0.18 },
+  { x:9.0, le:-5.9, te:-8.0, cam:.08, th:0.10 }
+]);
+
+const ARM_GEO = makeArmGeo(), BLADE_GEO = makeBladeGeo();
+
+const CLAW_GEO = new THREE.ConeGeometry(.30, 1.5, 5);
+function makeFlipper(){
+  const arm   = new THREE.Mesh(ARM_GEO,   MAT.flipper);
+  const blade = new THREE.Mesh(BLADE_GEO, MAT.flipper);
+  blade.position.set(9, 0, 0);        // 손목
+  blade.rotation.z = -0.12;           // 쉴 때 끝이 살짝 처진다
+  arm.add(blade);
+
+  // 앞가장자리의 발톱 하나 — 푸른바다거북은 앞지느러미마다 발톱이 딱 하나다
+  const claw = new THREE.Mesh(CLAW_GEO, MAT.eye);
+  claw.position.set(8.4, 0, 0.55);
+  claw.rotation.x = Math.PI/2;
+  claw.rotation.z = -0.5;
+  arm.add(claw);
+
+  return { arm, blade };
+}
+const FL = makeFlipper(), FR = makeFlipper();
+const flipLeft  = FL.arm, flipLeftBlade  = FL.blade;   // 사용자 왼팔 → 거북의 왼쪽(+x)
+const flipRight = FR.arm, flipRightBlade = FR.blade;   // 사용자 오른팔 → 거북의 오른쪽(-x)
+flipLeft.position.set( 4.3, -.5, 2.6);
+flipRight.position.set(-4.3, -.5, 2.6);
+// 길이를 0.72배로 줄이고 시위는 0.86배만 줄인다 → 짧고 넓은 노.
+// 실측 전체 폭 / 등딱지 길이 ≈ 2.2 (이전 2.85는 새 날개에 가까웠다)
+// z(시위)를 x(스팬)와 같은 비율로 줄인다. 시위/스팬 ≈ 0.32 — 넓적하면 면적이 과해 보인다.
+flipLeft.scale.set( 0.72, 0.78, 0.72);
+flipRight.scale.set(-0.72, 0.78, 0.72);  // 좌우 대칭 (양면 재질이라 법선 반전 무해)
+// ZYX 순서 — 지느러미 자체 축으로 먼저 비틀고(x) 그다음 젓는다(z).
+// 기본 XYZ면 비틀림이 몸 축 기준이 되어 어긋난다.
+flipLeft.rotation.order = 'ZYX';
+flipRight.rotation.order = 'ZYX';
+turtle.add(flipLeft, flipRight);
+
+// 뒷지느러미 — 앞지느러미를 축소한 짧고 넓은 노. 뒤로 크게 젖혀져 있다.
+// 구를 눌러 만들면 바퀴가 된다 — 앞뒤 가장자리가 따로 있어야 지느러미로 읽힌다.
+// x가 음수인 구간은 몸 안에 묻히는 허벅지다. 여기서 두껍게 시작해
+// 바깥으로 갈수록 얇아져야 지느러미가 몸에서 자라난 것으로 보인다.
+const makeRearGeo = () => makeLimbGeo([
+  { x:-2.6, le: 2.9, te:-1.6, cam:.38, th:1.55 },
+  { x:-1.2, le: 2.5, te:-1.9, cam:.36, th:1.20 },
+  { x:0,   le: 2.0, te:-2.2, cam:.34, th:0.80 },
+  { x:2.5, le: 0.6, te:-3.4, cam:.30, th:0.56 },
+  { x:4.5, le:-0.9, te:-4.2, cam:.24, th:0.34 },
+  { x:6.2, le:-2.8, te:-4.6, cam:.16, th:0.14 }
+]);
+const rearFlippers = [];
+{
+  const geo = makeRearGeo();
+  for(const sx of [1, -1]){
+    const m = new THREE.Mesh(geo, MAT.flipper);
+    m.position.set(sx*2.9, -0.55, -6.0);      // 배딱지 아래가 아니라 몸 안에서 시작
+    // 앞지느러미와 같은 비율로 줄인다 — 뒷/앞 길이비 0.35 (실측)
+    m.scale.set(sx*0.72, 0.78, 0.72);
+    turtle.add(m);
+    rearFlippers.push({ mesh:m, sx });
+  }
+}
+
+// 어깨와 엉덩이 — 지느러미가 몸에서 자라나 보이려면 뿌리에 살덩어리가 있어야 한다.
+// 절반은 등딱지 안에 묻혀 있어 경계가 드러나지 않는다.
+// 어깨는 튀어나온 공이 아니라 등딱지 가장자리를 살짝 메우는 살이다.
+// 뒷다리 쪽은 허벅지를 지느러미 형상에 넣었으므로 따로 덩어리를 두지 않는다.
+for(const sx of [-1, 1]){
+  const sh = new THREE.Mesh(new THREE.SphereGeometry(2.5, 10, 7), MAT.skin);
+  sh.scale.set(0.86, .60, 1.15);
+  sh.position.set(sx*3.7, -.55, 2.7);
+  turtle.add(sh);
+}
+
+// yaw(외곽) → pitch → roll 순서. XYZ 기본값이면 선회 중 피치가 월드축 기준으로 어긋난다.
+turtle.rotation.order = 'YXZ';
+turtle.scale.setScalar(1.15);
+scene.add(turtle);
+
+/* ═══════════════════════════════════════════════════════════
+   5. 해파리 — 모아야 할 대상이 아니라 지나치는 풍경이다
+   ═══════════════════════════════════════════════════════════ */
+const JELLY_BELL = new THREE.MeshBasicMaterial({color:0xCFE9FF, transparent:true,
+  opacity:.38, depthWrite:false, side:THREE.DoubleSide});
+const JELLY_GLOW = new THREE.MeshBasicMaterial({color:0xA8E8FF, transparent:true,
+  opacity:.16, depthWrite:false});
+const jellies = [];
+{
+  const bell = new THREE.SphereGeometry(5.2, 10, 6, 0, Math.PI*2, 0, Math.PI*0.62);
+  const glow = new THREE.SphereGeometry(9.5, 9, 6);
+  const tent = new THREE.CylinderGeometry(.16, .04, 12, 3);
+  for(let i=0;i<CFG.discoveryCount;i++){
+    const g = new THREE.Group();
+    g.add(new THREE.Mesh(bell, JELLY_BELL), new THREE.Mesh(glow, JELLY_GLOW));
+    for(let t=0;t<5;t++){
+      const m = new THREE.Mesh(tent, JELLY_BELL);
+      const a = (t/5)*Math.PI*2;
+      m.position.set(Math.cos(a)*2.6, -6.2, Math.sin(a)*2.6);
+      g.add(m);
+    }
+    g.userData = { phase: Math.random()*6.28, lastAt: -99,
+                   dx:(Math.random()-.5)*3.5, dz:(Math.random()-.5)*3.5 };
+    placeJelly(g);
+    scene.add(g); jellies.push(g);
+  }
+}
+function placeJelly(g){
+  const a = Math.random()*Math.PI*2, r = 180 + Math.random()*820;
+  const x = Math.cos(a)*r, z = Math.sin(a)*r;
+  g.position.set(x, Math.min(floorH(x,z) + 90 + Math.random()*200, SURFACE_Y-70), z);
+}
+
+// 물방울 — 매 프레임 객체를 만들지 않는 링버퍼
+const PCOUNT = 240;
+const bubbles = { pos:new Float32Array(PCOUNT*3), vel:new Float32Array(PCOUNT*3),
+                  life:new Float32Array(PCOUNT), head:0 };
+for(let i=0;i<PCOUNT;i++) bubbles.pos[i*3+1] = -9999;
+const bGeo = new THREE.BufferGeometry();
+bGeo.setAttribute('position', new THREE.BufferAttribute(bubbles.pos,3));
+const bPoints = new THREE.Points(bGeo, new THREE.PointsMaterial({
+  color:0xE8FBFF, size:3.8, map:TEX_BUBBLE, transparent:true, opacity:.75,
+  depthWrite:false, blending:THREE.AdditiveBlending }));
+scene.add(bPoints);
+
+function emitBubbles(x,y,z,n){
+  for(let k=0;k<n;k++){
+    const i = bubbles.head; bubbles.head = (bubbles.head+1) % PCOUNT;
+    bubbles.pos[i*3]=x; bubbles.pos[i*3+1]=y; bubbles.pos[i*3+2]=z;
+    bubbles.vel[i*3]  =(Math.random()-.5)*7;
+    bubbles.vel[i*3+1]= 9 + Math.random()*11;      // 물방울은 떠오른다
+    bubbles.vel[i*3+2]=(Math.random()-.5)*7;
+    bubbles.life[i] = 2.2 + Math.random()*1.6;
+  }
+}
+function stepBubbles(dt, t){
+  let alive = false;
+  for(let i=0;i<PCOUNT;i++){
+    if(bubbles.life[i] <= 0) continue;
+    alive = true;
+    bubbles.life[i] -= dt;
+    if(bubbles.life[i] <= 0){ bubbles.pos[i*3+1] = -9999; continue; }
+    bubbles.pos[i*3]   += (bubbles.vel[i*3]   + Math.sin(t*2.2+i)*2.5) * dt;
+    bubbles.pos[i*3+1] +=  bubbles.vel[i*3+1] * dt;
+    bubbles.pos[i*3+2] +=  bubbles.vel[i*3+2] * dt;
+    bubbles.vel[i*3+1] += 3*dt;                    // 올라갈수록 빨라진다
+  }
+  if(alive) bGeo.attributes.position.needsUpdate = true;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   6. Pose 입력
+   ═══════════════════════════════════════════════════════════ */
+const input = { bank:0, pitch:0, stroke:0, armL:0, armR:0 };
+const ema   = { bank:0, pitch:0, stroke:0, armL:0, armR:0 };
+let mode = null, landmarker = null, lastVideoTime = -1;
+let prevWristY = null, lastPoseAt = 0;
+let calibPitch = 0, calibArmL = 0, calibArmR = 0;
+// 팔 높이의 기준선. 고정값이 아니라 사용자를 천천히 따라간다.
+// 팔이 서서히 처져도 기준선이 함께 내려가므로 가라앉지 않는다 — 자세를 유지할 필요가 없다.
+let basePitch = null;
+let rawPitch = null, rawArmL = null, rawArmR = null;
+
+const video = document.getElementById('cam');
+const skel  = document.getElementById('skel');
+const sctx  = skel.getContext('2d');
+const LINKS = [[11,12],[11,13],[13,15],[12,14],[14,16],[11,23],[12,24],[23,24]];
+
+async function startCamera(){
+  const st = document.getElementById('status');
+  st.textContent = '바다를 준비하는 중…';
+  const vision = await FilesetResolver.forVisionTasks(
+    'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm');
+  landmarker = await PoseLandmarker.createFromOptions(vision,{
+    baseOptions:{ modelAssetPath:
+      'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task',
+      delegate:'GPU' },
+    runningMode:'VIDEO', numPoses:1
+  });
+  st.textContent = '카메라를 사용해도 될까요?';
+  video.srcObject = await navigator.mediaDevices.getUserMedia({video:{width:640,height:480}});
+  await video.play();
+  skel.width = video.videoWidth; skel.height = video.videoHeight;
+  document.getElementById('camwrap').style.display='block';
+  mode='pose'; enterSea();
+  connectWater();
+}
+
+// 자세를 지시하지 않는다. 첫인상이 만들어지는 순간이므로 조용히 지나간다.
+function connectWater(){
+  const box = document.getElementById('tune');
+  const dots = document.querySelectorAll('#dots span');
+  box.style.display='flex';
+  const sP=[], sL=[], sR=[];
+  let c = 0;
+  const tick = setInterval(()=>{ if(dots[c]) dots[c].classList.add('on'); c++; }, 1000);
+  const grab = setInterval(()=>{
+    if(rawPitch !== null){ sP.push(rawPitch); sL.push(rawArmL); sR.push(rawArmR); }
+  }, 100);
+  setTimeout(()=>{
+    clearInterval(tick); clearInterval(grab);
+    box.style.display='none';
+    const avg = a => a.length ? a.reduce((x,y)=>x+y,0)/a.length : 0;
+    if(sP.length){ calibPitch = avg(sP); calibArmL = avg(sL); calibArmR = avg(sR); }
+    basePitch = calibPitch;
+    showMessage('물살이 등딱지를 스칩니다');
+  }, 3400);
+}
+
+function readPose(now){
+  if(!landmarker || video.currentTime === lastVideoTime) return;
+  lastVideoTime = video.currentTime;
+  const res = landmarker.detectForVideo(video, now);
+  if(!res.landmarks?.length){ prevWristY = null; return; }   // 인식이 끊겨도 유영은 계속된다
+  lastPoseAt = now;
+
+  const L = res.landmarks[0];
+  const LS=L[11], RS=L[12], LW=L[15], RW=L[16];
+  const w = Math.max(Math.abs(LS.x-RS.x), 0.05);      // 어깨 너비 = 거리 정규화 기준
+  const shoulderY = (LS.y+RS.y)/2, wristY = (LW.y+RW.y)/2;
+
+  rawPitch = (shoulderY - wristY)/w;
+  rawArmL  = (LS.y - LW.y)/w;
+  rawArmR  = (RS.y - RW.y)/w;
+
+  if(basePitch === null) basePitch = rawPitch;
+  const pitch = (rawPitch - basePitch) * CFG.pitchGain;
+  // 오른팔이 낮아지면 오른쪽으로 — bankSign으로 좌우 반전 가능
+  const bank  = ((RW.y - LW.y)/w) * CFG.bankGain * CFG.bankSign;
+
+  let stroke = 0;
+  if(prevWristY !== null)
+    stroke = Math.min(Math.abs(wristY - prevWristY)/w * 46 * CFG.strokeGain, 1);
+  prevWristY = wristY;
+
+  setInput('pitch',  dz(pitch));
+  setInput('bank',   dz(bank));
+  setInput('stroke', stroke);
+  setInput('armL', THREE.MathUtils.clamp((rawArmL - calibArmL) * CFG.pitchGain, -1.4, 1.4));
+  setInput('armR', THREE.MathUtils.clamp((rawArmR - calibArmR) * CFG.pitchGain, -1.4, 1.4));
+
+  drawSkeleton(L);
+}
+const dz = v => Math.abs(v) < CFG.inputDeadzone ? 0 : THREE.MathUtils.clamp(v,-1.4,1.4);
+
+// 기준선이 실제 팔 높이를 좇는다.
+// 편차가 작으면 빨리 따라잡아 처짐을 흡수하고, 크면 천천히 따라가 의도한 동작을 살린다.
+function updateBaseline(dt){
+  if(rawPitch === null || basePitch === null) return;
+  const dev = Math.abs(rawPitch - basePitch);
+  const f = CFG.baselineFollow / (1 + CFG.baselineHold * dev);
+  basePitch += (rawPitch - basePitch) * Math.min(dt * f, 1);
+}
+
+let inputDt = 1/60;
+function setInput(k, target){
+  const next = ema[k]*(1-CFG.inputSmooth) + target*CFG.inputSmooth;
+  const cap  = CFG.inputMaxRate * inputDt;
+  ema[k] += THREE.MathUtils.clamp(next - ema[k], -cap, cap);
+  input[k] = ema[k];
+}
+function decayInput(dt){
+  for(const k of ['bank','pitch','stroke','armL','armR']){
+    ema[k] += (0 - ema[k]) * Math.min(dt*1.1, 1);
+    input[k] = ema[k];
+  }
+}
+
+function drawSkeleton(L){
+  sctx.clearRect(0,0,skel.width,skel.height);
+  sctx.save(); sctx.translate(skel.width,0); sctx.scale(-1,1);
+  sctx.strokeStyle='rgba(140,225,220,.85)'; sctx.lineWidth=4;
+  for(const [a,b] of LINKS){
+    sctx.beginPath();
+    sctx.moveTo(L[a].x*skel.width, L[a].y*skel.height);
+    sctx.lineTo(L[b].x*skel.width, L[b].y*skel.height); sctx.stroke();
+  }
+  sctx.fillStyle='rgba(230,245,200,.9)';
+  for(const i of [11,12,13,14,15,16,23,24]){
+    sctx.beginPath(); sctx.arc(L[i].x*skel.width, L[i].y*skel.height, 5.5, 0, 7); sctx.fill();
+  }
+  sctx.restore();
+}
+
+/* ═══════════════════════════════════════════════════════════
+   7. 키보드 입력 — 카메라 없이 둘러보기
+   ═══════════════════════════════════════════════════════════ */
+const keys = {};
+addEventListener('keydown', e=>{ keys[e.code]=true; });
+addEventListener('keyup',   e=>{ keys[e.code]=false; });
+function readKeys(){
+  const b = (keys.ArrowRight?1:0) - (keys.ArrowLeft?1:0);
+  const p = (keys.ArrowUp?1:0)    - (keys.ArrowDown?1:0);
+  setInput('bank',   b);
+  setInput('pitch',  p);
+  setInput('stroke', keys.Space?1:0);
+  setInput('armL',   p - b*0.35);
+  setInput('armR',   p + b*0.35);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   8. 유영 상태와 물리
+   중성부력이다. 아무것도 하지 않아도 가라앉지 않고,
+   바닥에 부딪히는 판정 대신 부드러운 깊이 보정만 있다.
+   ═══════════════════════════════════════════════════════════ */
+// 쉴 때의 지느러미 각도. 수평(0)이 아니라 아래로 기울어져 있다.
+const FLIP_REST = -0.30;
+const state = { x:0, y:200, z:-500, yaw:0, yawRate:0,
+                speed:CFG.cruiseSpeed, vspeed:0, roll:0, t:0, strokePhase:0 };
+let started = false, last = performance.now();
+let bladeAngL = -0.12, bladeAngR = -0.12;   // 바깥마디의 절대 각도 (지연 추종용)
+let lastBubbleAt = -99, lastBubbleSndAt = -99;
+
+const vFwd = new THREE.Vector3(), vCamGoal = new THREE.Vector3(),
+      vLookGoal = new THREE.Vector3(), vLook = new THREE.Vector3(),
+      vTmp = new THREE.Vector3();
+
+function step(dt){
+  state.t += dt;
+
+  /* 선회 — 목표 각속도를 두고 천천히 붙인다 */
+  const yawGoal = -input.bank * CFG.turnRate;     // + bank(오른팔 하강) → 우선회
+  state.yawRate += (yawGoal - state.yawRate) * Math.min(dt*CFG.turnEase, 1);
+  state.yaw += state.yawRate * dt;
+
+  /* 속도 — 물의 저항 때문에 좁은 범위에서 천천히 변한다 */
+  let sGoal = CFG.cruiseSpeed + input.stroke * (CFG.maxSpeed - CFG.cruiseSpeed)
+              - Math.max(input.pitch,0) * 3
+              + Math.max(-input.pitch,0) * CFG.glideBoost;
+  sGoal = THREE.MathUtils.clamp(sGoal, CFG.minSpeed, CFG.maxSpeed);
+  state.speed += (sGoal - state.speed) * Math.min(dt*CFG.speedEase, 1);
+
+  /* 깊이 — 중성부력이므로 위아래 계수가 같다 */
+  const gy  = groundLevel(state.x, state.z);
+  const agl = state.y - gy;
+  let vGoal = input.pitch * (input.pitch >= 0 ? CFG.riseRate : CFG.sinkRate);
+  if(agl < CFG.safeHeight)                                   // 바닥 가까이에서 완만한 복귀력
+    vGoal += (CFG.safeHeight - agl) * CFG.altitudeEase;
+  if(agl < CFG.floorHeight)                                  // 산호 아래로는 확실히 띄운다
+    vGoal = Math.max(vGoal, (CFG.floorHeight - agl) * 2.2);
+  const ceil = SURFACE_Y - CFG.surfaceBand;
+  if(state.y > ceil)                                         // 수면 가까이에서 저항이 붙는다
+    vGoal -= (state.y - ceil) * CFG.surfaceEase;
+  vGoal += Math.sin(state.t * 0.045) * CFG.driftAmp;         // 느린 물결
+  state.vspeed += (vGoal - state.vspeed) * Math.min(dt*CFG.vspeedEase, 1);
+  state.y += state.vspeed * dt;
+
+  /* 전진 */
+  vFwd.set(Math.sin(state.yaw), 0, Math.cos(state.yaw));
+  state.x += vFwd.x * state.speed * dt;
+  state.z += vFwd.z * state.speed * dt;
+
+  /* 경계 — 벽이 아니라 완만한 유도 */
+  const r = Math.hypot(state.x, state.z);
+  if(r > CFG.roamRadius){
+    const inward = Math.atan2(-state.x, -state.z);
+    let d = inward - state.yaw;
+    while(d >  Math.PI) d -= Math.PI*2;
+    while(d < -Math.PI) d += Math.PI*2;
+    state.yaw += d * Math.min((r - CFG.roamRadius)/420, 1) * .22 * dt;
+  }
+
+  /* 자세 */
+  const rollGoal = input.bank * .38;
+  state.roll += (rollGoal - state.roll) * Math.min(dt*1.8, 1);
+  turtle.position.set(state.x, state.y, state.z);
+  turtle.rotation.set(0, state.yaw, 0);
+  turtle.rotation.z = state.roll;
+  turtle.rotation.x = THREE.MathUtils.clamp(-state.vspeed*0.010, -.30, .30);
+
+  /* 앞지느러미 — 측정된 유영 운동을 따른다.
+     · 추력은 거의 전부 내려치기에서 나오고, 내려치기는 올려치기보다 두 배 빠르다
+     · 지느러미는 내려칠 때 −72°, 올려칠 때 +28° 비틀린다 (이 비틀림이 익형을 만든다)
+     · 운동의 대부분이 수평면 아래에서 일어난다 — 수평으로 뻗으면 새 날개가 된다 */
+  state.strokePhase += dt * (1.15 + input.stroke*2.2);
+  const cyc = ((state.strokePhase / (Math.PI*2)) % 1 + 1) % 1;
+  const DOWN = 0.34;                                    // 내려치기가 차지하는 시간 비율
+  const ph   = cyc < DOWN ? Math.PI * (cyc/DOWN)
+                          : Math.PI * (1 + (cyc-DOWN)/(1-DOWN));
+  const elev = Math.cos(ph);                            // +1 위 → −1 아래
+  const dstr = Math.sin(ph) * (cyc < DOWN ? 1.0 : 0.5); // 내려칠 때 양수, 두 배 빠르다
+
+  const amp = 0.13 + input.stroke*0.44;
+  const goalL = FLIP_REST + elev*amp + input.armL * CFG.flipperSpan;
+  const goalR = FLIP_REST + elev*amp + input.armR * CFG.flipperSpan;
+  const wr = Math.min(dt*5*CFG.flipperResponse, 1);
+  flipLeft.rotation.z  += ( goalL - flipLeft.rotation.z ) * wr;
+  flipRight.rotation.z += (-goalR - flipRight.rotation.z) * wr;
+
+  // 비틀림 — 측정값 그대로. 젓는 세기에 비례해 커진다.
+  // 여기에 더해, 가장 내려간 자리에서는 날을 세운다. 속도에만 비례시키면
+  // 스트로크 양 끝에서 비틀림이 0이 되어 지느러미가 평평하게 드러난다.
+  const twStr = 0.35 + input.stroke*0.65;
+  const tw = (dstr > 0 ? -1.257*dstr : -0.978*dstr) * twStr
+           - 0.34 * Math.max(-elev, 0) * twStr;
+  flipLeft.rotation.x  += (tw - flipLeft.rotation.x ) * wr;
+  flipRight.rotation.x += (tw - flipRight.rotation.x) * wr;
+
+  // 지느러미 끝은 어깨보다 늦게, 더 크게 따라온다.
+  // 물속에서는 이 지연이 공기 중보다 더 크게 보인다.
+  const br = wr * 0.38;
+  // 끝마디의 과장을 1.45 → 1.25로 줄인다. 크면 지느러미 끝이 지나치게 멀리 쓸린다.
+  bladeAngL += ((goalL - FLIP_REST)*1.25 + FLIP_REST - 0.12 - bladeAngL) * br;
+  bladeAngR += ((goalR - FLIP_REST)*1.25 + FLIP_REST - 0.12 - bladeAngR) * br;
+  flipLeftBlade.rotation.z  = THREE.MathUtils.clamp(bladeAngL - flipLeft.rotation.z,  -1.0, 1.0);
+  // 오른쪽은 부모의 미러 스케일 때문에 부모 각도를 그대로 더해야 좌우가 같아진다
+  flipRightBlade.rotation.z = THREE.MathUtils.clamp(bladeAngR + flipRight.rotation.z, -1.0, 1.0);
+
+  // 뒷지느러미는 조종과 무관하게 물결에 흔들린다
+  // 뒷지느러미는 추진에 거의 기여하지 않는다 — 방향타다.
+  // 따로 흔들리면 몸과 무관하게 노는 것처럼 보인다.
+  // 선회할 때 눕고, 앞지느러미와 같은 박자로 아주 조금만 오르내린다.
+  const rud = input.bank * 0.55 + Math.max(input.pitch, 0) * 0.12;
+  for(const rf of rearFlippers){
+    rf.mesh.rotation.y = rf.sx > 0 ? rud : -rud;
+    const a = -0.16 + elev * 0.10;
+    rf.mesh.rotation.z = rf.sx > 0 ? a : -a;
+  }
+
+  /* 물방울 — 크게 저을 때만 조금씩 */
+  if(input.stroke > .45 && state.t - lastBubbleAt > .55){
+    lastBubbleAt = state.t;
+    emitBubbles(state.x, state.y + 3, state.z + 6, 4);
+    // 크게 저을 때 나오는 작은 날숨 기포 — 보이는 것과 들리는 것을 맞춘다
+    if(state.t - lastBubbleSndAt > 3.2){
+      lastBubbleSndAt = state.t;
+      bubbleBurst(3 + (Math.random()*3|0), 0.002, 0.006,     // 2~6mm → 540~1630Hz
+                  0.030, 2600, 0.15);
+    }
+  }
+
+  /* 해파리 — 먹지도 모으지도 않는다. 지나가는 풍경이고, 가까이 가면 비켜난다. */
+  for(const g of jellies){
+    const u = g.userData;
+    g.position.y += Math.sin(state.t*.55 + u.phase) * 5 * dt;    // 맥동하며 떠 있다
+    g.position.x += u.dx * dt;
+    g.position.z += u.dz * dt;
+    const pulse = 1 + Math.sin(state.t*1.1 + u.phase)*.09;
+    g.scale.set(pulse, 2 - pulse, pulse);
+
+    vTmp.subVectors(g.position, turtle.position);
+    const d = vTmp.length();
+    if(d < 70 && d > 0.01){                                      // 물살에 밀려 옆으로 비킨다
+      const push = (1 - d/70) * 26 * dt;
+      g.position.addScaledVector(vTmp.normalize(), push);
+    }
+    if(d < CFG.discoveryRadius && state.t - u.lastAt > 10){       // 곁을 지날 때만 반응
+      u.lastAt = state.t;
+      emitBubbles(g.position.x, g.position.y - 4, g.position.z, 14);
+      playChime();
+      if(Math.random() < .5) showMessage(pick(MSG_DISCOVERY));
+    }
+    // 너무 멀리 흘러가면 조용히 다른 곳에서 다시 떠오른다
+    if(Math.hypot(g.position.x, g.position.z) > 1500) placeJelly(g);
+  }
+  stepBubbles(dt, state.t);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   9. 카메라 — 거북보다 조금 높고 뒤. 물속이라 더 느긋하다.
+   ═══════════════════════════════════════════════════════════ */
+function stepCamera(dt){
+  vCamGoal.set(state.x, state.y, state.z).addScaledVector(vFwd, -CFG.camBack);
+  vCamGoal.y += CFG.camUp;
+  vCamGoal.y = Math.max(vCamGoal.y, groundLevel(vCamGoal.x, vCamGoal.z) + 12);
+  vCamGoal.y = Math.min(vCamGoal.y, SURFACE_Y + 52);          // 거북을 따라 수면 위까지
+  camera.position.lerp(vCamGoal, Math.min(dt*CFG.camEase, 1));
+
+  vLookGoal.set(state.x + vFwd.x*CFG.lookAhead,
+                state.y - CFG.lookDrop,
+                state.z + vFwd.z*CFG.lookAhead);
+  vLook.lerp(vLookGoal, Math.min(dt*CFG.lookEase, 1));
+  camera.lookAt(vLook);                 // roll 없음, FOV 고정
+  sky.position.copy(camera.position);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   10. 바다의 움직임 + 시간의 아크
+   선택한 시간에 걸쳐 한낮에서 밤바다로 넘어간다.
+   목표도 실패도 없지만, 빛이 기울면서 경험에 형태가 생긴다.
+   ═══════════════════════════════════════════════════════════ */
+const ARC = [
+  {p:0.00, top:0x8FD4DC, mid:0x49A3B4, bot:0x1E5E72, fog:0x49A3B4, surf:0xDCF4F2, win:0xF2FCFF,
+   surfO:.55, atop:0x4E86C4, amid:0x9FC6DE, abot:0xE4EEF0, afog:0xDCE9EE,
+   hSky:0xD8F6F8, hGnd:0x33616B, hI:1.25, sun:0xEEFBF6, sI:.65, sunY:620, shaft:.060,
+   glow:0, caust:1.00, snowO:.26, label:'한낮'},
+  {p:0.50, top:0x8CCBD4, mid:0x4599AC, bot:0x1B566A, fog:0x4599AC, surf:0xDCEFE6, win:0xF0F8F0,
+   surfO:.52, atop:0x4C80BC, amid:0xA6C4D6, abot:0xEDE6D8, afog:0xE2E2D8,
+   hSky:0xD2F0F2, hGnd:0x315B66, hI:1.15, sun:0xF2F6E4, sI:.62, sunY:480, shaft:.065,
+   glow:0, caust:.95, snowO:.25, label:'오후'},
+  {p:0.76, top:0xD9A878, mid:0x5E8A93, bot:0x224E5E, fog:0x53808E, surf:0xF0C79A, win:0xFFDCA8,
+   surfO:.52, atop:0x5A6E9E, amid:0xD2A07E, abot:0xF3C892, afog:0xE9BE96,
+   hSky:0xEBD3B4, hGnd:0x39525A, hI:.95, sun:0xF5B87C, sI:.52, sunY:220, shaft:.095,
+   glow:.10, caust:.55, snowO:.20, label:'해질 무렵'},
+  {p:0.91, top:0x6E7894, mid:0x37596F, bot:0x163446, fog:0x31506A, surf:0xA6A9BE, win:0xC2B8C6,
+   surfO:.46, atop:0x33406A, amid:0x77708E, abot:0xC08A78, afog:0x8E7C86,
+   hSky:0xA3AEBE, hGnd:0x283C48, hI:.68, sun:0xB68CA8, sI:.30, sunY: 60, shaft:.040,
+   glow:.55, caust:.18, snowO:.14, label:'땅거미'},
+  {p:1.00, top:0x2E4260, mid:0x1B3049, bot:0x0C1B2C, fog:0x1D3450, surf:0x566A8C, win:0x6E7CA0,
+   surfO:.40, atop:0x101A32, amid:0x1E2A46, abot:0x38405E, afog:0x2A3450,
+   hSky:0x56698C, hGnd:0x16222E, hI:.45, sun:0x6C7AA8, sI:.16, sunY:-40, shaft:.012,
+   glow:.95, caust:.04, snowO:.10, label:'밤바다'}
+];
+const PHASE_MSG = {
+  '오후'     :'빛이 조금 낮아졌습니다',
+  '해질 무렵':'수면이 붉게 물듭니다',
+  '땅거미'   :'물이 어두워지기 시작합니다',
+  '밤바다'   :'플랑크톤이 반짝입니다'
+};
+
+let arcDuration = 600;      // 초 — 시작 화면에서 선택. 0이면 시간이 흐르지 않는다
+let arcT = 0, arcPhase = '한낮', closed = false;
+
+const _cA = new THREE.Color(), _cB = new THREE.Color();
+const mix = (a,b,t) => a + (b-a)*t;
+function mixHex(target, ha, hb, t){
+  _cA.setHex(ha); _cB.setHex(hb);
+  return target.copy(_cA).lerp(_cB, t);
+}
+
+// 지금 이 순간의 물빛과 하늘빛. 카메라가 물 안인지 밖인지에 따라 둘을 섞는다.
+const NOW = {
+  top:new THREE.Color(), mid:new THREE.Color(), bot:new THREE.Color(), fog:new THREE.Color(),
+  aTop:new THREE.Color(), aMid:new THREE.Color(), aBot:new THREE.Color(), aFog:new THREE.Color(),
+  caust:1, snowO:.26
+};
+let aboveMix = 0;          // 0 = 물속, 1 = 물 밖
+const _sunN = new THREE.Vector3();
+let lastBreathAt = -99, lastEdgeAt = -99;
+
+function applyArc(p){
+  let i = 0;
+  while(i < ARC.length-2 && p > ARC[i+1].p) i++;
+  const a = ARC[i], b = ARC[i+1];
+  const t = THREE.MathUtils.clamp((p - a.p) / (b.p - a.p), 0, 1);
+
+  mixHex(NOW.top,  a.top,  b.top,  t);
+  mixHex(NOW.mid,  a.mid,  b.mid,  t);
+  mixHex(NOW.bot,  a.bot,  b.bot,  t);
+  mixHex(NOW.fog,  a.fog,  b.fog,  t);
+  mixHex(NOW.aTop, a.atop, b.atop, t);
+  mixHex(NOW.aMid, a.amid, b.amid, t);
+  mixHex(NOW.aBot, a.abot, b.abot, t);
+  mixHex(NOW.aFog, a.afog, b.afog, t);
+  NOW.caust = mix(a.caust, b.caust, t);
+  NOW.snowO = mix(a.snowO, b.snowO, t);
+
+  mixHex(surfaceMat.uniforms.uColor.value,  a.surf, b.surf, t);
+  mixHex(surfaceMat.uniforms.uWindow.value, a.win,  b.win,  t);
+  surfaceMat.uniforms.uOpacity.value = mix(a.surfO, b.surfO, t);
+
+  mixHex(hemi.color,       a.hSky, b.hSky, t);
+  mixHex(hemi.groundColor, a.hGnd, b.hGnd, t);
+  hemi.intensity = mix(a.hI, b.hI, t);
+
+  mixHex(sun.color, a.sun, b.sun, t);
+  sun.intensity = mix(a.sI, b.sI, t);
+  sun.position.set(120, mix(a.sunY, b.sunY, t), 60);
+
+  shaftMat.opacity = mix(a.shaft, b.shaft, t);
+  plankton.material.opacity = mix(a.glow, b.glow, t);
+  JELLY_GLOW.opacity = 0.16 + mix(a.glow, b.glow, t) * 0.30;
+
+  const label = t < .5 ? a.label : b.label;
+  if(label !== arcPhase){
+    arcPhase = label;
+    if(PHASE_MSG[label]) showMessage(PHASE_MSG[label]);
+  }
+}
+
+// 물과 공기 사이를 오갈 때 색·안개·빛무늬가 함께 바뀐다
+function applyMedium(){
+  aboveMix = THREE.MathUtils.smoothstep(camera.position.y, SURFACE_Y - 22, SURFACE_Y + 16);
+  const u = sky.material.uniforms;
+  u.cTop.value.copy(NOW.top).lerp(NOW.aTop, aboveMix);
+  u.cMid.value.copy(NOW.mid).lerp(NOW.aMid, aboveMix);
+  u.cBottom.value.copy(NOW.bot).lerp(NOW.aBot, aboveMix);
+  scene.fog.color.copy(NOW.fog).lerp(NOW.aFog, aboveMix);
+  scene.fog.near = mix(330, 520, aboveMix);       // 물 밖에서는 멀리까지 보인다
+  scene.fog.far  = mix(1850, 3400, aboveMix);
+
+  if(causticU){
+    causticU.uTime.value = state.t;
+    causticU.uCaustic.value.setRGB(.56,.88,.85).multiplyScalar(NOW.caust);
+    causticU.uTurtle.value.set(state.x, state.y, state.z);
+    // 햇빛이 수면에서 굴절된 뒤의 기울기. 스넬 법칙상 연직에서 48.6°가 한계다.
+    _sunN.copy(sun.position).normalize();
+    const thA  = Math.acos(THREE.MathUtils.clamp(_sunN.y, 0.001, 1));
+    const thW  = Math.asin(Math.min(Math.sin(thA) / 1.333, 0.99999));
+    const tanW = Math.tan(thW);                       // 최대 1.135
+    const hx   = Math.hypot(_sunN.x, _sunN.z) || 1;
+    causticU.uShadowOff.value.set(-_sunN.x/hx * tanW, -_sunN.z/hx * tanW);
+    causticU.uShadowStr.value = 0.60 * THREE.MathUtils.clamp(sun.intensity/0.65, 0, 1);
+  }
+  snow.material.opacity = NOW.snowO * (1 - aboveMix);
+  shaftMat.opacity *= (1 - aboveMix);              // 빛기둥은 물속에만 있다
+  plankton.material.opacity *= (1 - aboveMix);
+  surfaceMat.uniforms.uCam.value.copy(camera.position);
+  surfaceMat.uniforms.uSun.value.copy(sun.position).normalize();
+
+  // 벼랑을 처음 넘어설 때 한 번
+  const rr = Math.hypot(state.x, state.z);
+  if(rr > 900 && state.t - lastEdgeAt > 60){
+    lastEdgeAt = state.t;
+    showMessage('바닥이 아래로 사라집니다');
+  }
+
+  // 처음 수면을 가를 때 한 번
+  if(aboveMix > .55 && state.t - lastBreathAt > 25){
+    lastBreathAt = state.t;
+    emitBubbles(state.x, state.y, state.z, 16);
+    showMessage('수면 위로 숨을 쉽니다');
+  }
+}
+
+function stepEnvironment(dt){
+  for(const u of swayUniforms) u.value = state.t;
+  surfaceMat.uniforms.uTime.value = state.t;
+  stepSnow(dt, state.t);
+  stepRays(dt, state.t);
+
+  for(const s of shafts){
+    s.position.x += s.userData.drift * dt;
+    if(s.position.x > 1300) s.position.x = -1300;
+  }
+
+  // 물고기 떼 — 무리 중심이 떠다니고 각자는 그 둘레를 돈다
+  const S = fishData.schools;
+  for(const sc of S){
+    sc.x += sc.vx*dt; sc.z += sc.vz*dt;
+    if(Math.hypot(sc.x, sc.z) > 1500){ sc.vx *= -1; sc.vz *= -1; }
+  }
+  for(let i=0;i<FISH_N;i++){
+    const f = fishData[i], sc = S[f.school];
+    f.a += f.w * dt;
+    const x = sc.x + Math.cos(f.a)*f.r, z = sc.z + Math.sin(f.a)*f.r;
+    _dummy.position.set(x, sc.y + f.y, z);
+    // 원운동의 접선 방향을 바라본다. 꼬리를 흔들 듯 미세하게 좌우로 떤다.
+    const sg = f.w > 0 ? 1 : -1;
+    const hx = -Math.sin(f.a)*sg, hz = Math.cos(f.a)*sg;
+    _dummy.rotation.set(0, Math.atan2(hx, hz) + Math.sin(state.t*5.5 + i)*0.11, 0);
+    _dummy.updateMatrix();
+    fish.setMatrixAt(i, _dummy.matrix);
+  }
+  fish.instanceMatrix.needsUpdate = true;
+
+  if(arcDuration > 0) arcT = Math.min(arcT + dt, arcDuration);
+  applyArc(arcDuration > 0 ? arcT / arcDuration : 0);
+  applyMedium();
+  if(arcDuration > 0 && !closed && arcT >= arcDuration) finishArc();
+}
+const _dummy = new THREE.Object3D();
+
+// 마무리 — 유영을 멈추지 않는다. 조용히 카드만 떠오른다.
+function finishArc(){
+  closed = true;
+  const el = document.getElementById('close');
+  el.style.display = 'flex';
+  requestAnimationFrame(()=>{ el.style.opacity = '1'; });
+}
+function restartArc(){
+  const el = document.getElementById('close');
+  el.style.opacity = '0';
+  setTimeout(()=>{ el.style.display = 'none'; }, 4000);
+  arcT = 0; closed = false; arcPhase = '한낮';
+  showMessage('다시 아침 바다입니다');
+}
+
+/* ═══════════════════════════════════════════════════════════
+   11. 사운드 — 물소리 + 생성형 앰비언트 음악
+   외부 음원 파일 없이 Web Audio로 화성을 직접 만든다.
+   물속이므로 공기 중보다 훨씬 어두운 음색에서 출발한다.
+
+   외부 음원을 쓰려면 EXTERNAL_TRACK에 파일 경로를 넣는다.
+   반드시 사용 허락이 있는 음원만 사용할 것 (CC0 · 로열티프리 · 직접 제작).
+   ═══════════════════════════════════════════════════════════ */
+const EXTERNAL_TRACK = null;   // 예: './ambient.mp3'
+
+let audio = null, masterGain = null;
+let currentGain = null, currentFilter = null;
+let musicBus = null, trackGain = null, reverbReturn = null;
+let bubbleGain = null, revNode = null;
+let nextBurstAt = 18;
+let soundMode = 0;             // 0 전체 · 1 물소리만 · 2 무음
+let lastChimeAt = -99;
+
+const LV = { current: 0.12, music: 0.55, track: 0.5, bubble: 0.30 };
+
+// 세 벌 모두 D장조 / B단조 음 재료 안에 있어 같은 5음 선율이 어디에나 얹힌다
+const CHORDS_DAY = [
+  [38, 45, 52, 57, 64],   // D add9
+  [35, 42, 49, 54, 61],   // Bm
+  [31, 38, 45, 50, 57],   // G
+  [33, 40, 47, 52, 59]    // Asus
+];
+const CHORDS_EVE = [
+  [38, 45, 54, 61, 64],   // Dmaj9
+  [35, 42, 50, 57, 61],   // Bm7
+  [31, 38, 47, 54, 57],   // Gmaj7
+  [33, 40, 49, 54, 59]    // A6/9
+];
+const CHORDS_NIGHT = [
+  [35, 42, 50, 54, 57],   // Bm7
+  [31, 38, 47, 50, 57],   // Gmaj9
+  [33, 40, 45, 52, 57],   // Asus2
+  [30, 37, 45, 49, 54]    // F#m
+];
+const SCALE = [74, 76, 78, 81, 83, 86, 88];
+const mtof = m => 440 * Math.pow(2, (m - 69) / 12);
+
+const arcP = () => arcDuration > 0 ? arcT / arcDuration : 0;
+const nightEase = () => THREE.MathUtils.smoothstep(arcP(), 0.5, 1.0);
+
+let chordIdx = 0, nextChordAt = 0, nextNoteAt = 0;
+
+function initAudio(){
+  if(audio) return;
+  const AC = window.AudioContext || window.webkitAudioContext;
+  if(!AC) return;
+  audio = new AC();
+  if(audio.state === 'suspended') audio.resume();
+
+  masterGain = audio.createGain();
+  masterGain.gain.value = 0.55;
+  masterGain.connect(audio.destination);
+
+  /* 물소리 — 갈색 노이즈를 아주 낮게 깎는다. 물은 고음을 삼킨다. */
+  const len = audio.sampleRate * 3;
+  const buf = audio.createBuffer(1, len, audio.sampleRate);
+  const ch = buf.getChannelData(0);
+  let v = 0;
+  for(let i=0;i<len;i++){
+    v = (v + (Math.random()*2-1)*0.22) * 0.955;
+    ch[i] = v;
+  }
+  const src = audio.createBufferSource();
+  src.buffer = buf; src.loop = true;
+
+  currentFilter = audio.createBiquadFilter();
+  currentFilter.type = 'lowpass';
+  currentFilter.frequency.value = 240;
+  currentFilter.Q.value = 0.7;
+
+  currentGain = audio.createGain();
+  currentGain.gain.value = 0.0001;
+  src.connect(currentFilter); currentFilter.connect(currentGain);
+  currentGain.connect(masterGain);
+  src.start();
+  currentGain.gain.linearRampToValueAtTime(LV.current, audio.currentTime + 5);
+
+  /* 음악 버스 + 잔향 — 임펄스도 코드로 만든다 */
+  musicBus = audio.createGain();
+  musicBus.gain.value = 0.0001;
+  musicBus.connect(masterGain);
+
+  revNode = audio.createConvolver();
+  revNode.buffer = makeImpulse(4.2, 2.4);      // 물속이라 잔향이 길다
+  reverbReturn = audio.createGain();
+  reverbReturn.gain.value = 1.05;
+  musicBus.connect(revNode); revNode.connect(reverbReturn);
+  reverbReturn.connect(masterGain);
+
+  // 기포는 음악이 아니라 물소리 계층이다 — '물소리만' 모드에서도 남는다
+  bubbleGain = audio.createGain();
+  bubbleGain.gain.value = LV.bubble;
+  bubbleGain.connect(masterGain);
+  bubbleGain.connect(revNode);                 // 잔향에도 실어 멀리서 울리게
+
+  trackGain = audio.createGain();
+  trackGain.gain.value = 0.0001;
+  trackGain.connect(masterGain);
+
+  const t = audio.currentTime;
+  musicBus.gain.linearRampToValueAtTime(LV.music, t + 9);
+  nextChordAt = t + 1.5;
+  nextNoteAt  = t + 14;
+
+  if(EXTERNAL_TRACK) loadExternalTrack();
+  document.getElementById('mute').style.display = 'flex';
+}
+
+function makeImpulse(sec, decay){
+  const rate = audio.sampleRate, len = Math.floor(rate*sec);
+  const buf = audio.createBuffer(2, len, rate);
+  for(let c=0;c<2;c++){
+    const d = buf.getChannelData(c);
+    for(let i=0;i<len;i++)
+      d[i] = (Math.random()*2-1) * Math.pow(1 - i/len, decay);
+  }
+  return buf;
+}
+
+// 패드 — 물속이라 낮부터 이미 어둡다
+function schedulePad(t, notes, len, dark){
+  const cut  = mix(480, 250, dark);
+  const rise = mix(6, 8.5, dark);
+  for(const m of notes){
+    const f = mtof(m);
+    for(let d=-1; d<=1; d+=2){
+      const o  = audio.createOscillator();
+      const lp = audio.createBiquadFilter();
+      const g  = audio.createGain();
+      o.type = 'triangle';
+      o.frequency.value = f;
+      o.detune.value = d * mix(6, 9, dark);
+      lp.type = 'lowpass';
+      lp.frequency.value = cut + Math.random()*200*(1-dark*0.7);
+      lp.Q.value = 0.4;
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.linearRampToValueAtTime(0.022, t + rise);
+      g.gain.setValueAtTime(0.022, t + len - 3);
+      g.gain.linearRampToValueAtTime(0.0001, t + len + 3.5);
+      o.connect(lp); lp.connect(g); g.connect(musicBus);
+      o.start(t); o.stop(t + len + 4);
+    }
+  }
+}
+
+function playTone(midi, t, vel, dec){
+  const d = dec || 6;
+  const o = audio.createOscillator(), g = audio.createGain();
+  o.type = 'sine';
+  o.frequency.value = mtof(midi);
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(vel, t + 0.35);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + d);
+  o.connect(g);
+  if(audio.createStereoPanner){
+    const p = audio.createStereoPanner();
+    p.pan.value = (Math.random()*2-1) * 0.55;
+    g.connect(p); p.connect(musicBus);
+  } else g.connect(musicBus);
+  o.start(t); o.stop(t + d + 0.2);
+}
+
+function stepMusic(){
+  if(EXTERNAL_TRACK || soundMode !== 0) return;
+  const t = audio.currentTime;
+  const p = arcP(), dark = nightEase();
+
+  if(nextChordAt < t - 3) nextChordAt = t;
+  if(nextNoteAt  < t - 3) nextNoteAt  = t + 4;
+
+  if(t >= nextChordAt){
+    const bank = p < 0.5 ? CHORDS_DAY : (p < 0.8 ? CHORDS_EVE : CHORDS_NIGHT);
+    const len  = mix(18, 26, dark);            // 물속에서는 처음부터 느리다
+    schedulePad(nextChordAt, bank[chordIdx % bank.length], len, dark);
+    chordIdx++;
+    nextChordAt += len;
+  }
+  if(t >= nextNoteAt){
+    const oct = dark > 0.6 ? -12 : 0;
+    playTone(SCALE[(Math.random()*SCALE.length)|0] + oct,
+             t + 0.05, mix(0.070, 0.052, dark), mix(6, 9, dark));
+    nextNoteAt = t + mix(7, 12, dark) + Math.random()*mix(9, 15, dark);
+  }
+  reverbReturn.gain.setTargetAtTime(mix(1.05, 1.40, dark), t, 2);
+}
+
+async function loadExternalTrack(){
+  try{
+    const res = await fetch(EXTERNAL_TRACK);
+    const buf = await audio.decodeAudioData(await res.arrayBuffer());
+    const s = audio.createBufferSource();
+    s.buffer = buf; s.loop = true;
+    s.connect(trackGain); s.start();
+    trackGain.gain.linearRampToValueAtTime(LV.track, audio.currentTime + 6);
+  }catch(e){
+    console.warn('외부 음원을 불러오지 못했습니다:', e.message);
+  }
+}
+
+function stepAudio(){
+  if(!audio || soundMode === 2) return;
+  const t = audio.currentTime, dark = nightEase();
+  const glide = Math.max(-input.pitch, 0);
+  // 물 밖으로 머리를 내면 고음이 한꺼번에 돌아온다 — 물이 삼키던 소리가 풀린다
+  currentFilter.frequency.setTargetAtTime(
+    mix(240, 170, dark) + input.stroke*280 + glide*140 + state.speed*2.4
+    + aboveMix*2800, t, .35);
+  currentGain.gain.setTargetAtTime(
+    (mix(LV.current, LV.current*0.65, dark) + input.stroke*0.07 + glide*0.04)
+    * (1 - aboveMix*0.4), t, .5);
+  // 간헐적으로 큰 기포 한 무리가 수면으로 올라간다
+  if(state.t > nextBurstAt){
+    nextBurstAt = state.t + 14 + Math.random()*26;
+    bubbleBurst(5 + (Math.random()*6|0), 0.008, 0.025,       // 8~25mm → 130~410Hz
+                0.055 * (1 - dark*0.35) * (1 - aboveMix*0.6),
+                900, 0.25);
+  }
+  stepMusic();
+}
+
+/* 기포 소리 ───────────────────────────────────────────────
+   물속 기포는 부피 진동을 하고, 그 고유진동수는 민네르트 공명을 따른다.
+       f0 ≈ 3.26 / r      (Hz, r은 m)
+   큰 방울일수록 낮게 울린다. 이 관계만 지켜도 크기가 귀에 들린다.
+   감쇠는 Q≈32 기준으로 τ = Q/(π·f0) — 큰 방울이 더 오래 남는다. */
+function bubbleBlip(t, radius, level, cutoff, pan){
+  const f0  = 3.26 / radius;
+  const tau = 32 / (Math.PI * f0);
+  const o = audio.createOscillator(), g = audio.createGain();
+  const lp = audio.createBiquadFilter();
+  o.type = 'sine';
+  // 짧은 상승 글라이드가 물방울 특유의 "보글" 느낌을 만든다
+  o.frequency.setValueAtTime(f0 * 0.80, t);
+  o.frequency.exponentialRampToValueAtTime(f0 * 1.22, t + Math.min(tau*0.9, 0.05));
+  lp.type = 'lowpass'; lp.frequency.value = cutoff; lp.Q.value = 0.5;
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(level, t + 0.003);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + tau*2.2);
+  o.connect(lp); lp.connect(g);
+  if(audio.createStereoPanner){
+    const pn = audio.createStereoPanner(); pn.pan.value = pan;
+    g.connect(pn); pn.connect(bubbleGain);
+  } else g.connect(bubbleGain);
+  o.start(t); o.stop(t + tau*2.4 + 0.05);
+}
+
+// 한 번의 기포 무리. 위로 올라가면서 멀어지므로 뒤로 갈수록 작고 둔해진다.
+function bubbleBurst(n, rMin, rMax, level, cutoff, spread){
+  if(!audio || soundMode === 2) return;
+  const t0 = audio.currentTime + 0.02;
+  const pan = (Math.random()*2 - 1) * 0.6;
+  let t = t0;
+  for(let i=0;i<n;i++){
+    const away = i/(n-1 || 1);                       // 0 가까움 → 1 멀어짐
+    const r = rMin + Math.random()*(rMax - rMin);
+    bubbleBlip(t, r,
+      level * (0.55 + Math.random()*0.6) * (1 - away*0.45),
+      cutoff * (1 - away*0.30),
+      pan + (Math.random()-0.5)*spread);
+    t += 0.045 + Math.random()*0.16;
+  }
+}
+
+function playChime(){
+  if(!audio || soundMode === 2) return;
+  if(state.t - lastChimeAt < 1.2) return;
+  lastChimeAt = state.t;
+  const dark = nightEase();
+  playTone(SCALE[3 + ((Math.random()*4)|0)] + (dark > 0.6 ? 0 : 12),
+           audio.currentTime, mix(0.085, 0.065, dark), mix(6, 8, dark));
+}
+
+const SOUND_LABEL = ['♪','~','·'];
+const SOUND_ARIA  = ['소리 끄기 (물소리만 남기기)','물소리 끄기','소리 켜기'];
+document.getElementById('mute').onclick = (e)=>{
+  if(!audio) return;
+  soundMode = (soundMode + 1) % 3;
+  const t = audio.currentTime;
+  currentGain.gain.setTargetAtTime(soundMode < 2 ? LV.current : 0.0001, t, .4);
+  bubbleGain.gain.setTargetAtTime(soundMode < 2 ? LV.bubble : 0.0001, t, .4);
+  musicBus.gain.setTargetAtTime(soundMode === 0 ? LV.music : 0.0001, t, .8);
+  trackGain.gain.setTargetAtTime(soundMode === 0 && EXTERNAL_TRACK ? LV.track : 0.0001, t, .8);
+  e.currentTarget.textContent = SOUND_LABEL[soundMode];
+  e.currentTarget.setAttribute('aria-label', SOUND_ARIA[soundMode]);
+};
+
+/* ═══════════════════════════════════════════════════════════
+   12. UI와 안내 문장
+   ═══════════════════════════════════════════════════════════ */
+const $ = id => document.getElementById(id);
+const pick = a => a[(Math.random()*a.length)|0];
+
+let msgTimer = null, nextMsgAt = CFG.messageInterval, lastMsg = '';
+function showMessage(text){
+  if(text === lastMsg) return;
+  lastMsg = text;
+  const el = $('msg');
+  el.textContent = text;
+  el.style.opacity = '1';
+  clearTimeout(msgTimer);
+  msgTimer = setTimeout(()=>{ el.style.opacity = '0'; }, 6000);
+}
+
+let ambTimer = 0;
+function stepUI(dt){
+  if(state.t > nextMsgAt){
+    nextMsgAt = state.t + CFG.messageInterval + Math.random()*10;
+    showMessage(pick(MSG));
+  }
+  ambTimer -= dt;
+  if(ambTimer <= 0){
+    ambTimer = 2.5;
+    const gh = floorH(state.x, state.z);
+    const r  = Math.hypot(state.x, state.z);
+    const agl = state.y - gh;
+    let place = '모래바닥 위';
+    if(state.y > SURFACE_Y - 140) place = '수면 가까이';
+    else if(r > 1150)  place = '먼바다';
+    else if(r > 820)   place = '벼랑 끝';
+    else if(r < 280)   place = '산호 언덕 곁';
+    else if(agl < 60)  place = '바닥 가까이';
+    else if(agl > 300) place = '열린 물속';
+    $('aPlace').textContent = arcDuration > 0 ? arcPhase + ' · ' + place : place;
+    $('aFlow').textContent =
+      input.stroke > .45 ? '물살이 갈라집니다'
+      : input.stroke > .18 ? '물이 천천히 흐릅니다'
+      : '물결이 잔잔합니다';
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   13. 메인 루프
+   ═══════════════════════════════════════════════════════════ */
+function loop(now){
+  requestAnimationFrame(loop);
+  const dt = Math.min((now-last)/1000, .05); last = now;
+  if(!started){ renderer.render(scene, camera); return; }
+  inputDt = dt;
+
+  if(mode === 'pose'){
+    readPose(now);
+    updateBaseline(dt);
+    if(now - lastPoseAt > 500) decayInput(dt);   // 인식이 끊겨도 유영은 이어진다
+  } else {
+    readKeys();
+  }
+
+  step(dt);
+  stepCamera(dt);
+  stepEnvironment(dt);
+  stepAudio();
+  stepUI(dt);
+  renderer.render(scene, camera);
+}
+requestAnimationFrame(loop);
+
+/* ═══════════════════════════════════════════════════════════
+   14. 시작과 오류 처리
+   ═══════════════════════════════════════════════════════════ */
+function enterSea(){
+  $('gate').style.display = 'none';
+  $('ambient').style.opacity = '1';
+  started = true;
+  last = performance.now();
+  lastPoseAt = last;
+  arcT = 0; closed = false; arcPhase = '한낮'; basePitch = null;
+  if(arcDuration > 0) applyArc(0);
+  vLook.set(state.x, state.y, state.z + 60);
+  camera.position.set(state.x, state.y + CFG.camUp, state.z - CFG.camBack);
+}
+
+document.querySelectorAll('#dur .chip').forEach(c => {
+  c.onclick = () => {
+    document.querySelectorAll('#dur .chip').forEach(x => x.classList.remove('on'));
+    c.classList.add('on');
+    arcDuration = Number(c.dataset.min) * 60;
+  };
+});
+$('btnAgain').onclick = restartArc;
+
+$('btnCam').onclick = () => {
+  initAudio();
+  startCamera().catch(e => {
+    const st = $('status');
+    const m = String(e && e.message || e);
+    if(/Permission|NotAllowed/i.test(m))
+      st.innerHTML = '카메라를 사용할 수 없습니다.<br>키보드로 둘러보기를 선택하면 방향키로 헤엄칠 수 있습니다.';
+    else if(/fetch|network|Failed to load|wasm/i.test(m))
+      st.innerHTML = '움직임 인식 파일을 불러오지 못했습니다.<br>연결을 확인한 뒤 다시 시도하거나, 키보드로 둘러보세요.';
+    else
+      st.innerHTML = '지금은 카메라로 들어갈 수 없습니다.<br>키보드로 둘러보기를 선택해 주세요.';
+  });
+};
+$('btnKey').onclick = () => { initAudio(); mode='key'; enterSea(); showMessage('방향키가 물살이 됩니다'); };
+
+addEventListener('resize', ()=>{
+  camera.aspect = innerWidth/innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+</script>
+</body>
+</html>
