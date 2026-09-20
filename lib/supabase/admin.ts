@@ -138,7 +138,8 @@ export interface PageViewStats {
 
 export async function getPageViewStats(): Promise<PageViewStats> {
   const supabase = await createClient();
-  const { data } = (await supabase.rpc("othub_admin_pageview_stats")) as {
+  const { data, error } = (await supabase.rpc("othub_admin_pageview_stats")) as {
+    error: unknown;
     data:
       | {
           total_views: number;
@@ -150,6 +151,7 @@ export async function getPageViewStats(): Promise<PageViewStats> {
       | null;
   };
   const row = data?.[0];
+  if (error || !row) throw new Error("방문 통계를 불러오지 못했습니다.");
   return {
     total: row?.total_views ?? 0,
     views7d: row?.views_7d ?? 0,
@@ -164,9 +166,10 @@ export async function getTopPages(
   limit = 10
 ): Promise<{ path: string; views: number }[]> {
   const supabase = await createClient();
-  const { data } = (await supabase.rpc("othub_admin_top_pages", {
+  const { data, error } = (await supabase.rpc("othub_admin_top_pages", {
     days,
     page_limit: limit,
-  })) as { data: { path: string; views: number }[] | null };
+  })) as { data: { path: string; views: number }[] | null; error: unknown };
+  if (error || !data) throw new Error("인기 페이지 통계를 불러오지 못했습니다.");
   return data ?? [];
 }

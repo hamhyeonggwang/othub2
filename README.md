@@ -1,32 +1,46 @@
-# Clinical System Designer Portfolio
+# OTHub
 
-함형광님의 개인 포트폴리오 랜딩페이지 프로토타입입니다.
+작업치료 훈련 도구, 콘텐츠, 임상 평가를 제공하는 Next.js 서비스입니다.
 
-## 실행
+- 운영: https://othub.kr (www 도메인으로 이동)
+- 운영 소스: `hamhyeonggwang/othub2`
+- 스택: Next.js App Router · React · Supabase Auth/Postgres · Vercel
+- [공개 SaaS 개선 및 운영 절차](docs/SAAS-OPERATIONS.md)
+- [변경 기록](CHANGELOG.md)
 
-별도의 설치 없이 `index.html`을 브라우저에서 열 수 있습니다. 로컬 서버로 확인하려면 다음을 실행합니다.
+## 개발
 
-```bash
-python3 -m http.server 4173
+Node.js 22와 npm을 사용합니다. Supabase 공개 연결 정보는 로컬 `.env.local`에 설정하고 커밋하지 않습니다.
+
+```dotenv
+NEXT_PUBLIC_SUPABASE_URL=https://YOUR_PROJECT.supabase.co
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=YOUR_PUBLIC_KEY
 ```
 
-브라우저에서 `http://localhost:4173`으로 접속합니다.
+```sh
+npm ci
+npm run dev
+```
 
-## 파일
+사이트는 `http://localhost:3000`에서 실행됩니다. Google 로그인은 기존 Supabase OAuth 설정 및 허용된 콜백 주소가 필요합니다. 서비스 역할 키를 프런트엔드에 넣지 않습니다.
 
-- `index.html`: 콘텐츠와 페이지 구조
-- `styles.css`: 반응형 디자인과 글래스모피즘 스타일
-- `script.js`: 패럴랙스, 스크롤 등장 효과, 연도 표시
+## 검증
 
-## 공개 전 교체할 내용
+```sh
+npm test
+npm run typecheck
+npm run build
+```
 
-1. `index.html`의 `hello@example.com`을 실제 이메일 또는 문의 링크로 교체
-2. 공개할 프로젝트별 상세 페이지나 외부 링크 연결
-3. 필요한 경우 프로필 사진, 이력, 강의·연구 실적 추가
+실제 계정이나 운영 데이터 없이 실행하는 브라우저 검증 방법은 [운영 문서](docs/SAAS-OPERATIONS.md#로컬-검증)에 있습니다. PR 검증 워크플로도 같은 로컬 가짜 DB를 사용합니다.
 
-## 디자인 원칙
+## 구조
 
-- 첫 화면은 투명 데이터 패널을 활용한 고밀도 공간 경험
-- 본문은 읽기 쉽고 실제 정보 전달에 집중
-- 모바일에서는 장식 패널과 움직임을 줄여 성능과 가독성 확보
-- `prefers-reduced-motion` 환경에서는 애니메이션 최소화
+- `app/(hub)`: 공통 내비게이션과 홈페이지·도구·콘텐츠·관리자 화면
+- `app/api`: 평가 저장 및 방문 수집 API
+- `components`: 공유 UI
+- `lib/supabase`: 기존 인증, 콘텐츠, 관리자 데이터 접근
+- `public/apps`, `public/assess`: 기존 독립 실행 도구
+- `docs`: 설계 및 운영 기록
+
+관리자 권한은 이메일 문자열이 아니라 기존 프로필의 역할과 서버/RLS로 검증합니다. 평가 도구와 계정·운영 DB를 새로운 정적 사이트로 교체하지 않습니다.

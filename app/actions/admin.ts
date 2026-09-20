@@ -3,8 +3,10 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/supabase/admin";
+import { assertWritableDeployment } from "@/lib/deployment";
 
 export async function approveTherapist(profileId: string) {
+  assertWritableDeployment();
   await requireAdmin();
   const supabase = await createClient();
   await supabase
@@ -16,6 +18,7 @@ export async function approveTherapist(profileId: string) {
 }
 
 export async function rejectTherapist(profileId: string) {
+  assertWritableDeployment();
   await requireAdmin();
   const supabase = await createClient();
   await supabase
@@ -27,6 +30,7 @@ export async function rejectTherapist(profileId: string) {
 }
 
 export async function adminDeleteComment(commentId: string) {
+  assertWritableDeployment();
   await requireAdmin();
   const supabase = await createClient();
   await supabase.from("othub_comments").delete().eq("id", commentId);
@@ -34,6 +38,7 @@ export async function adminDeleteComment(commentId: string) {
 }
 
 export async function toggleContentStatus(contentId: string, publish: boolean) {
+  assertWritableDeployment();
   await requireAdmin();
   const supabase = await createClient();
   await supabase
@@ -45,6 +50,7 @@ export async function toggleContentStatus(contentId: string, publish: boolean) {
 }
 
 export async function deleteContent(contentId: string) {
+  assertWritableDeployment();
   await requireAdmin();
   const supabase = await createClient();
   await supabase.from("othub_content_items").delete().eq("id", contentId);
@@ -62,6 +68,7 @@ function parseTagList(value: FormDataEntryValue | null): string[] {
 }
 
 export async function saveContent(formData: FormData) {
+  assertWritableDeployment();
   await requireAdmin();
   const supabase = await createClient();
 

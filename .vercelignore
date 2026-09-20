@@ -1,0 +1,8 @@
+.env*
+test-results
+playwright-report
+tests
+docs
+.github
+game
+otassess-main

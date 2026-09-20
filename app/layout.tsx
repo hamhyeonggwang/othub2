@@ -1,6 +1,9 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import "./landing.css";
+import "./navigation.css";
+import PageViewTracker from "@/components/PageViewTracker";
+import { isReadOnlyPreview } from "@/lib/deployment";
 
 const SITE_TITLE = "OTHub — By OTs, For Everyone";
 const SITE_DESCRIPTION =
@@ -45,7 +48,12 @@ export default function RootLayout({
           href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css"
         />
       </head>
-      <body>{children}</body>
+      <body>
+        {children}
+        {isReadOnlyPreview()
+          ? <aside className="preview-notice" aria-label="검토 환경 안내">검토용 Preview · 데이터 저장 비활성화</aside>
+          : <PageViewTracker />}
+      </body>
     </html>
   );
 }

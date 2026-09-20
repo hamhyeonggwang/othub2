@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { isReadOnlyPreview, PREVIEW_READ_ONLY_MESSAGE } from "@/lib/deployment";
 
 interface ToolReport {
   title?: string;
@@ -21,6 +22,7 @@ interface SaveSessionBody {
 }
 
 export async function POST(request: Request) {
+  if (isReadOnlyPreview()) return NextResponse.json({ error: PREVIEW_READ_ONLY_MESSAGE }, { status: 403 });
   const supabase = await createClient();
   const {
     data: { user },

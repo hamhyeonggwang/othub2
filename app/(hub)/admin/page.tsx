@@ -48,7 +48,7 @@ const ROLE_LABEL: Record<string, string> = {
 export default async function AdminPage({
   searchParams,
 }: {
-  searchParams: Promise<{ tab?: string; edit?: string }>;
+  searchParams: Promise<{ tab?: string; edit?: string; days?: string }>;
 }) {
   await requireAdmin();
   const params = await searchParams;
@@ -79,7 +79,7 @@ export default async function AdminPage({
       {tab === "content" && <ContentTab editSlug={params.edit} />}
       {tab === "members" && <MembersTab />}
       {tab === "engagement" && <EngagementTab />}
-      {tab === "visits" && <VisitsTab />}
+      {tab === "visits" && <VisitsTab days={params.days === "30" ? 30 : 7} />}
       </div>
     </>
   );
@@ -319,15 +319,23 @@ async function EngagementTab() {
   );
 }
 
-async function VisitsTab() {
-  const [stats, topPages] = await Promise.all([getPageViewStats(), getTopPages(7, 10)]);
+async function VisitsTab({ days }: { days: 7 | 30 }) {
+  const results = await Promise.allSettled([getPageViewStats(), getTopPages(days, 10)]);
+  if (results[0].status === "rejected" || results[1].status === "rejected") {
+    return <div role="alert" className="admin-empty">
+      <p>방문 통계를 불러오지 못했습니다. 데이터가 0건이라는 뜻은 아닙니다.</p>
+      <p>잠시 후 새로고침해 주세요. 문제가 계속되면 통계 조회 권한과 서버 연결을 확인해 주세요.</p>
+    </div>;
+  }
+  const stats = results[0].value;
+  const topPages = results[1].value;
 
   return (
     <>
       <div className="admin-stat-row">
         <div className="admin-stat">
           <strong>{stats.total}</strong>
-          <span>누적 방문(전체 기간)</span>
+          <span>누적 페이지 조회(전체 기간)</span>
         </div>
         <div className="admin-stat">
           <strong>{stats.views7d}</strong>
@@ -335,7 +343,7 @@ async function VisitsTab() {
         </div>
         <div className="admin-stat">
           <strong>{stats.visitors7d}</strong>
-          <span>순 방문자 (최근 7일)</span>
+          <span>고유 브라우저 (최근 7일)</span>
         </div>
         <div className="admin-stat">
           <strong>{stats.views30d}</strong>
@@ -343,11 +351,17 @@ async function VisitsTab() {
         </div>
         <div className="admin-stat">
           <strong>{stats.visitors30d}</strong>
-          <span>순 방문자 (최근 30일)</span>
+          <span>고유 브라우저 (최근 30일)</span>
         </div>
       </div>
 
-      <h3 className="feed-section-title">많이 본 페이지 (최근 7일)</h3>
+      <nav className="admin-tabs" aria-label="인기 페이지 집계 기간">
+        {[7, 30].map((period) => <Link key={period}
+          className="admin-tab" data-active={days === period}
+          aria-current={days === period ? "page" : undefined}
+          href={`/admin?tab=visits&days=${period}`}>최근 {period}일</Link>)}
+      </nav>
+      <h3 className="feed-section-title">많이 본 페이지 (최근 {days}일)</h3>
       <div className="admin-table-wrap">
         {topPages.length === 0 ? (
           <p className="admin-empty">아직 집계된 방문 기록이 없습니다.</p>
@@ -371,8 +385,11 @@ async function VisitsTab() {
         )}
       </div>
       <p className="admin-empty" style={{ marginTop: 12 }}>
-        방문자 수는 쿠키 기반 익명 식별이라 브라우저를 바꾸거나 쿠키를 지우면
-        새 방문자로 집계될 수 있습니다.
+        고유 브라우저는 무작위 쿠키 식별자 기준이며 실제 사람 수와 다릅니다.
+        쿠키를 지우거나 브라우저를 바꾸면 다시 집계됩니다.
+        새 수집 방식은 화면 이동만 기록하며 미리 불러오기, 검색 조건 변경,
+        관리자·로그인 페이지와 독립 실행 HTML 도구 내부 활동은 제외합니다.
+        이전 방식으로 수집한 데이터가 포함된 기간은 직접 비교에 주의해 주세요.
       </p>
     </>
   );

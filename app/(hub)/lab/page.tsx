@@ -3,7 +3,6 @@ import Link from "next/link";
 import Image from "next/image";
 import "../hub/hub.css";
 import { getPublishedContent } from "@/lib/supabase/content";
-import { getCurrentUserAndProfile } from "@/lib/supabase/profile";
 import { PROJECT_STATUS, PROJECT_STATUS_LABEL } from "@/lib/supabase/content-types";
 
 export const metadata: Metadata = {
@@ -20,10 +19,7 @@ const STATUS_EXPLAIN: { status: keyof typeof PROJECT_STATUS_LABEL; desc: string 
 ];
 
 export default async function LabPage() {
-  const [allContent] = await Promise.all([
-    getPublishedContent(),
-    getCurrentUserAndProfile(),
-  ]);
+  const allContent = await getPublishedContent();
   const projects = allContent.filter((item) => item.type === "project");
 
   return (

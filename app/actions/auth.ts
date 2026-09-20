@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
+import { safeReturnPath } from "@/lib/auth-navigation";
+import { isReadOnlyPreview, PREVIEW_READ_ONLY_MESSAGE } from "@/lib/deployment";
 
 export async function signInWithGoogle(next?: string) {
   const headerList = await headers();
@@ -12,7 +14,7 @@ export async function signInWithGoogle(next?: string) {
     `https://${headerList.get("host")}`;
 
   // 오픈 리다이렉트 방지: 같은 오리진의 절대 경로만 허용한다.
-  const safeNext = next && next.startsWith("/") && !next.startsWith("//") ? next : null;
+  const safeNext = safeReturnPath(next);
   const callbackUrl = safeNext
     ? `${origin}/auth/callback?next=${encodeURIComponent(safeNext)}`
     : `${origin}/auth/callback`;
@@ -40,6 +42,7 @@ export async function signOut() {
 }
 
 export async function requestTherapistRole(formData: FormData) {
+  if (isReadOnlyPreview()) return { error: PREVIEW_READ_ONLY_MESSAGE };
   const licenseNo = String(formData.get("license_no") ?? "").trim();
   const org = String(formData.get("org") ?? "").trim();
 
@@ -69,6 +72,7 @@ export async function requestTherapistRole(formData: FormData) {
 }
 
 export async function updateDisplayName(formData: FormData) {
+  if (isReadOnlyPreview()) return { error: PREVIEW_READ_ONLY_MESSAGE };
   const displayName = String(formData.get("display_name") ?? "").trim();
   if (!displayName) return { error: "이름을 입력해 주세요." };
 

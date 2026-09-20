@@ -1,11 +1,10 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-const PAGE_VIEW_SKIP_PREFIXES = ["/api", "/auth"];
-const VISITOR_COOKIE = "othub_vid";
-
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
+  // Public telemetry validates its own request and does not use authentication.
+  if (request.nextUrl.pathname === "/api/page-view") return supabaseResponse;
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -35,26 +34,12 @@ export async function updateSession(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
 
-  // 익명 방문자 식별용 쿠키 — 통계 집계 전용, 개인정보 아님(무작위 UUID)
-  let visitorId = request.cookies.get(VISITOR_COOKIE)?.value;
-  if (!visitorId) {
-    visitorId = crypto.randomUUID();
-    supabaseResponse.cookies.set(VISITOR_COOKIE, visitorId, {
-      maxAge: 60 * 60 * 24 * 365,
-      sameSite: "lax",
-      path: "/",
-    });
-  }
-
-  if (!PAGE_VIEW_SKIP_PREFIXES.some((p) => pathname.startsWith(p))) {
-    try {
-      await supabase
-        .from("othub_page_views")
-        .insert({ path: pathname, visitor_id: visitorId });
-    } catch {
-      // 방문 기록 실패가 페이지 로딩을 막지 않도록 무시
-    }
-  }
+  // Record committed navigations in the browser, never prefetch/RSC requests.
+  const redirectWithCookies = (path: string) => {
+    const response = NextResponse.redirect(new URL(path, request.url));
+    supabaseResponse.cookies.getAll().forEach((cookie) => response.cookies.set(cookie));
+    return response;
+  };
 
   // 역할 가드: /assess(정적 평가 도구 포함)는 치료사·관리자, /admin은 관리자만
   const needsRole = pathname.startsWith("/assess") || pathname.startsWith("/admin");
@@ -62,7 +47,7 @@ export async function updateSession(request: NextRequest) {
   if (needsRole) {
     if (!user) {
       const next = pathname.startsWith("/admin") ? "/admin" : "/assess";
-      return NextResponse.redirect(new URL(`/login?next=${next}`, request.url));
+      return redirectWithCookies(`/login?next=${next}`);
     }
     const { data: profile } = await supabase
       .from("othub_profiles")
@@ -72,10 +57,10 @@ export async function updateSession(request: NextRequest) {
     const role = profile?.role;
 
     if (pathname.startsWith("/admin") && role !== "admin") {
-      return NextResponse.redirect(new URL("/me", request.url));
+      return redirectWithCookies("/me");
     }
     if (pathname.startsWith("/assess") && role !== "therapist" && role !== "admin") {
-      return NextResponse.redirect(new URL("/me?assess=locked", request.url));
+      return redirectWithCookies("/me?assess=locked");
     }
   }
 
