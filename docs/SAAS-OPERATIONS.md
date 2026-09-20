@@ -138,3 +138,16 @@ npm run test:e2e
 - 로그인 액션과 콜백·치료사 인증·운영 DB·Preview 쓰기 차단을 변경하지 않았다.
 - 이 단계도 로컬 변경이다. 새 코드 업로드, 운영 승격, GitHub push/PR/merge는 실행하지 않았다. 3차 Preview URL을 최신 상세·My Hub·로그인·통계 배포본으로 안내하지 않는다.
 - 다음 반영 묶음은 4·5차 미배포 변경이다. 보호된 읽기 전용 Preview에 반영한 뒤 운영 반영 여부를 별도로 결정한다.
+
+## 6차 진행: 통합 Preview 배포 (2026-09-21)
+
+- 사용자 진행 승인에 따라 4·5차 변경을 기존 Vercel `othub2` 프로젝트에 업로드하고 Preview로 배포했다.
+- 최신 Preview: https://othub2-bedjjnbed-starlight-papas-projects.vercel.app
+- 배포 상세: https://vercel.com/starlight-papas-projects/othub2/CUYgn1fwjP2WwiPnjgYmpeCZGcfz
+- 배포 ID: `dpl_CUYgn1fwjP2WwiPnjgYmpeCZGcfz`, 상태 `READY`, target `null`(Preview), 운영 도메인 별칭 없음.
+- 소스 커밋: `0f36084727f8866c8c4fe3b23001d218365e85b8`. 단위 테스트 83개·브라우저 테스트 25개·타입 검사·로컬 빌드를 통과한 코드이며 Vercel Turbopack 빌드와 타입 검사도 완료됐다.
+- 빌드·실행 환경에 `OTHUB_PREVIEW_ALLOW_WRITES=false`를 지정했다. 관리자/참여/프로필/평가 저장·방문 기록 변경 차단을 유지한다. 로그인·세션 갱신·조회는 가능하며 DB 자체의 읽기 전용 권한을 뜻하지 않는다.
+- 배포 전후 운영 ID `dpl_4VR63rjLBbWHjbVsXb44g8tYsi7d`와 소스 `fc0a57c105b55fe9f858da394e47c1da9d3c0d02`가 같음을 API로 확인했다.
+- 기존 보호 설정 `all_except_custom_domains` 유지, 비로그인 HTTP 요청은 302. 접근 보호를 해제하거나 우회 토큰을 만들지 않았다. 검토자는 권한 있는 Vercel 계정이 필요하다.
+- 이번 확인 범위는 배포 완료·빌드·보호·운영 배포 유지다. 새 통합 Preview의 실제 계정 UI 검토·저장 검증을 완료했다고 기록하지 않는다.
+- GitHub push/PR/merge·운영 승격·DNS·OAuth 설정·DB 변경은 실행하지 않았다. 정식 반영은 새 통합 Preview 검토와 별도 운영 배포 승인 이후 진행한다.
