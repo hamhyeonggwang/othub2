@@ -92,10 +92,13 @@ const server = createServer(async (request, response) => {
     "pending",
     "therapist",
     "admin",
+    "admin-stats-error",
+    "admin-top-error",
+    "admin-empty",
     "empty-therapist",
   ].includes(scenario);
   const role =
-    scenario === "admin"
+    validScenario && scenario.startsWith("admin")
       ? "admin"
       : ["therapist", "empty-therapist"].includes(scenario)
         ? "therapist"
@@ -111,6 +114,73 @@ const server = createServer(async (request, response) => {
   };
   response.setHeader("Content-Type", "application/json");
   if (url.pathname === "/health") return response.end("{}");
+  // Stop OAuth tests at a local page, including native form redirect chains.
+  // Never forward this endpoint to Google or issue a real session.
+  if (url.pathname === "/auth/v1/authorize") {
+    response.setHeader("Content-Type", "text/html");
+    return response.end(
+      "<!doctype html><html><body><h1>Local OAuth destination</h1></body></html>",
+    );
+  }
+  if (
+    url.pathname.startsWith("/rest/v1/rpc/othub_admin_") &&
+    validScenario &&
+    role === "admin"
+  ) {
+    const isStats = url.pathname.endsWith("othub_admin_pageview_stats");
+    const isTop = url.pathname.endsWith("othub_admin_top_pages");
+    if (
+      (isStats && scenario === "admin-stats-error") ||
+      (isTop && scenario === "admin-top-error")
+    ) {
+      response.statusCode = 500;
+      return response.end(
+        JSON.stringify({
+          code: "fixture_error",
+          message: "Local test query failure",
+        }),
+      );
+    }
+    if (isStats)
+      return response.end(
+        JSON.stringify([
+          scenario === "admin-empty"
+            ? {
+                total_views: 0,
+                views_7d: 0,
+                views_30d: 0,
+                visitors_7d: 0,
+                visitors_30d: 0,
+              }
+            : {
+                total_views: 1200,
+                views_7d: 84,
+                views_30d: 360,
+                visitors_7d: 28,
+                visitors_30d: 90,
+              },
+        ]),
+      );
+    if (isTop) {
+      let body = "";
+      for await (const chunk of request) body += chunk;
+      const { days } = JSON.parse(body || "{}");
+      return response.end(
+        JSON.stringify(
+          scenario === "admin-empty"
+            ? []
+            : [
+                { path: "/hub/apps", views: days === 30 ? 180 : 42 },
+                {
+                  path: "/hub/apps/cu-kiosk-trainer",
+                  views: days === 30 ? 120 : 28,
+                },
+                { path: "/hub", views: days === 30 ? 60 : 14 },
+              ],
+        ),
+      );
+    }
+  }
   if (url.pathname === "/auth/v1/user" && validScenario)
     return response.end(JSON.stringify(user));
   if (url.pathname === "/rest/v1/othub_profiles" && validScenario)

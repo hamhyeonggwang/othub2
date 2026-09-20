@@ -1,0 +1,198 @@
+.login-workspace {
+  min-height: 100svh;
+  display: grid;
+  place-items: center;
+  padding: 64px 28px;
+  background:
+    radial-gradient(ellipse at 12% 20%, #e4f0e8, transparent 65%), #f7faf8;
+  color: #173c36;
+}
+.login-layout {
+  width: 100%;
+  max-width: 1040px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 420px;
+  gap: 80px;
+  align-items: center;
+}
+.login-intro {
+  min-width: 0;
+}
+.login-workspace .auth-brand {
+  margin-bottom: 46px;
+}
+.login-workspace .auth-brand-mark {
+  width: 42px;
+  height: 42px;
+}
+.login-eyebrow {
+  margin: 0 0 14px;
+  color: #307568;
+  font-size: 11px;
+  font-weight: 750;
+  letter-spacing: 0.12em;
+}
+.login-intro h2 {
+  font-size: clamp(26px, 3vw, 36px);
+  letter-spacing: -0.045em;
+  line-height: 1.45;
+  margin: 0 0 18px;
+  word-break: keep-all;
+}
+.login-intro-desc {
+  font-size: 15px;
+  line-height: 1.8;
+  color: #52677c;
+}
+.login-benefits {
+  list-style: none;
+  padding: 0;
+  margin: 30px 0;
+  display: grid;
+  gap: 20px;
+}
+.login-benefits li {
+  display: flex;
+  gap: 14px;
+}
+.login-benefits li > span {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border: 1px solid #c7dace;
+  border-radius: 9px;
+  color: #307568;
+  font-size: 11px;
+}
+.login-benefits strong {
+  font-size: 14px;
+}
+.login-benefits p {
+  font-size: 13px;
+  line-height: 1.7;
+  color: #52677c;
+  margin: 6px 0 0;
+}
+.login-browse,
+.login-help a {
+  display: inline-block;
+  color: #1b6558;
+  font-size: 13px;
+  font-weight: 650;
+  padding: 10px 0;
+}
+.login-workspace .login-card {
+  max-width: none;
+  border-color: #d8e4db;
+  border-radius: 20px;
+  padding: 36px;
+  box-shadow: 0 16px 60px #173c3608;
+}
+.login-card h1 {
+  font-size: 25px;
+  letter-spacing: -0.04em;
+  margin-bottom: 14px;
+}
+.login-card .auth-desc {
+  line-height: 1.8;
+  color: #52677c;
+}
+.login-card .auth-google {
+  min-height: 52px;
+  border-color: #bccfc3;
+  border-radius: 10px;
+  font-size: 14px;
+}
+.login-card .auth-google:hover:not(:disabled) {
+  background: #f1f7f3;
+}
+.login-card .auth-note {
+  line-height: 1.8;
+  font-size: 12px;
+  color: #52677c;
+}
+.login-access-note {
+  padding: 16px;
+  border-radius: 10px;
+  background: #eef7f2;
+  color: #245d50;
+  font-size: 13px;
+  line-height: 1.7;
+  margin-bottom: 24px;
+}
+.login-access-note p {
+  margin: 8px 0 0;
+}
+.login-help {
+  margin-top: 28px;
+  padding-top: 24px;
+  border-top: 1px solid #e3ebe5;
+}
+.login-help h2 {
+  margin: 0 0 10px;
+  font-size: 14px;
+}
+.login-help p {
+  color: #52677c;
+  font-size: 13px;
+  line-height: 1.8;
+  margin: 0;
+}
+.login-support {
+  margin: 24px 0 0;
+  color: #52677c;
+  font-size: 12px;
+  line-height: 1.9;
+  overflow-wrap: anywhere;
+}
+.login-support a {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.login-workspace :is(a, button):focus-visible {
+  outline: 2px solid #27776a;
+  outline-offset: 4px;
+}
+.login-workspace .auth-error {
+  line-height: 1.7;
+}
+@media (max-width: 900px) {
+  .login-layout {
+    gap: 36px;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+  .login-workspace .login-card {
+    padding: 28px;
+  }
+}
+@media (max-width: 640px) {
+  .login-workspace {
+    padding: 28px 20px 60px;
+  }
+  .login-layout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 28px;
+    max-width: 420px;
+  }
+  .login-workspace .auth-brand {
+    margin-bottom: 24px;
+  }
+  .login-intro h2 {
+    font-size: 25px;
+  }
+  .login-intro-desc,
+  .login-benefits {
+    display: none;
+  }
+  .login-browse {
+    margin-top: 0;
+  }
+  .login-workspace .login-card {
+    padding: 24px;
+  }
+  .login-card h1 {
+    font-size: 23px;
+  }
+}
