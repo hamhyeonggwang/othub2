@@ -5,7 +5,7 @@
 - 운영 소스: `hamhyeonggwang/othub2`, 기준 커밋 `fc0a57c105b55fe9f858da394e47c1da9d3c0d02`.
 - 서비스 진입 도메인: `othub.kr` (현재 `www.othub.kr`로 이동).
 - 운영 담당 계정: `h2g0614@gmail.com`. 이메일을 코드에 하드코딩해 권한을 부여하지 않는다. 기존 `othub_profiles.role = admin`과 서버/RLS 검증을 유지한다.
-- 이 작업은 로컬 개선안이며 배포·DNS·OAuth 설정·운영 DB 변경을 실행하지 않았다.
+- 1차 개선은 보호된 읽기 전용 Preview에 배포했다. 운영 배포·DNS·OAuth 설정·운영 DB 변경은 실행하지 않았다. 아래 Preview 검증 기록을 참고한다.
 - 이전에 조사한 별도 정적 저장소 `othub 2`의 파일·SQL은 이 운영 저장소에 적용하지 않는다.
 
 ## 1차 변경: 이동 경험과 통계 정확성
@@ -79,3 +79,33 @@ npm run test:e2e
 ## 롤백
 
 문제가 생기면 이번 배포 직전의 검증된 Vercel 배포로 되돌린다. 스키마 변경이 없으므로 역방향 SQL은 없다. 이전 코드로 되돌리면 서버 요청 기반 통계 수집도 돌아오므로 롤백 시각을 기록한다. 인증 오류, Assess 접근 제한 회귀, 페이지 오류 증가가 발생하면 기능 확장보다 롤백을 우선한다.
+
+## 2차 진행: 보호된 Preview 배포
+
+- Preview: https://othub2-81mv8w5yd-starlight-papas-projects.vercel.app
+- 배포 상세: https://vercel.com/starlight-papas-projects/othub2/B1H4uzCJLwduDLRBLxNgatUDifC5
+- 배포 ID: `dpl_B1H4uzCJLwduDLRBLxNgatUDifC5`, 상태 `READY`.
+- 로컬 소스 커밋: `a43c558e9c5edb5ff31469e12d014eb6b5184ad2`, 브랜치 `codex/saas-preview-20260920`. GitHub push/PR/merge는 실행하지 않았다.
+- 배포 후 확인한 운영 ID는 기존 `dpl_4VR63rjLBbWHjbVsXb44g8tYsi7d`, 커밋은 `fc0a57c105b55fe9f858da394e47c1da9d3c0d02` 그대로다. Preview에 운영 도메인을 연결하지 않았다.
+- 기존 Vercel 보호 설정 `all_except_custom_domains`를 유지했다. 검토자는 Vercel 계정 접근 권한이 필요하다. 우회 토큰은 생성하지 않았다.
+- Preview 환경변수 2개와 Production 환경변수 2개는 각각 존재하지만 민감 변수로 설정되어 있어 DB 분리 여부는 검증하지 못했다.
+
+### Preview 안전장치 및 로그인 보완
+
+- `VERCEL_ENV=preview`에서 데이터 변경을 기본 차단한다. 관리자 액션, 댓글·북마크·좋아요, 프로필 변경, 평가 저장, 방문 기록 모두 차단한다. 로그인·세션 갱신·조회는 허용된다. 이는 DB 자체의 읽기 전용 계정을 의미하지는 않는다.
+- 이번 배포는 빌드·실행 환경 모두 `OTHUB_PREVIEW_ALLOW_WRITES=false`로 지정했다. 이 변수는 **분리된 스테이징 DB를 확인하고 담당자가 승인한 경우에만** `true`로 변경할 수 있다.
+- 화면에 검토 환경 배너를 표시하며 Preview에서는 방문 트래커를 렌더링하지 않는다.
+- OAuth 콜백에 직접 주어진 복귀 경로도 검증한다. `@다른호스트`, `//다른호스트`, 역슬래시·제어문자 등이 포함된 경로는 `/me`로 돌린다.
+- 추가 후 단위 테스트 70개, 브라우저 테스트 5개, 타입 검사, 로컬 webpack 빌드가 통과했다. Vercel Node 24 환경의 Turbopack 빌드도 성공했다.
+
+### 남은 검증 / 재개 지점
+
+1. Mac 잠금 해제 후 열어 둔 Google 로그인 화면에서 관리자가 직접 로그인한다. 비밀번호·OTP는 채팅이나 파일로 전달하지 않는다.
+2. 기존 서비스의 `/admin?tab=visits`에서 관리자 권한·통계 조회를 확인한다. 환자 기록·회원 목록은 검증을 위해 내려받지 않는다.
+3. Vercel 계정으로 보호된 Preview를 열고 Tool/Content/소개 화면과 실제 공개 콘텐츠를 검토한다. Preview Google OAuth 복귀 URL의 허용 여부도 확인해야 한다.
+4. 일반회원/치료사 계정의 실제 RLS 및 스테이징 INSERT 검증은 아직 미완료다. 자동 테스트의 가짜 DB 결과를 실제 RLS 검증으로 간주하지 않는다.
+5. 운영 반영은 이 검증과 사용자의 Preview 승인 이후 별도 진행한다.
+
+브라우저가 Google 계정 입력 단계까지 도달한 것은 확인했으나 로그인 완료는 확인하지 못했다. 이후 기존 브라우저 세션을 확인하려다 Mac 잠금 때문에 중단됐다. 보호된 Preview의 실제 UI·관리자 통계가 검증 완료됐다고 표현하지 않는다.
+
+참고: [Vercel Preview 배포 옵션](https://vercel.com/docs/cli/deploy), [CLI 검증이 보호 우회 토큰을 생성할 수 있는 동작](https://vercel.com/docs/cli/curl#how-it-works). 후자는 이번에 실행하지 않았다.
