@@ -11,7 +11,7 @@ test("slow page data shows navigation feedback while the sidebar stays usable", 
   await expect(page.locator('.nav-hint[data-pending="true"], .route-loading [role="status"]').first()).toBeVisible({ timeout: 1000 });
   await expect(menu.getByRole("link", { name: "소개", exact: true })).toBeVisible();
   await click;
-  await expect(page.getByRole("heading", { name: "Content", exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "콘텐츠 라이브러리", exact: true })).toBeVisible();
 });
 
 test("prefetch does not count; navigation survives telemetry failure", async ({ page }) => {
@@ -30,7 +30,7 @@ test("prefetch does not count; navigation survives telemetry failure", async ({ 
   expect(views).toEqual(["/"]);
   await tool.click();
   await expect(tool).toHaveAttribute("aria-current", "page");
-  await expect(page.getByRole("heading", { name: "Tool", exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "훈련 도구", exact: true })).toBeVisible();
   await expect.poll(() => views).toEqual(["/", "/hub/apps"]);
   await page.getByRole("link", { name: "키오스크 훈련", exact: true }).click();
   await expect(page).toHaveURL(/cat=kiosk/);
@@ -51,7 +51,7 @@ test("mobile menu is accessible, fits, and closes after navigation", async ({ pa
   await expect(menu.getByRole("link", { name: "소개", exact: true })).toBeInViewport();
   await menu.getByRole("link", { name: "Tool", exact: true }).click();
   await expect(page.getByRole("button", { name: "메뉴 열기" })).toHaveAttribute("aria-expanded", "false");
-  await expect(page.getByRole("heading", { name: "Tool", exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "훈련 도구", exact: true })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await page.screenshot({ path: "test-results/tool-mobile.png", fullPage: true });
 });
