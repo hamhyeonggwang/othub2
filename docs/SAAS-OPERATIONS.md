@@ -98,7 +98,7 @@ npm run test:e2e
 - OAuth 콜백에 직접 주어진 복귀 경로도 검증한다. `@다른호스트`, `//다른호스트`, 역슬래시·제어문자 등이 포함된 경로는 `/me`로 돌린다.
 - 추가 후 단위 테스트 70개, 브라우저 테스트 5개, 타입 검사, 로컬 webpack 빌드가 통과했다. Vercel Node 24 환경의 Turbopack 빌드도 성공했다.
 
-### 남은 검증 / 재개 지점
+### 당시 남은 검증 / 재개 지점 (이력)
 
 사용자 요청에 따라 아래 실제 계정 검증은 보류 상태다. 다음 작업으로 홈·목록 디자인을 개선했으며 변경 범위와 로컬 확인 결과는 `docs/DESIGN-NOTES.md`에 기록한다.
 
@@ -111,3 +111,22 @@ npm run test:e2e
 브라우저가 Google 계정 입력 단계까지 도달한 것은 확인했으나 로그인 완료는 확인하지 못했다. 이후 기존 브라우저 세션을 확인하려다 Mac 잠금 때문에 중단됐다. 보호된 Preview의 실제 UI·관리자 통계가 검증 완료됐다고 표현하지 않는다.
 
 참고: [Vercel Preview 배포 옵션](https://vercel.com/docs/cli/deploy), [CLI 검증이 보호 우회 토큰을 생성할 수 있는 동작](https://vercel.com/docs/cli/curl#how-it-works). 후자는 이번에 실행하지 않았다.
+
+## 3차 진행: 홈·목록 디자인 Preview 배포
+
+- 소스·빌드 데이터의 Vercel 업로드에 대한 사용자 승인 후 기존 `othub2` 프로젝트에 Preview로 배포했다.
+- Preview: https://othub2-rf9gy3r4v-starlight-papas-projects.vercel.app
+- 배포 상세: https://vercel.com/starlight-papas-projects/othub2/2RHcFAgtaMeXRc8Bi133nBKoYh1K
+- 배포 ID: `dpl_2RHcFAgtaMeXRc8Bi133nBKoYh1K`, 상태 `READY`, 운영 도메인 별칭 없음.
+- 소스 커밋: `ac47960` (`Refresh home and catalogs with instant accessible filtering`). GitHub push/PR/merge는 실행하지 않았다.
+- 홈·훈련 도구·콘텐츠 목록 디자인과 즉시 검색/필터를 포함한다. 상세 범위는 `docs/DESIGN-NOTES.md`를 참고한다.
+- 빌드·실행 환경 모두 `OTHUB_PREVIEW_ALLOW_WRITES=false`로 배포했다. 기존 애플리케이션의 Preview 데이터 변경 차단을 유지한다.
+- Vercel의 프로덕션 빌드와 타입 검사가 완료됐다. 실제 Preview UI, Google 로그인, 관리자 권한 및 RLS 검증은 사용자 요청대로 보류한다.
+- 배포 후 API 조회에서 기존 보호 설정 `all_except_custom_domains`와 운영 배포 `dpl_4VR63rjLBbWHjbVsXb44g8tYsi7d` / 소스 `fc0a57c105b55fe9f858da394e47c1da9d3c0d02`가 유지됨을 확인했다. 보호 우회 토큰은 생성하지 않았다.
+
+## 4차 진행: 사용자 검증 완료 확인 및 상세·My Hub 개선
+
+- 사용자가 대화에서 “검증 완료. 다음작업진행”으로 기존 검증 완료를 확인했다. 앞의 보류 기록은 당시 이력으로 보존하며 동일한 로그인 절차를 다시 요구하지 않는다.
+- 항목별 측정값·DB 정책 결과는 별도로 전달받지 않았으므로 에이전트가 직접 OAuth/RLS·운영 성능을 재검증한 것으로 기록하지 않는다.
+- 다음 디자인 범위인 도구 상세(`/hub/apps/[slug]`)와 My Hub(`/me`)를 개선했다. UI 변경 외 인증·서버 액션·DB 스키마·평가 저장 방식·Preview 쓰기 차단은 유지한다.
+- 이 단계의 코드 변경은 로컬 작업이다. 앞의 3차 Preview는 홈·목록 디자인 배포본이며, 새 상세·My Hub 변경이 포함됐다고 간주하지 않는다. 운영 승격·GitHub push는 실행하지 않았다.

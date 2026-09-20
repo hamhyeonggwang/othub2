@@ -25,6 +25,7 @@ export default function LikeBookmarkButtons({
           type="submit"
           className="engage-btn"
           data-active={likedByMe}
+          aria-pressed={likedByMe}
           title={isLoggedIn ? "좋아요" : "로그인 후 좋아요를 누를 수 있어요"}
         >
           좋아요 {likeCount}
@@ -35,6 +36,7 @@ export default function LikeBookmarkButtons({
           type="submit"
           className="engage-btn"
           data-active={bookmarkedByMe}
+          aria-pressed={bookmarkedByMe}
           title={isLoggedIn ? "북마크" : "로그인 후 북마크할 수 있어요"}
         >
           {bookmarkedByMe ? "북마크됨" : "북마크"}

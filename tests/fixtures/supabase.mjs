@@ -21,6 +21,7 @@ const content = [
     id: "tool-1",
     type: "app",
     slug: "cu-kiosk-trainer",
+    app_path: "/apps/test-tool.html",
     title: "CU 편의점 셀프계산대 훈련",
     description: "편의점 바코드 스캔부터 결제까지 연습합니다.",
     category: "kiosk",
@@ -32,6 +33,7 @@ const content = [
     id: "tool-2",
     type: "app",
     slug: "airdrawing",
+    app_path: "/apps/test-tool.html",
     title: "에어 드로잉",
     description: "손을 움직이며 허공에 그림을 그립니다.",
     category: "hand",
@@ -43,6 +45,7 @@ const content = [
     id: "tool-3",
     type: "app",
     slug: "gazeplay-stars",
+    app_path: "/apps/test-tool.html",
     title: "GazePlay 별자리 그리기",
     description: "시선을 움직여 별을 연결합니다.",
     category: "gaze",
@@ -73,8 +76,82 @@ const content = [
 ];
 const server = createServer(async (request, response) => {
   const url = new URL(request.url, "http://127.0.0.1:4181");
+  // Test-only session interpretation. This server binds to localhost and is
+  // excluded from deployment; no application auth or RLS bypass is introduced.
+  let scenario;
+  try {
+    const token = request.headers.authorization?.replace(/^Bearer /, "");
+    scenario = JSON.parse(
+      Buffer.from(token.split(".")[1], "base64url").toString(),
+    ).fixture;
+  } catch {
+    /* Anonymous fixture request. */
+  }
+  const validScenario = [
+    "member",
+    "pending",
+    "therapist",
+    "admin",
+    "empty-therapist",
+  ].includes(scenario);
+  const role =
+    scenario === "admin"
+      ? "admin"
+      : ["therapist", "empty-therapist"].includes(scenario)
+        ? "therapist"
+        : "member";
+  const user = {
+    id: "11111111-1111-4111-8111-111111111111",
+    email: "fixture-user@example.invalid",
+    role: "authenticated",
+    aud: "authenticated",
+    app_metadata: {},
+    user_metadata: {},
+    created_at: "2026-01-01T00:00:00Z",
+  };
   response.setHeader("Content-Type", "application/json");
   if (url.pathname === "/health") return response.end("{}");
+  if (url.pathname === "/auth/v1/user" && validScenario)
+    return response.end(JSON.stringify(user));
+  if (url.pathname === "/rest/v1/othub_profiles" && validScenario)
+    return response.end(
+      JSON.stringify({
+        id: user.id,
+        display_name: "테스트 회원",
+        role,
+        therapist_requested_at:
+          scenario === "pending" ? "2026-01-01T00:00:00Z" : null,
+        approved_at: null,
+      }),
+    );
+  if (url.pathname === "/rest/v1/othub_bookmarks" && validScenario)
+    return response.end(
+      JSON.stringify(
+        ["therapist", "admin"].includes(scenario)
+          ? [
+              { content_id: "tool-1" },
+              { content_id: "content-1" },
+              { content_id: "content-2" },
+            ]
+          : [],
+      ),
+    );
+  if (url.pathname === "/rest/v1/othub_assessment_sessions" && validScenario)
+    return response.end(
+      JSON.stringify(
+        ["therapist", "admin"].includes(scenario)
+          ? [1, 2, 3, 4].map((id) => ({
+              id: `fixture-session-${id}`,
+              client_code: `샘플-${id}`,
+              client_meta: {},
+              tools: [],
+              status: id === 1 ? "in_progress" : "done",
+              created_at: `2026-01-0${5 - id}T00:00:00Z`,
+              updated_at: "2026-01-05T00:00:00Z",
+            }))
+          : [],
+      ),
+    );
   if (url.pathname === "/__views") return response.end(JSON.stringify(views));
   if (
     url.pathname === "/rest/v1/othub_page_views" &&
@@ -90,9 +167,18 @@ const server = createServer(async (request, response) => {
     // Deliberately slow data fetch to expose navigation feedback regressions.
     await new Promise((resolve) => setTimeout(resolve, 900));
     const slug = url.searchParams.get("slug")?.replace(/^eq\./, "");
+    const ids = url.searchParams
+      .get("id")
+      ?.replace(/^in\.\(/, "")
+      .replace(/\)$/, "")
+      .split(",");
     return response.end(
       JSON.stringify(
-        slug ? (content.find((item) => item.slug === slug) ?? null) : content,
+        slug
+          ? (content.find((item) => item.slug === slug) ?? null)
+          : ids
+            ? content.filter((item) => ids.includes(item.id))
+            : content,
       ),
     );
   }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import Link from "next/link";
 import { addComment, deleteComment } from "@/app/actions/engagement";
 import type { CommentWithAuthor } from "@/lib/supabase/content-types";
 
@@ -20,7 +21,7 @@ export default function CommentSection({
   const [state, formAction, pending] = useActionState(
     async (_prev: typeof initialState, formData: FormData) =>
       addComment(contentId, path, formData),
-    initialState
+    initialState,
   );
 
   return (
@@ -29,8 +30,13 @@ export default function CommentSection({
 
       {isLoggedIn ? (
         <form action={formAction} className="comment-form">
-          {state.error && <div className="auth-error">{state.error}</div>}
+          {state.error && (
+            <div className="auth-error" role="alert">
+              {state.error}
+            </div>
+          )}
           <textarea
+            aria-label="댓글 내용"
             name="body"
             placeholder="댓글을 남겨보세요"
             required
@@ -42,13 +48,16 @@ export default function CommentSection({
         </form>
       ) : (
         <p className="hint">
-          <a href="/login">로그인</a> 후 댓글을 남길 수 있습니다.
+          <Link href={`/login?next=${encodeURIComponent(path)}`}>로그인</Link>{" "}
+          후 댓글을 남길 수 있습니다.
         </p>
       )}
 
       <ul className="comment-list">
         {comments.length === 0 && (
-          <li className="comment-empty">아직 댓글이 없습니다. 첫 댓글을 남겨보세요.</li>
+          <li className="comment-empty">
+            아직 댓글이 없습니다. 첫 댓글을 남겨보세요.
+          </li>
         )}
         {comments.map((c) => (
           <li key={c.id} className="comment-item">
