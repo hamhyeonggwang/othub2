@@ -110,7 +110,7 @@ export default function LandingPage() {
               </span>
               <span>
                 <strong>일상 속 활동 연습하기</strong>
-                <small>키오스크 · 손 인식 · 시선 추적</small>
+                <small>키오스크 · 손 동작 · 시선 추적</small>
               </span>
               <WorkspaceIcon kind="arrow" />
             </Link>

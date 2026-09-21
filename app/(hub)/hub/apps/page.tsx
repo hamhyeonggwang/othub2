@@ -7,7 +7,7 @@ import ToolCatalog from "@/components/ToolCatalog";
 export const metadata: Metadata = {
   title: "Tool",
   description:
-    "키오스크 훈련, 손 인식 AI 게임, 시선 추적 훈련 웹앱을 찾아보세요.",
+    "키오스크 훈련, 손 동작 훈련, 시선 추적 훈련 웹앱을 찾아보세요.",
   alternates: { canonical: "/hub/apps" },
 };
 

@@ -36,7 +36,7 @@ test("category URLs and browser history update without a server round trip", asy
     if (url.pathname === "/hub/apps" && request.headers().rsc === "1")
       requests.push(request.url());
   });
-  await page.getByRole("link", { name: "손 인식 AI", exact: true }).click();
+  await page.getByRole("link", { name: "손 동작 훈련", exact: true }).click();
   await expect(page).toHaveURL(/cat=hand/);
   await expect(
     page.getByRole("heading", { name: "에어 드로잉" }),

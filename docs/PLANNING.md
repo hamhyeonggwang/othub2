@@ -15,7 +15,7 @@
 | 핵심 가치 | ① 임상 근거 기반(Evidence-informed) ② 참여 중심(Participation-centered) ③ 사람이 주도하는 AI(Human-led AI) |
 
 ### 서비스 3대 축
-1. **훈련 웹앱 (For Everyone)** — 키오스크 훈련, 손 인식 게임 등. 비회원도 즉시 사용 가능한 공개 영역
+1. **훈련 웹앱 (For Everyone)** — 키오스크 훈련, 손 동작 훈련 등. 비회원도 즉시 사용 가능한 공개 영역
 2. **콘텐츠 허브 (For Everyone)** — 영상·학회 정보·도서 등 큐레이션. 공개 열람, 좋아요·댓글·북마크는 회원 기능
 3. **임상 평가 도구 (For OTs)** — OTHub Assess. 회원(치료사) 전용, 평가 세션·결과보고서 관리
 
@@ -43,7 +43,7 @@
 ```
 /                    랜딩 (index.html 디자인 뼈대 유지 + OTHub 브랜딩)
 /hub                 앱 홈 — 피드 (추천 웹앱·영상·정보 큐레이션)
-/hub/apps            훈련 웹앱 목록 (카테고리: 키오스크, 손 인식, 시지각, 쓰기, 시선)
+/hub/apps            훈련 웹앱 목록 (카테고리: 키오스크, 손 동작, 시지각, 쓰기, 시선)
 /hub/apps/[slug]     웹앱 상세 (설명·대상·사용법·좋아요·댓글) → 실행
 /apps/[slug]         실제 웹앱 실행 (정적 HTML, 전체화면)
 /hub/videos          영상 콘텐츠 (YouTube 큐레이션)
@@ -80,7 +80,7 @@
 | 분류 | 파일 | 기술 |
 |---|---|---|
 | 키오스크 훈련 (7) | cu, paik, maratang, munggu, homeplus, photobooth(하루필름), korail | 순수 HTML/JS (일부 QRCode.js) |
-| 손 인식 (4) | airdrawing, balloon-adventure, color-tray, writing-game | MediaPipe Hands |
+| 손 동작 훈련 (4) | airdrawing, balloon-adventure, color-tray, writing-game | MediaPipe Hands |
 | 시선 추적 (1) | gazeplay_v1 | 자체 구현 |
 
 - **korail-kiosk-trainer**는 preview의 GAMES 목록에 누락 → 재구현 시 포함

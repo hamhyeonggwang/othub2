@@ -38,7 +38,7 @@ const content = [
     description: "손을 움직이며 허공에 그림을 그립니다.",
     category: "hand",
     requires_camera: true,
-    tags: ["손 인식", "상지기능"],
+    tags: ["손 동작", "상지기능"],
   },
   {
     ...base,

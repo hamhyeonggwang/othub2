@@ -64,7 +64,7 @@ export const PROJECT_STATUS: Record<string, ProjectStatus> = {
 export const APP_CATEGORIES: { key: AppCategory | "all"; label: string }[] = [
   { key: "all", label: "전체" },
   { key: "kiosk", label: "키오스크 훈련" },
-  { key: "hand", label: "손 인식 AI" },
+  { key: "hand", label: "손 동작 훈련" },
   { key: "gaze", label: "시선 추적" },
 ];
 
