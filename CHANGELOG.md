@@ -41,4 +41,4 @@
 
 통합 Preview 검토 단계 이후 사용자 운영 배포 승인을 받아 운영 환경으로 새로 빌드·배포했다. [통합 Preview](https://othub2-bedjjnbed-starlight-papas-projects.vercel.app)는 계속 보호된 읽기 전용 환경이다. 운영 배포는 Preview 빌드를 그대로 승격한 것이 아니며 배포 링크와 단계별 상태는 `docs/SAAS-OPERATIONS.md`에 기록했다.
 
-이전 운영 배포 `dpl_4VR63rjLBbWHjbVsXb44g8tYsi7d`를 롤백 대상으로 기록했다. DB 스키마·OAuth·DNS 설정을 별도로 변경하지 않았으며 기존 계정·게임·평가 도구를 교체하지 않았다. GitHub push/PR/merge는 아직 실행하지 않았다.
+이전 운영 배포 `dpl_4VR63rjLBbWHjbVsXb44g8tYsi7d`를 롤백 대상으로 기록했다. DB 스키마·OAuth·DNS 설정을 별도로 변경하지 않았으며 기존 계정·게임·평가 도구를 교체하지 않았다. 이후 사용자 승인으로 운영 코드와 배포 기록을 GitHub `main`에 fast-forward push했다. PR·강제 push·브랜치 보호 설정 변경은 실행하지 않았다.

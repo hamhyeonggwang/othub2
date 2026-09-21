@@ -173,5 +173,13 @@ npm run test:e2e
 
 ### 후속 관리
 
-- 변경 코드와 배포 기록은 로컬 커밋으로 보관 중이며 GitHub push/PR/merge는 아직 실행하지 않았다. 다음 운영 코드 배포 전에 GitHub 운영 브랜치와 배포 소스를 동기화해야 이전 코드가 다시 배포되는 혼선을 줄일 수 있다.
+- 이 운영 배포 당시에는 코드와 기록을 로컬 커밋으로 보관했으며, 이후 아래 8차에서 GitHub 운영 브랜치에 동기화했다.
 - 운영 중 오류·통계 품질 점검과 정기 업데이트는 위 운영 리듬에 따라 진행한다. 자동 모니터링·알림·예약 작업을 새로 등록한 것은 아니다.
+
+## 8차 진행: GitHub 운영 브랜치 동기화 (2026-09-21)
+
+- 사용자 진행 승인 후 `hamhyeonggwang/othub2`의 기본 브랜치 `main`과 쓰기 권한·보호 여부를 조회했다. 원격은 기존 기준 `fc0a57c105b55fe9f858da394e47c1da9d3c0d02`였고 추가 변경이나 보호 규칙이 없었다.
+- 원격 최신 상태를 fetch하고 조상 관계·작업 트리·차이의 공백 오류를 확인한 뒤 7개 커밋을 일반 fast-forward push했다. 첫 동기화 커밋은 `8a0b141b52f6ceccb8907386934037a796ec47b2`이며 GitHub API에서 main과 일치함을 확인했다.
+- 앱 소스·테스트·Quality checks 워크플로·배포 기록을 함께 반영했다. 환경변수 파일·Vercel 로컬 프로젝트 설정·화면 캡처는 추적/업로드 대상이 아니다. 강제 push·보호 설정 변경·PR 생성은 하지 않았다.
+- main push로 기존 Vercel 연동의 운영 자동 배포와 GitHub Quality checks가 시작됐다. 수동 운영 배포 코드와 비교하면 앱 코드 차이는 없고 운영 기록만 추가된 상태다.
+- [GitHub 검사 이력](https://github.com/hamhyeonggwang/othub2/actions/workflows/quality.yml)과 [Vercel 배포 이력](https://vercel.com/starlight-papas-projects/othub2)에서 각 main 커밋의 결과를 확인한다. 이 기록의 후속 문서 push도 기존 자동화의 적용 대상이다.
