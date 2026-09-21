@@ -84,3 +84,11 @@
 - 소스: `0f36084727f8866c8c4fe3b23001d218365e85b8`. 홈·목록에 더해 상세·My Hub·로그인·관리자 통계 개선을 포함한다.
 - Vercel Turbopack 빌드·타입 검사 통과, 배포 상태 `READY`. 보호된 읽기 전용 Preview이며 운영 도메인은 연결하지 않았다.
 - 배포 후 API에서 접근 보호와 기존 운영 배포 유지, 비로그인 요청의 HTTP 302를 확인했다. 보호를 우회하거나 실제 계정으로 새 배포의 UI·저장 동작을 검증하지 않았다.
+
+## 운영 반영 (2026-09-21)
+
+- 사용자 운영 배포 승인 후 https://www.othub.kr 에 통합 개선을 반영했다. 최신 소스 `01bad1d99934732a5457eeb58e51a1ab8e415c99`는 검증된 `0f36084`와 문서 변경만 다르다.
+- Preview를 승격하지 않고 운영 환경변수로 새로 빌드했다. Vercel 배포 ID는 `dpl_8WDB5DawqbijqxH4gJxsxZwBT1NV`, 상태 `READY`, target `production`이다.
+- 공개 홈·훈련 목록·콘텐츠 목록·로그인·CU 도구 상세에서 HTTP 200과 새 화면 식별 문구를 확인했고 Preview 배너는 없다. 홈페이지 JavaScript 청크도 HTTP 200이다.
+- 비로그인 Admin·Assess·정적 평가 경로는 로그인으로 HTTP 307 이동한다. My Hub는 HTTP 200 스트리밍 응답 안에 로그인 이동이 포함되며, 새 Chromium 세션에서 `/login?next=/me` 도착·로그인 제목 표시·개인 화면 미노출·런타임 오류 없음을 확인했다.
+- 로그인한 사용자 권한·저장·통계 INSERT를 이번 운영 점검에서 다시 실행하지 않았다. 상세 배포 시점과 롤백 대상은 `docs/SAAS-OPERATIONS.md`의 7차 기록을 참고한다.

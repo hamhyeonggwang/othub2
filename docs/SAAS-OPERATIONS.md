@@ -151,3 +151,27 @@ npm run test:e2e
 - 기존 보호 설정 `all_except_custom_domains` 유지, 비로그인 HTTP 요청은 302. 접근 보호를 해제하거나 우회 토큰을 만들지 않았다. 검토자는 권한 있는 Vercel 계정이 필요하다.
 - 이번 확인 범위는 배포 완료·빌드·보호·운영 배포 유지다. 새 통합 Preview의 실제 계정 UI 검토·저장 검증을 완료했다고 기록하지 않는다.
 - GitHub push/PR/merge·운영 승격·DNS·OAuth 설정·DB 변경은 실행하지 않았다. 정식 반영은 새 통합 Preview 검토와 별도 운영 배포 승인 이후 진행한다.
+
+## 7차 진행: 승인된 운영 배포 (2026-09-21)
+
+- 사용자가 “운영배포승인”을 명시했다. 첫 시도는 승인 검토 시스템의 사용량 제한으로 실행되지 않았으며, 사용자의 재진행 요청 후 같은 승인 절차로 배포했다.
+- 운영 주소: https://www.othub.kr (https://othub.kr 은 기존처럼 이 주소로 HTTP 307 이동).
+- 배포 상세: https://vercel.com/starlight-papas-projects/othub2/8WDB5DawqbijqxH4gJxsxZwBT1NV
+- 배포 ID: `dpl_8WDB5DawqbijqxH4gJxsxZwBT1NV`, 상태 `READY`, target `production`.
+- 소스: `01bad1d99934732a5457eeb58e51a1ab8e415c99`. 검증된 `0f36084`와 문서 변경만 다르다. 로컬 단위 83개/브라우저 25개 통과 코드를 운영 환경변수로 새로 빌드했고 Vercel의 Turbopack 빌드·타입 검사도 완료됐다.
+- 배포 전 운영 ID를 확인하고 변경되지 않은 경우에만 실행했다. 롤백 대상: `dpl_4VR63rjLBbWHjbVsXb44g8tYsi7d` / 이전 소스 `fc0a57c105b55fe9f858da394e47c1da9d3c0d02`. 실제 롤백은 실행하지 않았다.
+- 운영 대상 및 도메인 연결 확인: `www.othub.kr`, `othub.kr` 등이 새 배포에 연결됐다. 프로젝트 보호 설정 `all_except_custom_domains`는 유지했다. DNS·OAuth·DB 스키마·환경변수 설정은 별도로 변경하지 않았다.
+- 운영 반영 확인 시각: `2026-09-21T04:23:27.734Z` (한국시간 13:23). 서버 요청 기반에서 화면 이동 기반으로 바뀐 통계의 비교 기준으로 기록한다. 기존 데이터와의 단순 증감을 사용량 변화로 단정하지 않는다.
+
+### 운영 직후 점검
+
+- 홈, `/hub/apps`, `/hub`, `/login`, `/hub/apps/cu-kiosk-trainer`: HTTP 200, 새 화면 식별 문구 확인, Preview 배너 없음. 홈에서 참조하는 JavaScript 청크도 HTTP 200.
+- `/admin?tab=visits`, `/assess`, `/assess/hub.html`: 비로그인 요청은 `/login`으로 HTTP 307.
+- `/me`: HTTP 200 안에 `NEXT_REDIRECT`로 `/login?next=/me` 이동이 포함되며 개인 화면은 렌더링되지 않는다. 최초 HTTP 상태 기반 검사는 이를 실패로 분류했으나 응답 내용과 새 비로그인 Chromium 세션으로 정상 로그인 이동을 확인했다. 개인 화면 미노출 및 런타임 오류 없음.
+- 점검은 비로그인 GET 중심이다. Chromium은 DNT=1, GET/HEAD 이외 요청 차단으로 실행했다. 실제 Google 로그인, 저장·삭제, 통계 INSERT, 로그인한 계정별 RLS를 이번 점검에서 다시 실행하지 않았다.
+- 운영에서는 Preview 전용 쓰기 차단이 적용되지 않는다. 읽기 전용 통합 Preview는 별도로 유지된다.
+
+### 후속 관리
+
+- 변경 코드와 배포 기록은 로컬 커밋으로 보관 중이며 GitHub push/PR/merge는 아직 실행하지 않았다. 다음 운영 코드 배포 전에 GitHub 운영 브랜치와 배포 소스를 동기화해야 이전 코드가 다시 배포되는 혼선을 줄일 수 있다.
+- 운영 중 오류·통계 품질 점검과 정기 업데이트는 위 운영 리듬에 따라 진행한다. 자동 모니터링·알림·예약 작업을 새로 등록한 것은 아니다.
