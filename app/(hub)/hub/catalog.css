@@ -224,6 +224,10 @@
   background: #eeeffb;
   color: #6354a5;
 }
+.tool-card[data-category="assistive"] .tool-symbol {
+  background: #e8f3fb;
+  color: #1f6a99;
+}
 .tool-requirement {
   font-size: 11px;
   color: #52677c;

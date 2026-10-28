@@ -2,6 +2,7 @@ export type WorkspaceIconKind =
   | "kiosk"
   | "hand"
   | "gaze"
+  | "assistive"
   | "content"
   | "assess"
   | "arrow"
@@ -25,6 +26,13 @@ export default function WorkspaceIcon({ kind }: { kind: WorkspaceIconKind }) {
         <>
           <path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12Z" />
           <circle cx="12" cy="12" r="3" />
+        </>
+      )}
+      {kind === "assistive" && (
+        <>
+          <circle cx="10" cy="5" r="1.8" />
+          <path d="M10 8v6h5l3 5M10 11h5" />
+          <path d="M8 21a5 5 0 1 1-3-9" />
         </>
       )}
       {kind === "content" && (

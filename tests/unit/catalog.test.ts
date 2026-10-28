@@ -42,6 +42,9 @@ it("combines category and camera requirements", () => {
   expect(filterTools(tools, "hand", "with", "")).toHaveLength(1);
   expect(filterTools(tools, "all", "without", "")).toEqual([base]);
 });
+it("accepts the assistive category", () => {
+  expect(toolCategory("assistive")).toBe("assistive");
+});
 it.each([undefined, null, "", "unknown", "<script>"])(
   "falls back safely for category %s",
   (value) => {

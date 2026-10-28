@@ -1,0 +1,4393 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>층층미로 v1.1 — Stage Select</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<style>
+/* ==========================================================
+  팔레트 — 콘크리트 타워 + 놋쇠 엘리베이터
+  벽 #8C8C8C / 그림자 #3A3A3A / 바닥 #D9CBAE / 놋쇠 #E8B23A
+  신호 초록 #5BC24A / 경고 주황 #E8802B / 휠체어 청록 #2FA8A0
+  ========================================================== */
+:root{
+ --wall:#8C8C8C; --dark:#2E2E2E; --line:#1D1D1D;
+ --brass:#E8B23A; --go:#5BC24A; --warn:#E8802B; --chair:#2FA8A0;
+ --paper:#EDEAE2;
+}
+*{ box-sizing:border-box; }
+html,body{ margin:0; height:100%; overflow:hidden; }
+body{
+ background:#1A1A1A; color:var(--paper); user-select:none;
+ font-family:Galmuri11,"Pretendard Variable",monospace;
+}
+canvas#view{ position:fixed; inset:0; display:block; }
+
+/* ---------- 공통 블록 패널 ---------- */
+.panel{
+ background:#5A5A5A; padding:24px 26px; position:relative;
+ box-shadow:
+  inset 4px 4px 0 0 #8C8C8C, inset -4px -4px 0 0 #2E2E2E,
+  inset 8px 8px 0 0 #6E6E6E, inset -8px -8px 0 0 #3E3E3E,
+  0 12px 0 0 rgba(0,0,0,.45), 0 0 0 4px var(--line);
+ max-height:92vh; overflow:auto;
+}
+.panel::before{
+ content:""; position:absolute; inset:0; pointer-events:none; opacity:.14;
+ background-image:linear-gradient(rgba(255,255,255,.4) 1px,transparent 1px),
+          linear-gradient(90deg,rgba(0,0,0,.4) 1px,transparent 1px);
+ background-size:8px 8px,8px 8px;
+}
+.panel > *{ position:relative; z-index:1; }
+.tag{
+ display:inline-block; font-size:11px; color:#1D1D1D; background:var(--brass);
+ padding:5px 11px; margin-bottom:10px; letter-spacing:1px;
+ box-shadow:inset 2px 2px 0 #FFDA86, inset -2px -2px 0 #A97C15;
+}
+.big{
+ font-size:clamp(26px,5.4vw,44px); line-height:1.15; color:var(--brass); letter-spacing:2px;
+ text-shadow:4px 0 0 #6E5210,-4px 0 0 #6E5210,0 4px 0 #6E5210,0 -4px 0 #6E5210,
+       4px 4px 0 #6E5210,-4px 4px 0 #6E5210,4px -4px 0 #6E5210,-4px -4px 0 #6E5210,
+       0 10px 0 rgba(0,0,0,.5);
+ margin:4px 0 10px;
+}
+.sub{ font-size:13px; color:#DCDCDC; line-height:1.9; text-shadow:2px 2px 0 rgba(0,0,0,.6); }
+.btn{
+ font-family:Galmuri11,monospace; font-size:16px; color:#fff; background:#4E7FA8;
+ border:0; padding:14px 30px; cursor:pointer; letter-spacing:1px; margin:6px 4px 0;
+ text-shadow:2px 2px 0 rgba(0,0,0,.55);
+ box-shadow:inset 3px 3px 0 #7FB0D6, inset -3px -3px 0 #2C5175,
+       0 6px 0 #1F3A55, 0 0 0 3px var(--line);
+}
+.btn:hover{ background:#5B90BC; }
+.btn:active{ transform:translateY(6px); box-shadow:inset 3px 3px 0 #7FB0D6, inset -3px -3px 0 #2C5175, 0 0 0 3px var(--line); }
+.btn.go{ background:#5B9E3E; box-shadow:inset 3px 3px 0 #8FCF72, inset -3px -3px 0 #37662A, 0 6px 0 #24461B, 0 0 0 3px var(--line); }
+.btn.go:hover{ background:#68B048; }
+.btn.ghost{ background:#4A4A4A; box-shadow:inset 3px 3px 0 #6E6E6E, inset -3px -3px 0 #2A2A2A, 0 6px 0 #1E1E1E, 0 0 0 3px var(--line); }
+
+.screen{
+ position:fixed; inset:0; z-index:60; display:flex; align-items:center; justify-content:center;
+ background:rgba(10,14,20,.62); padding:18px;
+}
+.hidden{ display:none !important; }
+.w520{ width:100%; max-width:520px; }
+.w640{ width:100%; max-width:640px; }
+
+/* ---------- 층 안내 목록 ---------- */
+.tasks{ list-style:none; margin:14px 0 4px; padding:14px 16px; text-align:left; font-size:12.5px; line-height:2.05;
+ background:rgba(0,0,0,.3); box-shadow:inset 2px 2px 0 rgba(255,255,255,.12), inset -2px -2px 0 rgba(0,0,0,.45); }
+.tasks b{ color:var(--brass); }
+.hintbar{
+ margin-top:14px; font-size:11.5px; color:#BFD8B0; background:rgba(0,0,0,.28); padding:10px 12px;
+ box-shadow:inset 2px 2px 0 rgba(255,255,255,.1), inset -2px -2px 0 rgba(0,0,0,.45);
+}
+
+/* ---------- HUD ---------- */
+#hud{ position:fixed; inset:14px 14px auto 14px; z-index:20; display:flex; gap:12px; align-items:flex-start; pointer-events:none; }
+.chip{
+ background:#4A4A4A; padding:9px 13px; font-size:12px; color:#EDEAE2; letter-spacing:.5px;
+ text-shadow:2px 2px 0 rgba(0,0,0,.55);
+ box-shadow:inset 3px 3px 0 #6E6E6E, inset -3px -3px 0 #2A2A2A, 0 4px 0 rgba(0,0,0,.35), 0 0 0 3px var(--line);
+}
+#floorChip{ color:var(--brass); }
+#coinChip{ color:#FFC93C; }
+#comboChip{ min-width:74px; text-align:center; color:#BDBDBD; }
+#comboChip.hot{ color:#1D1D1D; background:var(--brass); box-shadow:inset 3px 3px 0 #FFDA86, inset -3px -3px 0 #A97C15, 0 4px 0 rgba(0,0,0,.35), 0 0 0 3px var(--line); }
+#speedWrap{ display:flex; align-items:center; gap:9px; }
+.meter{ width:120px; height:13px; background:#1D1D1D; box-shadow:inset 2px 2px 0 rgba(0,0,0,.8); }
+.meter i{ display:block; height:100%; width:0%;
+ background:repeating-linear-gradient(90deg,var(--go) 0 7px,#43932F 7px 14px);
+ box-shadow:inset 0 3px 0 rgba(255,255,255,.3); }
+#revMark{ color:var(--warn); }
+
+#controlChip{
+ min-width:142px;
+ padding:8px 10px;
+}
+#controlChip .ctlLabel{ display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:5px; }
+#controlChip .ctlState{ color:#BDBDBD; }
+#controlChip.fine .ctlState{ color:#79D7FF; }
+#controlChip.max .ctlState{ color:#FFB45E; }
+#inputMeter{
+ position:relative; width:120px; height:10px; background:#1D1D1D;
+ box-shadow:inset 2px 2px 0 rgba(0,0,0,.8);
+}
+#inputMeter::before{
+ content:""; position:absolute; left:0; top:0; bottom:0; width:45%;
+ background:rgba(76,181,225,.40);
+}
+#inputMeter::after{
+ content:""; position:absolute; right:0; top:0; bottom:0; width:15%;
+ background:rgba(232,128,43,.55);
+}
+#inputFill{ position:absolute; left:0; top:0; bottom:0; width:0%; background:#EDEAE2; opacity:.9; }
+#missionChip{ color:#EDEAE2; max-width:280px; }
+#missionChip b{ color:var(--brass); }
+
+#zoneChallenge{
+ position:fixed; left:50%; bottom:76px; transform:translateX(-50%);
+ z-index:24; width:min(520px,90vw); padding:12px 14px;
+ background:rgba(35,35,35,.94);
+ box-shadow:inset 3px 3px 0 #5E5E5E,inset -3px -3px 0 #242424,0 0 0 3px var(--line);
+ pointer-events:none;
+}
+#zoneChallenge .zcHead{ display:flex; justify-content:space-between; align-items:center; gap:12px; font-size:12px; }
+#zoneChallenge .zcHead b{ color:var(--brass); }
+#zoneChallenge .zcBar{ margin-top:8px; height:14px; background:#1D1D1D; position:relative; overflow:hidden; }
+#zoneChallenge .zcTarget{
+ position:absolute; top:0; bottom:0; background:rgba(255,255,255,.18);
+ border-left:2px solid rgba(255,255,255,.55); border-right:2px solid rgba(255,255,255,.55);
+}
+#zoneChallenge .zcInput{
+ position:absolute; left:0; top:0; bottom:0; width:0%;
+ background:var(--go); opacity:.92;
+}
+#zoneChallenge .zcHold{
+ margin-top:7px; height:7px; background:#1D1D1D;
+}
+#zoneChallenge .zcHold i{ display:block; height:100%; width:0%; background:var(--brass); }
+#zoneChallenge.fine .zcHead b{ color:#79D7FF; }
+#zoneChallenge.mid .zcHead b{ color:#BFD8B0; }
+#zoneChallenge.max .zcHead b{ color:#FFB45E; }
+
+/* ==========================================================
+  v0.8 DESIGN PASS
+  ========================================================== */
+body{ transition:background .6s ease; }
+#hud{ gap:8px; flex-wrap:wrap; }
+
+#viewChip,#bumpChip,#timeChip,#coinChip,#comboChip,#speedWrap{
+ display:none;
+}
+body.therapist #viewChip,
+body.therapist #bumpChip,
+body.therapist #timeChip,
+body.therapist #coinChip,
+body.therapist #comboChip,
+body.therapist #speedWrap{
+ display:flex;
+}
+
+#missionChip{
+ position:fixed;
+ left:50%;
+ top:16px;
+ transform:translateX(-50%);
+ z-index:26;
+ max-width:min(560px,82vw);
+ min-width:min(460px,78vw);
+ justify-content:center;
+ align-items:center;
+ text-align:center;
+ font-size:15px;
+ line-height:1.45;
+ padding:12px 18px;
+ background:rgba(32,32,32,.90);
+}
+#missionChip b{ margin-right:8px; }
+
+#controlChip{
+ position:fixed;
+ left:14px;
+ top:68px;
+ z-index:24;
+ min-width:122px;
+ opacity:.92;
+}
+
+#controlDial{
+ position:fixed;
+ left:50%;
+ bottom:22px;
+ transform:translateX(-50%);
+ z-index:25;
+ width:min(560px,88vw);
+ pointer-events:none;
+ text-align:center;
+}
+#controlDial .dialLabel{
+ display:flex;
+ justify-content:space-between;
+ align-items:center;
+ font-size:12px;
+ margin:0 auto 8px;
+ width:92%;
+ text-shadow:2px 2px 0 rgba(0,0,0,.7);
+}
+#controlDial .dialLabel .fine{ color:#79D7FF; }
+#controlDial .dialLabel .mid{ color:#BFD8B0; }
+#controlDial .dialLabel .max{ color:#FFB45E; }
+
+#controlDial .dialTrack{
+ position:relative;
+ height:42px;
+ border-radius:26px 26px 8px 8px;
+ overflow:hidden;
+ background:#1C1C1C;
+ box-shadow:0 0 0 4px #111, inset 0 5px 10px rgba(0,0,0,.6);
+}
+#controlDial .zoneFine,
+#controlDial .zoneMid,
+#controlDial .zoneMax{
+ position:absolute; top:0; bottom:0;
+}
+#controlDial .zoneFine{ left:20%; width:15%; background:rgba(89,191,234,.72); }
+#controlDial .zoneMid{ left:45%; width:20%; background:rgba(120,184,90,.72); }
+#controlDial .zoneMax{ left:85%; width:15%; background:rgba(232,128,43,.78); }
+
+#controlDial .dialNeedle{
+ position:absolute;
+ top:-7px;
+ bottom:-7px;
+ width:6px;
+ left:0%;
+ background:#fff;
+ box-shadow:0 0 10px rgba(255,255,255,.85);
+ transform:translateX(-3px);
+}
+#controlDial .dialPct{
+ display:inline-block;
+ margin-top:8px;
+ background:rgba(0,0,0,.55);
+ padding:5px 10px;
+ font-size:12px;
+ box-shadow:0 0 0 2px rgba(255,255,255,.12);
+}
+
+#zoneChallenge{
+ bottom:112px;
+ width:min(520px,86vw);
+ border-radius:8px;
+}
+
+.missionIcon{
+ font-size:21px;
+ vertical-align:-2px;
+ margin-right:4px;
+}
+
+body.theme1{ background:#172231; }
+body.theme2{ background:#2E2A1F; }
+body.theme3{ background:#20252B; }
+body.theme4{ background:#233427; }
+body.theme5{ background:#253423; }
+
+#scrFloor .panel::after{
+ content:"";
+ position:absolute;
+ left:0; right:0; top:0; height:8px;
+ background:var(--brass);
+}
+body.theme1 #scrFloor .panel::after{ background:#5FADE1; }
+body.theme2 #scrFloor .panel::after{ background:#E4C65F; }
+body.theme3 #scrFloor .panel::after{ background:#B89BE8; }
+body.theme4 #scrFloor .panel::after{ background:#7BBE6A; }
+body.theme5 #scrFloor .panel::after{ background:#5BC24A; }
+
+#rewardFlash{
+ position:fixed; inset:0; z-index:55; pointer-events:none;
+ opacity:0;
+ background:radial-gradient(circle at center,rgba(255,244,173,.62),rgba(255,244,173,0) 62%);
+}
+#rewardFlash.on{ animation:rewardFlash .55s ease-out forwards; }
+@keyframes rewardFlash{
+ 0%{opacity:0}
+ 25%{opacity:1}
+ 100%{opacity:0}
+}
+
+body.rewarded canvas#view{
+ filter:saturate(1.18) brightness(1.05);
+ transition:filter .45s ease;
+}
+
+
+/* ==========================================================
+  v0.9 EVENT ENGINE
+  ========================================================== */
+#stopCoach{
+ position:fixed;
+ left:50%;
+ bottom:170px;
+ transform:translateX(-50%);
+ z-index:27;
+ width:min(520px,86vw);
+ padding:12px 14px;
+ background:rgba(25,31,29,.94);
+ box-shadow:inset 3px 3px 0 rgba(255,255,255,.14),
+       inset -3px -3px 0 rgba(0,0,0,.45),
+       0 0 0 3px #17201B;
+ text-align:center;
+ pointer-events:none;
+}
+#stopCoach .stopSteps{
+ display:flex;
+ align-items:center;
+ justify-content:center;
+ gap:9px;
+ font-size:13px;
+}
+#stopCoach .step{
+ opacity:.32;
+ padding:5px 8px;
+ background:rgba(255,255,255,.06);
+}
+#stopCoach .step.on{
+ opacity:1;
+ background:rgba(91,194,74,.20);
+ box-shadow:0 0 0 2px rgba(91,194,74,.34);
+}
+#stopCoach .stopBar{
+ height:9px;
+ margin-top:9px;
+ background:#111;
+ overflow:hidden;
+}
+#stopCoach .stopBar i{
+ display:block;
+ height:100%;
+ width:0%;
+ background:var(--go);
+}
+#stopCoach .stopText{
+ margin-top:7px;
+ font-size:11px;
+ color:#D8E6DA;
+}
+
+#eventToast{
+ position:fixed;
+ right:18px;
+ bottom:18px;
+ z-index:26;
+ max-width:min(300px,72vw);
+ padding:10px 13px;
+ background:rgba(32,32,32,.88);
+ box-shadow:0 0 0 2px rgba(255,255,255,.14);
+ font-size:11px;
+ line-height:1.55;
+ pointer-events:none;
+}
+#eventToast b{ color:var(--brass); }
+
+#skillMetrics{
+ margin-top:12px;
+ padding-top:10px;
+ border-top:1px solid rgba(255,255,255,.16);
+}
+#skillMetrics .metricTitle{
+ color:var(--brass);
+ margin-bottom:6px;
+}
+#skillMetrics .metricRow{
+ display:flex;
+ justify-content:space-between;
+ gap:8px;
+ color:#CFCFCF;
+}
+#skillMetrics .metricRow b{ color:#fff; }
+
+#collectionMini{
+ position:fixed;
+ left:14px;
+ top:118px;
+ z-index:23;
+ padding:7px 9px;
+ font-size:11px;
+ background:rgba(35,35,35,.82);
+ box-shadow:0 0 0 2px rgba(255,255,255,.12);
+ pointer-events:none;
+}
+
+/* 아동 화면에서는 사건이 활성화될 때만 보인다 */
+body:not(.therapist) #eventToast{ display:none; }
+
+/* Stop zone가 활성화되면 Control Dial은 남기되 하단 공간을 확보 */
+body.stop-active #controlDial{ bottom:18px; }
+body.stop-active #zoneChallenge{ display:none !important; }
+
+@media(max-width:720px){
+ #stopCoach{ bottom:158px; }
+ #collectionMini{ top:110px; }
+}
+
+@media(max-width:720px){
+ #missionChip{ min-width:72vw; font-size:13px; top:12px; }
+ #controlChip{ top:62px; transform:scale(.9); transform-origin:left top; }
+ #controlDial{ bottom:16px; }
+ #zoneChallenge{ bottom:104px; }
+}
+
+
+
+
+/* 목표 나침반 */
+#compass{
+ position:fixed; left:50%; top:14px; transform:translateX(-50%); z-index:20; pointer-events:none;
+ background:#4A4A4A; padding:8px 14px; font-size:12px; color:var(--brass);
+ box-shadow:inset 3px 3px 0 #6E6E6E, inset -3px -3px 0 #2A2A2A, 0 4px 0 rgba(0,0,0,.35), 0 0 0 3px var(--line);
+ text-shadow:2px 2px 0 rgba(0,0,0,.6);
+}
+#compass i{ display:inline-block; font-style:normal; font-size:16px; }
+
+/* 조작 안내 */
+#pad{ position:fixed; left:14px; bottom:14px; z-index:20; font-size:11px; color:#C8C8C8;
+ background:#3E3E3E; padding:9px 12px; box-shadow:inset 2px 2px 0 #5E5E5E, inset -2px -2px 0 #262626, 0 0 0 3px var(--line); }
+#pad b{ color:var(--brass); }
+
+/* 도킹 프롬프트 — 이 게임의 시그니처 */
+#dock{
+ position:fixed; left:50%; bottom:12%; transform:translateX(-50%); z-index:24; text-align:center;
+ width:min(400px,88%); background:#3A3A3A; padding:16px;
+ box-shadow:inset 3px 3px 0 #5E5E5E, inset -3px -3px 0 #242424, 0 8px 0 rgba(0,0,0,.4), 0 0 0 4px var(--line);
+}
+#dockTitle{ font-size:13px; color:#DCDCDC; margin-bottom:10px; text-shadow:2px 2px 0 rgba(0,0,0,.6); }
+#dockRing{ height:16px; background:#1D1D1D; box-shadow:inset 2px 2px 0 rgba(0,0,0,.8); }
+#dockFill{ height:100%; width:0%; background:repeating-linear-gradient(90deg,var(--brass) 0 8px,#B8871F 8px 16px);
+ box-shadow:inset 0 3px 0 rgba(255,255,255,.35); transition:width .12s linear; }
+#dockKey{ margin-top:11px; font-size:14px; color:#8A8A8A; }
+#dock.ready #dockKey{ color:var(--go); animation:blink .5s steps(2,end) infinite; }
+@keyframes blink{ 50%{ opacity:.35; } }
+
+/* 관리자 리포트 표 */
+#reportTable{ width:100%; border-collapse:collapse; margin:14px 0 6px; font-size:11.5px; }
+#reportTable th{
+  text-align:left; padding:8px 6px; color:var(--brass); font-weight:400;
+  border-bottom:3px solid #3A3A3A; text-shadow:2px 2px 0 rgba(0,0,0,.6);
+}
+#reportTable td{ padding:7px 6px; color:#DCDCDC; border-bottom:1px solid #4A4A4A; }
+#reportTable td.num{ text-align:right; font-variant-numeric:tabular-nums; }
+#reportTable tr.done td.mark{ color:#7BE04A; }
+#reportTable tr.part td.mark{ color:var(--brass); }
+#reportTable tr.miss td.mark{ color:#C86A5A; }
+#reportTable td.mark{ text-align:center; width:56px; }
+
+/* 중앙 배너 */
+#banner{
+ position:fixed; left:50%; top:26%; transform:translate(-50%,-50%); z-index:30; opacity:0;
+ width:min(680px,86%); text-align:center; pointer-events:none; white-space:pre-line;
+ font-size:clamp(15px,2.3vw,22px); color:var(--brass); line-height:1.8; letter-spacing:1px;
+ background:rgba(10,12,16,.75); padding:16px 20px;
+ box-shadow:inset 3px 3px 0 rgba(255,255,255,.13), inset -3px -3px 0 rgba(0,0,0,.6), 0 0 0 3px var(--line);
+ text-shadow:3px 3px 0 rgba(0,0,0,.7);
+}
+#banner.on{ animation:bpop 2.4s steps(1,end) forwards; }
+@keyframes bpop{ 0%{opacity:0} 6%{opacity:1} 80%{opacity:1} 100%{opacity:0} }
+
+/* 화면 페이드(엘리베이터 이동) */
+#fade{ position:fixed; inset:0; z-index:50; background:#0A0A0A; opacity:0; pointer-events:none; transition:opacity .5s linear; }
+#fade.on{ opacity:1; }
+
+/* ---------- 설정 ---------- */
+.row{ display:flex; align-items:center; gap:10px; margin:9px 0; font-size:12px; }
+.row label{ flex:0 0 118px; color:#DCDCDC; text-shadow:2px 2px 0 rgba(0,0,0,.6); }
+.row input[type=range]{ flex:1; accent-color:var(--brass); height:20px; }
+.row .val{ flex:0 0 54px; text-align:right; color:var(--brass); }
+.row select{ flex:1; font-family:Galmuri11,monospace; font-size:12px; padding:6px; background:#3A3A3A; color:#EDEAE2; border:0; box-shadow:inset 2px 2px 0 #5E5E5E, inset -2px -2px 0 #242424; }
+.seg{ display:flex; gap:6px; flex:1; }
+.seg button{
+ flex:1; font-family:Galmuri11,monospace; font-size:11.5px; padding:9px 4px; cursor:pointer;
+ background:#3A3A3A; color:#BDBDBD; border:0;
+ box-shadow:inset 2px 2px 0 #5E5E5E, inset -2px -2px 0 #242424;
+}
+.seg button.sel{ background:var(--brass); color:#1D1D1D; box-shadow:inset 2px 2px 0 #FFDA86, inset -2px -2px 0 #A97C15; }
+.axisbar{ height:11px; background:#1D1D1D; position:relative; margin-top:4px; box-shadow:inset 2px 2px 0 rgba(0,0,0,.8); }
+.axisbar i{ position:absolute; top:0; bottom:0; width:5px; background:var(--go); left:50%; }
+.note{ font-size:11px; color:#A9A9A9; line-height:1.8; margin-top:10px; }
+.sechead{ font-size:12px; color:var(--brass); margin:18px 0 6px; letter-spacing:1px; }
+hr.blk{ border:0; height:3px; background:#3A3A3A; box-shadow:0 2px 0 #6E6E6E; margin:16px 0; }
+
+/* 치료사 오버레이 */
+#wst{
+ position:fixed; right:14px; top:64px; z-index:22; width:min(330px,86vw);
+ background:#3A3A3A; padding:14px; font-size:11.5px; line-height:1.85; color:#DCDCDC;
+ box-shadow:inset 3px 3px 0 #5E5E5E, inset -3px -3px 0 #242424, 0 0 0 3px var(--line);
+}
+#wst h4{ margin:0 0 8px; font-size:12px; color:var(--brass); letter-spacing:1px; }
+#wst ul{ margin:0; padding-left:16px; }
+#wst li{ margin-bottom:5px; }
+#wst .meta{ margin-top:10px; color:#9E9E9E; font-size:10.5px; }
+
+
+/* ==========================================================
+  v1.1 START / STAGE SELECT
+  ========================================================== */
+.titleActions{
+ display:grid;
+ grid-template-columns:1fr 1fr;
+ gap:9px;
+ margin-top:15px;
+}
+.titleActions .btn{ margin:0; width:100%; padding:13px 12px; font-size:14px; }
+.titleActions .wide{ grid-column:1 / -1; }
+#btnContinue:disabled{
+ opacity:.38; cursor:not-allowed; filter:grayscale(.8);
+}
+#resumeInfo{ margin-top:10px; min-height:28px; }
+
+.stagePanel{ width:min(900px,96vw); }
+.stageHead{
+ display:flex; justify-content:space-between; align-items:flex-end; gap:16px;
+ margin-bottom:15px;
+}
+.stageHead .big{ margin-bottom:0; }
+.stageGrid{
+ display:grid;
+ grid-template-columns:repeat(5,minmax(0,1fr));
+ gap:11px;
+}
+.stageCard{
+ position:relative;
+ min-height:220px;
+ padding:16px 12px 13px;
+ border:0;
+ cursor:pointer;
+ text-align:left;
+ color:#F3F1E9;
+ font-family:inherit;
+ background:#454545;
+ box-shadow:inset 3px 3px 0 rgba(255,255,255,.16),
+       inset -3px -3px 0 rgba(0,0,0,.36),
+       0 6px 0 rgba(0,0,0,.34),0 0 0 3px var(--line);
+ transition:transform .12s ease,filter .12s ease;
+}
+.stageCard:hover{ transform:translateY(-4px); filter:brightness(1.08); }
+.stageCard:active{ transform:translateY(2px); }
+.stageCard.current{ box-shadow:inset 3px 3px 0 rgba(255,255,255,.25),inset -3px -3px 0 rgba(0,0,0,.32),0 6px 0 rgba(0,0,0,.34),0 0 0 4px var(--brass); }
+.stageCard.done::after{
+ content:"완료";
+ position:absolute; right:8px; top:8px;
+ background:#4E9C42; color:#fff; padding:4px 6px; font-size:9px;
+ box-shadow:0 0 0 2px rgba(0,0,0,.35);
+}
+.stageCard .stageNo{ font-size:10px; opacity:.72; letter-spacing:1px; }
+.stageCard .stageIcon{ font-size:34px; margin:15px 0 9px; display:block; }
+.stageCard .stageName{ display:block; font-size:15px; color:#fff; margin-bottom:10px; line-height:1.35; }
+.stageCard .stageSkills{ font-size:10.5px; line-height:1.7; opacity:.88; }
+.stageCard .stageRecent{ margin-top:10px; font-size:9.5px; color:#FFF3B1; }
+.stageCard.s1{ background:#4F7998; }
+.stageCard.s2{ background:#8F7554; }
+.stageCard.s3{ background:#677684; }
+.stageCard.s4{ background:#617D59; }
+.stageCard.s5{ background:#718957; }
+.stageFooter{ display:flex; justify-content:center; margin-top:17px; }
+
+@media(max-width:900px){
+ .stageGrid{ grid-template-columns:repeat(3,1fr); }
+}
+@media(max-width:620px){
+ .stageGrid{ grid-template-columns:1fr 1fr; }
+ .stageCard{ min-height:180px; }
+ .stageHead{ align-items:flex-start; flex-direction:column; }
+ .titleActions{ grid-template-columns:1fr; }
+ .titleActions .wide{ grid-column:auto; }
+}
+
+@media (prefers-reduced-motion: reduce){ #dock.ready #dockKey{ animation:none; } }
+
+/* ==========================================================
+  v1.3 FIRST-PERSON COMFORT PASS
+  목표: 주변시 자극을 줄이고 중앙 진행축을 안정시킨다.
+  ========================================================== */
+#fpReticle{
+ position:fixed;
+ left:50%;
+ top:48%;
+ width:32px;
+ height:16px;
+ transform:translate(-50%,-50%);
+ z-index:24;
+ pointer-events:none;
+ opacity:0;
+ transition:opacity .18s ease;
+}
+#fpReticle::before,
+#fpReticle::after{
+ content:"";
+ position:absolute;
+ top:7px;
+ width:10px;
+ height:2px;
+ background:rgba(255,255,255,.72);
+ box-shadow:0 1px 2px rgba(0,0,0,.45);
+}
+#fpReticle::before{ left:0; }
+#fpReticle::after{ right:0; }
+#fpReticle i{
+ position:absolute;
+ left:14px;
+ top:6px;
+ width:4px;
+ height:4px;
+ border-radius:50%;
+ background:rgba(255,255,255,.88);
+ box-shadow:0 0 0 2px rgba(0,0,0,.28);
+}
+
+#comfortVignette{
+ position:fixed;
+ inset:0;
+ z-index:23;
+ pointer-events:none;
+ opacity:0;
+ background:
+  radial-gradient(ellipse at center,
+   rgba(8,13,16,0) 0%,
+   rgba(8,13,16,0) 58%,
+   rgba(8,13,16,.13) 78%,
+   rgba(8,13,16,.42) 100%);
+ transition:opacity .12s linear;
+}
+
+body.first-person #fpReticle{ opacity:.82; }
+body.first-person #comfortVignette{ opacity:.22; }
+
+/* 1인칭에서는 '바닥을 보는 공간'을 최대한 확보한다. */
+body.first-person #controlDial{
+ width:min(330px,54vw);
+ bottom:10px;
+ opacity:.72;
+}
+body.first-person #controlDial .dialLabel{
+ font-size:9px;
+ margin-bottom:4px;
+}
+body.first-person #controlDial .dialTrack{
+ height:18px;
+ border-radius:12px 12px 5px 5px;
+ box-shadow:0 0 0 2px rgba(0,0,0,.72);
+}
+body.first-person #controlDial .dialNeedle{
+ width:3px;
+ top:-3px;
+ bottom:-3px;
+}
+body.first-person #controlDial .dialPct{
+ margin-top:4px;
+ padding:3px 7px;
+ font-size:9px;
+ opacity:.78;
+}
+
+/* 비핵심 HUD는 1인칭 시야에서 제거한다. */
+body.first-person #controlChip,
+body.first-person #collectionMini,
+body.first-person #pad{
+ display:none !important;
+}
+body.first-person #missionChip{
+ top:10px;
+ min-width:0;
+ width:auto;
+ max-width:min(430px,68vw);
+ padding:8px 12px;
+ font-size:12px;
+ opacity:.88;
+}
+body.first-person #missionChip .missionIcon{ font-size:16px; }
+body.first-person #compass{
+ top:54px;
+ padding:5px 9px;
+ font-size:9px;
+ opacity:.64;
+}
+body.first-person #compass i{ font-size:11px; }
+
+body.first-person #zoneChallenge{
+ bottom:58px;
+ width:min(360px,60vw);
+ padding:8px 10px;
+ opacity:.86;
+}
+body.first-person #stopCoach{
+ bottom:62px;
+ width:min(400px,66vw);
+ padding:8px 10px;
+ opacity:.88;
+}
+body.first-person #stopCoach .stopSteps{ font-size:10px; gap:5px; }
+body.first-person #stopCoach .step{ padding:3px 5px; }
+body.first-person #stopCoach .stopText{ font-size:9px; }
+
+/* 화면 플래시는 1인칭에서 약하게. */
+body.first-person #rewardFlash{
+ background:radial-gradient(circle at center,
+  rgba(255,244,173,.28),
+  rgba(255,244,173,0) 56%);
+}
+
+/* 1인칭에서는 장식보다 길이 먼저 읽혀야 한다. */
+body.first-person canvas#view{
+ filter:saturate(.92) contrast(.96);
+}
+
+/* reduced motion 환경에서는 vignette 변화도 최소화 */
+@media (prefers-reduced-motion: reduce){
+ #comfortVignette{ transition:none; }
+}
+
+
+#errorFallback{
+  position:fixed;
+  inset:auto 18px 18px 18px;
+  z-index:999;
+  display:none;
+  padding:12px 14px;
+  background:rgba(96,30,30,.94);
+  color:#fff;
+  font-family:monospace;
+  font-size:12px;
+  line-height:1.55;
+  box-shadow:0 0 0 3px rgba(0,0,0,.45);
+}
+#errorFallback.on{ display:block; }
+
+
+/* ==========================================================
+   v1.5 MOUSE-EMULATION JOYSTICK
+   ========================================================== */
+#mouseInputState{
+ position:fixed;
+ right:14px;
+ top:14px;
+ z-index:28;
+ padding:7px 10px;
+ font-size:10px;
+ background:rgba(30,34,36,.84);
+ color:#D7E2E6;
+ box-shadow:0 0 0 2px rgba(255,255,255,.12);
+ pointer-events:none;
+}
+#mouseInputState.active{ color:#BFD8B0; }
+#mouseInputState.calibrating{ color:#E8C75B; }
+
+#mouseGate{
+ position:fixed;
+ inset:0;
+ z-index:80;
+ display:flex;
+ align-items:center;
+ justify-content:center;
+ background:rgba(8,12,14,.76);
+}
+#mouseGate .gatePanel{
+ width:min(520px,88vw);
+ padding:22px;
+ text-align:center;
+ background:#3C4144;
+ color:#ECEFEF;
+ box-shadow:inset 3px 3px 0 rgba(255,255,255,.12),
+            inset -3px -3px 0 rgba(0,0,0,.38),
+            0 0 0 4px #202528;
+}
+#mouseGate .gateTitle{
+ font-size:18px;
+ margin-bottom:12px;
+}
+#mouseGate .gateText{
+ font-size:11px;
+ line-height:1.8;
+ color:#C8D1D5;
+ margin-bottom:16px;
+}
+#mouseGate.hidden{ display:none; }
+
+.mouseInputPanel{
+ margin-top:10px;
+ padding:12px;
+ background:rgba(0,0,0,.16);
+ box-shadow:inset 2px 2px 0 rgba(255,255,255,.08),
+            inset -2px -2px 0 rgba(0,0,0,.24);
+}
+.mouseBars{ display:grid; gap:8px; margin-top:10px; }
+.mouseBarRow{
+ display:grid;
+ grid-template-columns:70px 1fr 72px;
+ gap:8px;
+ align-items:center;
+ font-size:10px;
+ color:#D5D5D5;
+}
+.mouseBar{
+ position:relative;
+ height:12px;
+ background:#1C1C1C;
+ overflow:hidden;
+}
+.mouseBar::after{
+ content:"";
+ position:absolute;
+ left:50%;
+ top:0;
+ bottom:0;
+ width:1px;
+ background:rgba(255,255,255,.25);
+}
+.mouseBar i{
+ position:absolute;
+ top:0;
+ bottom:0;
+ left:50%;
+ width:0%;
+ background:#BFD8B0;
+}
+.mouseActions{
+ display:flex;
+ gap:8px;
+ margin-top:11px;
+}
+.mouseActions button{ flex:1; }
+#mouseCalStatus{
+ margin-top:8px;
+ min-height:30px;
+ color:#BFC8CC;
+ line-height:1.55;
+}
+
+
+/* ==========================================================
+   CALM PASS — 시각 부담 정리
+   원칙 1. 고주파 텍스처(격자·다중 베벨·하드 그림자) 제거
+   원칙 2. 본문은 픽셀 폰트가 아닌 읽는 글꼴로
+   원칙 3. 대비를 낮추고 강조색은 한 곳에만
+   원칙 4. 무한 깜빡임 없음 — 상태는 색으로만 알린다
+   기능은 그대로 두고 표현만 바꾼다.
+   ========================================================== */
+:root{
+  --bg:#171A1D;          /* 화면 바탕 */
+  --surf:#22262B;        /* 패널 */
+  --surf2:#2B3037;       /* 패널 위 요소 */
+  --edge:#3A4048;        /* 경계선 */
+  --txt:#DFE3E7;         /* 본문 */
+  --txt2:#9AA3AC;        /* 보조 */
+  --accent:#E0A93E;      /* 강조 — 한 색만 */
+  --ok:#6FAE63;
+  --alert:#C97A5C;
+}
+body{
+  background:var(--bg);
+  color:var(--txt);
+  font-family:"Pretendard Variable",Pretendard,system-ui,"Noto Sans KR",sans-serif;
+  -webkit-font-smoothing:antialiased;
+  letter-spacing:0;
+}
+
+/* ---------- 패널 : 4겹 베벨 → 단일 면 ---------- */
+.panel{
+  background:var(--surf);
+  border:1px solid var(--edge);
+  border-radius:2px;
+  box-shadow:0 18px 48px rgba(0,0,0,.45);
+  padding:30px 32px;
+}
+.panel::before{ display:none; }          /* 8px 격자 텍스처 제거 */
+.screen{ background:rgba(12,14,17,.72); backdrop-filter:blur(2px); }
+
+/* ---------- 타이포 ---------- */
+.tag{
+  background:none; color:var(--accent); padding:0; margin-bottom:12px;
+  font-size:11px; font-weight:600; letter-spacing:.16em; box-shadow:none;
+}
+.big{
+  font-size:clamp(24px,4.2vw,34px); font-weight:700; color:var(--txt);
+  letter-spacing:-.01em; line-height:1.25; margin:0 0 12px;
+  text-shadow:none;                       /* 8방향 외곽선 제거 */
+}
+.sub{ font-size:14px; line-height:1.75; color:var(--txt2); text-shadow:none; }
+.note,.vfine,.fine{ font-size:12px; color:var(--txt2); line-height:1.7; text-shadow:none; }
+.sechead{
+  font-size:11px; font-weight:600; color:var(--txt2);
+  letter-spacing:.12em; margin:22px 0 8px; text-transform:none;
+}
+hr.blk{ height:1px; background:var(--edge); box-shadow:none; margin:20px 0; }
+
+/* ---------- 목록 ---------- */
+.tasks,.vlist{
+  background:rgba(255,255,255,.03); border:1px solid var(--edge); border-radius:2px;
+  box-shadow:none; padding:14px 16px; font-size:13px; line-height:1.9; color:var(--txt);
+  text-shadow:none;
+}
+.tasks b,.vlist b{ color:var(--accent); font-weight:600; }
+.hintbar{
+  background:rgba(224,169,62,.07); border:1px solid rgba(224,169,62,.28);
+  border-radius:2px; box-shadow:none; color:#D8C79F; font-size:12.5px; padding:11px 13px;
+}
+
+/* ---------- 버튼 : 6px 입체 → 평면 ---------- */
+.btn,.vbtn{
+  font-family:inherit; font-size:14px; font-weight:600; letter-spacing:0;
+  border-radius:2px; padding:12px 22px; text-shadow:none;
+  background:var(--surf2); color:var(--txt); border:1px solid var(--edge);
+  box-shadow:none; transition:background .15s ease, border-color .15s ease;
+}
+.btn:hover,.vbtn:hover{ background:#333941; border-color:#4A525B; }
+.btn:active,.vbtn:active{ transform:none; background:#2A2F35; }
+.btn.go,.vbtn.go{ background:var(--accent); color:#20242A; border-color:var(--accent); }
+.btn.go:hover,.vbtn.go:hover{ background:#EBB753; border-color:#EBB753; }
+.btn.ghost{ background:transparent; color:var(--txt2); }
+.btn.ghost:hover{ background:rgba(255,255,255,.05); color:var(--txt); }
+.btn:disabled,.vbtn:disabled{ background:transparent; color:#5A6069; border-color:#31363C; }
+
+/* ---------- HUD : 떠 있는 정보를 뒤로 물린다 ---------- */
+#hud{ gap:6px; top:12px; left:12px; right:12px; }
+.chip{
+  background:rgba(24,27,31,.78); border:1px solid rgba(255,255,255,.08);
+  border-radius:2px; box-shadow:none;
+  font-family:inherit; font-size:11.5px; font-weight:500; letter-spacing:0;
+  color:var(--txt2); padding:7px 10px; text-shadow:none;
+}
+#floorChip{ color:var(--txt); font-weight:600; }
+#coinChip{ color:var(--accent); }
+#comboChip{ color:var(--txt2); }
+#comboChip.hot{ background:rgba(224,169,62,.16); color:var(--accent); border-color:rgba(224,169,62,.4); box-shadow:none; }
+.meter,#inputMeter,#rinseTrack,.track{
+  background:rgba(255,255,255,.08); border-radius:1px; box-shadow:none;
+}
+.meter i,#speedFill,#inputFill,#gaugeFill{
+  background:var(--ok); box-shadow:none; border-radius:1px; transition:width .18s ease;
+}
+#controlChip.fine .ctlState{ color:#7FA9CC; }
+#controlChip.max .ctlState{ color:var(--accent); }
+#pad,#hint{
+  background:rgba(24,27,31,.72); border:1px solid rgba(255,255,255,.07);
+  box-shadow:none; color:var(--txt2); font-size:11px; padding:8px 11px; border-radius:2px;
+}
+#pad b,#hint b{ color:var(--txt); font-weight:600; }
+#compass{
+  background:rgba(24,27,31,.78); border:1px solid rgba(255,255,255,.08);
+  box-shadow:none; color:var(--txt); font-size:12px; text-shadow:none;
+  border-radius:2px; padding:7px 12px;
+}
+
+/* ---------- 안내·배너 : 깜빡임 제거 ---------- */
+#banner{
+  background:rgba(18,21,24,.9); border:1px solid var(--edge); box-shadow:none;
+  color:var(--txt); font-size:clamp(14px,1.9vw,18px); font-weight:600;
+  text-shadow:none; letter-spacing:0; line-height:1.7; border-radius:2px;
+}
+#dock,#stopCoach,#wst,#mouseInputState{
+  box-shadow:none; text-shadow:none;
+}
+#dock{
+  background:rgba(24,27,31,.9); border:1px solid var(--edge); border-radius:2px; padding:14px;
+}
+#dockTitle{ color:var(--txt2); font-size:12.5px; }
+#dockFill{ background:var(--accent); box-shadow:none; }
+#dockKey{ color:var(--txt2); font-size:12.5px; }
+#dock.ready #dockKey{ color:var(--ok); animation:none; }   /* 초당 2회 깜빡임 제거 */
+#dock.ready{ border-color:rgba(111,174,99,.5); }
+#lockBox{ background:var(--surf); border:1px solid var(--edge); border-radius:2px; }
+#lockTitle{ color:var(--txt); font-size:15px; font-weight:600; }
+#lockBody{ color:var(--txt2); font-size:13px; }
+#lockKey{ color:var(--accent); font-size:12px; }
+#wst{
+  background:rgba(24,27,31,.92); border:1px solid var(--edge); border-radius:2px;
+  color:var(--txt2); font-size:11.5px;
+}
+#wst h4{ color:var(--accent); font-weight:600; letter-spacing:.08em; }
+
+/* ---------- 설정 ---------- */
+.row label{ color:var(--txt2); font-size:12.5px; }
+.row .val{ color:var(--txt); font-size:12.5px; }
+.row select{
+  background:var(--surf2); color:var(--txt); border:1px solid var(--edge);
+  border-radius:2px; box-shadow:none; font-family:inherit; font-size:12.5px;
+}
+.seg button{
+  font-family:inherit; font-size:12px; font-weight:500; border-radius:2px;
+  background:var(--surf2); color:var(--txt2); border:1px solid var(--edge); box-shadow:none;
+}
+.seg button:hover{ background:#333941; color:var(--txt); }
+.seg button.sel{
+  background:rgba(224,169,62,.15); color:var(--accent);
+  border-color:rgba(224,169,62,.45); box-shadow:none;
+}
+.axisbar{ background:rgba(255,255,255,.07); box-shadow:none; border-radius:1px; }
+.axisbar i{ background:var(--ok); }
+
+/* ---------- 리포트 표 ---------- */
+#reportTable th{
+  color:var(--txt2); font-size:11px; font-weight:600; letter-spacing:.1em;
+  border-bottom:1px solid var(--edge); text-shadow:none;
+}
+#reportTable td{ color:var(--txt); border-bottom:1px solid rgba(255,255,255,.06); font-size:12.5px; }
+#reportTable tr.done td.mark{ color:var(--ok); }
+#reportTable tr.part td.mark{ color:var(--accent); }
+#reportTable tr.miss td.mark{ color:var(--alert); }
+
+/* ---------- 조준·시선 보조 ---------- */
+#fpReticle{ opacity:.5; }
+body.first-person #fpReticle{ opacity:.55; }
+#comfortVignette{ opacity:.14; }
+body.first-person #comfortVignette{ opacity:.2; }
+.aim i{ box-shadow:none; }
+.aim.fire{ animation:none; }             /* 0.18초 주기 확대 반복 제거 */
+
+/* ---------- 스테이지 선택 ---------- */
+.titleActions .btn{ width:100%; }
+
+@media (prefers-reduced-motion: reduce){
+  *{ animation:none !important; }
+}
+
+</style>
+</head>
+<body>
+
+<canvas id="view"></canvas>
+
+<div id="mouseInputState">입력 대기</div>
+<div id="mouseGate" class="hidden">
+ <div class="gatePanel">
+  <div class="gateTitle">조이스틱 입력 시작</div>
+  <div class="gateText">
+   이 게임은 마우스 포인터를 움직이는 보조 조이스틱을 사용합니다.<br>
+   화면 끝에 닿아도 계속 조작할 수 있도록 주행 중 포인터를 잠급니다.<br>
+   조이스틱의 클릭 기능은 엘리베이터 버튼 동작으로 사용됩니다.
+  </div>
+  <button class="btn go" id="btnMouseActivate">입력 활성화</button>
+  <div class="note">키보드 방향키와 WASD는 개발·테스트용으로만 사용할 수 있습니다.</div>
+ </div>
+</div>
+
+<div id="errorFallback"></div>
+
+<!-- HUD -->
+<div id="hud" class="hidden">
+ <div class="chip" id="floorChip">1층</div>
+ <div class="chip" id="speedWrap">
+  <span id="revMark">&nbsp;</span>
+  <span>속도</span><span class="meter"><i id="speedFill"></i></span>
+ </div>
+ <div class="chip" id="viewChip" style="pointer-events:auto;cursor:pointer">시점 3인칭</div>
+ <div class="chip" id="coinChip">동전 0/0</div>
+ <div class="chip" id="comboChip">&nbsp;</div>
+
+ <div class="chip" id="controlChip">
+  <div class="ctlLabel"><span>조이스틱</span><b class="ctlState" id="controlState">중립</b></div>
+  <div id="inputMeter"><i id="inputFill"></i></div>
+ </div>
+ <div class="chip" id="missionChip"><b>이동</b> 길을 따라 다음 지점으로</div>
+ <div class="chip" id="bumpChip">부딪힘 0</div>
+ <div class="chip" id="timeChip">0:00</div>
+</div>
+<div id="compass" class="hidden"><i id="compassArrow">▲</i> <span id="compassText">엘리베이터 12m</span></div>
+<div id="pad" class="hidden"></div>
+
+
+<div id="controlDial" class="hidden">
+ <div class="dialLabel">
+  <span class="fine">미세</span>
+  <span class="mid">중간</span>
+  <span class="max">최대</span>
+ </div>
+ <div class="dialTrack">
+  <i class="zoneFine"></i>
+  <i class="zoneMid"></i>
+  <i class="zoneMax"></i>
+  <i class="dialNeedle" id="dialNeedle"></i>
+ </div>
+ <div class="dialPct" id="dialPct">입력 0%</div>
+</div>
+<div id="rewardFlash"></div>
+
+<div id="comfortVignette"></div>
+<div id="fpReticle"><i></i></div>
+
+
+<div id="stopCoach" class="hidden">
+ <div class="stopSteps">
+  <span class="step" id="stopStepApproach">접근</span>
+  <span class="stepSep">-</span>
+  <span class="step" id="stopStepSlow">감속</span>
+  <span class="stepSep">-</span>
+  <span class="step" id="stopStepRelease">놓기</span>
+  <span class="stepSep">-</span>
+  <span class="step" id="stopStepHold">정지</span>
+ </div>
+ <div class="stopBar"><i id="stopHoldFill"></i></div>
+ <div class="stopText" id="stopCoachText">초록 영역 안에서 조이스틱을 놓고 멈춰보세요.</div>
+</div>
+
+<div id="eventToast" class="hidden">
+ <b>EVENT</b>
+ <div id="eventToastText">준비</div>
+</div>
+
+<div id="collectionMini" class="hidden">발견 0</div>
+
+
+<div id="zoneChallenge" class="hidden">
+ <div class="zcHead">
+  <span><b id="zcName">미세조정</b> 입력을 유지하세요</span>
+  <span id="zcRange">20~35%</span>
+ </div>
+ <div class="zcBar">
+  <i class="zcTarget" id="zcTarget"></i>
+  <i class="zcInput" id="zcInput"></i>
+ </div>
+ <div class="zcHold"><i id="zcHold"></i></div>
+</div>
+
+
+<!-- 도킹 프롬프트 -->
+<div id="dock" class="hidden">
+ <div id="dockTitle">버튼 앞에 똑바로 서세요</div>
+ <div id="dockRing"><div id="dockFill"></div></div>
+ <div id="dockKey">정렬 중…</div>
+</div>
+
+<div id="banner"></div>
+<div id="fade"></div>
+
+<!-- 치료사 오버레이 -->
+<div id="wst" class="hidden">
+ <h4>WST 매핑 (치료사용 · T)</h4>
+ <ul id="wstList"></ul>
+ <div class="meta" id="wstMeta"></div>
+
+ <div id="skillMetrics">
+  <div class="metricTitle">PRE-DRIVING SKILL INDICATORS</div>
+  <div id="skillMetricRows">사건 데이터 없음</div>
+ </div>
+</div>
+
+<!-- 타이틀 -->
+<div id="scrTitle" class="screen">
+ <div class="panel w520" style="text-align:center">
+  <div class="tag">LAYERED LABYRINTH</div>
+  <div class="big">층층미로</div>
+  <p class="sub">한 층이 통째로 미로다.<br>길은 올라갈 때마다 다시 짜인다.</p>
+  <div class="hintbar" id="padStatus">입력 장치를 확인하는 중</div>
+  <div class="titleActions">
+   <button class="btn go wide" id="btnStart">처음부터 시작</button>
+   <button class="btn" id="btnContinue">이어하기</button>
+   <button class="btn" id="btnStageSelect">단계 선택</button>
+   <button class="btn ghost wide" id="btnSetup">조종 설정</button>
+  </div>
+  <div class="hintbar" id="resumeInfo">마지막 플레이 기록이 없습니다.</div>
+ </div>
+</div>
+
+<!-- 단계 선택 -->
+<div id="scrStageSelect" class="screen hidden">
+ <div class="panel stagePanel">
+  <div class="stageHead">
+   <div>
+    <div class="tag">SELECT STAGE</div>
+    <div class="big" style="font-size:clamp(22px,4vw,34px)">어디서 시작할까?</div>
+   </div>
+   <div class="sub">원하는 장소를 눌러 바로 시작할 수 있습니다.</div>
+  </div>
+  <div class="stageGrid" id="stageGrid"></div>
+  <div class="stageFooter">
+   <button class="btn ghost" id="btnStageBack">← 시작 화면</button>
+  </div>
+ </div>
+</div>
+
+<!-- 프롤로그 -->
+<div id="scrProlog" class="screen hidden">
+ <div class="panel w520" style="text-align:center">
+  <div class="tag" id="prologTag">PROLOGUE</div>
+  <div class="big" id="prologLine" style="font-size:clamp(20px,4.2vw,32px)"></div>
+  <p class="sub" id="prologSub"></p>
+  <div class="hintbar" id="prologDots"></div>
+  <button class="btn go" id="btnProlog">다음</button>
+ </div>
+</div>
+
+<!-- 층 진입 -->
+<div id="scrFloor" class="screen hidden">
+ <div class="panel w520" style="text-align:center">
+  <div class="tag" id="floorTag">FLOOR 1</div>
+  <div class="big" id="floorName">로비</div>
+  <p class="sub" id="floorStory"></p>
+  <ul class="tasks" id="floorTasks"></ul>
+  <div class="hintbar" id="floorTip"></div>
+  <div style="margin-top:14px">
+   <button class="btn go" id="btnGo">들어가기</button>
+   <button class="btn ghost" id="btnFloorSetup">조종 설정</button>
+  </div>
+ </div>
+</div>
+
+<!-- 층 완료 -->
+<div id="scrClear" class="screen hidden">
+ <div class="panel w520" style="text-align:center">
+  <div class="tag">FLOOR CLEAR</div>
+  <div class="big" id="clearTitle">올라간다</div>
+  <ul class="tasks" id="clearStats"></ul>
+  <button class="btn go" id="btnNext">다음 층</button>
+ </div>
+</div>
+
+<!-- 최종 -->
+<div id="scrEnd" class="screen hidden">
+ <div class="panel w520" style="text-align:center">
+  <div class="tag">LABYRINTH CLEARED</div>
+  <div class="big">미로를 빠져나왔다</div>
+  <p class="sub">마지막 문 너머는 하늘이다.<br>다시 들어가면 길은 또 달라진다.</p>
+  <ul class="tasks" id="endStats"></ul>
+  <button class="btn go" id="btnRestart">⌂ 시작 화면</button>
+  <button class="btn ghost" id="btnReport">관리자 리포트</button>
+ </div>
+</div>
+
+<!-- 관리자 리포트 — WST 항목별 수행도 -->
+<div id="scrReport" class="screen hidden">
+ <div class="panel w640">
+  <div class="tag">ADMIN · WST PERFORMANCE</div>
+  <div class="big" style="font-size:clamp(19px,3.6vw,27px)">항목별 수행도</div>
+  <p class="sub" id="reportMeta"></p>
+  <table id="reportTable"></table>
+  <p class="note" id="reportNote"></p>
+  <div style="text-align:center">
+   <button class="btn" id="btnReportCopy">기록 복사</button>
+   <button class="btn ghost" id="btnReportClose">닫기</button>
+  </div>
+ </div>
+</div>
+
+<!-- 일시정지 · 포인터 모드 -->
+<div id="scrPause" class="screen hidden">
+ <div class="panel w520" style="text-align:center">
+  <div class="tag">POINTER MODE</div>
+  <div class="big" style="font-size:clamp(20px,3.8vw,28px)">포인터를 돌려드렸습니다</div>
+  <p class="sub">지금은 조이스틱으로 화면의 버튼을 누를 수 있습니다.<br>주행으로 돌아가면 다시 휠체어를 조종합니다.</p>
+  <ul class="tasks" id="pauseTasks"></ul>
+  <div style="display:flex;flex-direction:column;gap:8px;margin-top:6px">
+   <button class="btn go" id="btnResume">주행으로 돌아가기</button>
+   <button class="btn" id="btnPauseSetup">조종 설정</button>
+   <button class="btn" id="btnPauseReport">WST 수행 기록</button>
+   <button class="btn ghost" id="btnPauseHome">시작 화면으로</button>
+  </div>
+ </div>
+</div>
+
+<!-- 설정 -->
+<div id="scrSetup" class="screen hidden">
+ <div class="panel w640">
+  <div class="tag">CONTROL</div>
+  <div class="big" style="font-size:clamp(20px,4vw,30px)">조종 설정</div>
+
+  <div class="sechead">빠르기</div>
+  <div class="seg" id="presetSeg">
+   <button data-p="slow">아주 천천히</button>
+   <button data-p="normal">보통</button>
+   <button data-p="fast">빠르게</button>
+  </div>
+
+  <div class="row"><label>앞으로 속도</label><input type="range" id="sMaxFwd" min="1.4" max="7" step="0.1"><span class="val" id="vMaxFwd"></span></div>
+  <div class="row"><label>뒤로 속도</label><input type="range" id="sMaxRev" min="0.6" max="3.4" step="0.1"><span class="val" id="vMaxRev"></span></div>
+  <div class="row"><label>회전 속도</label><input type="range" id="sMaxTurn" min="0.8" max="3.6" step="0.1"><span class="val" id="vMaxTurn"></span></div>
+  <div class="row"><label>출발 부드럽기</label><input type="range" id="sAccel" min="1.5" max="12" step="0.2"><span class="val" id="vAccel"></span></div>
+  <div class="row"><label>멈춤 힘</label><input type="range" id="sBrake" min="2" max="12" step="0.2"><span class="val" id="vBrake"></span></div>
+
+  <div class="sechead">손떨림 · 중립</div>
+  <div class="row"><label>중립 구역</label><input type="range" id="sDead" min="0.03" max="0.45" step="0.01"><span class="val" id="vDead"></span></div>
+  <div class="row"><label>떨림 완화</label><input type="range" id="sSmooth" min="0" max="0.92" step="0.02"><span class="val" id="vSmooth"></span></div>
+
+  <div class="sechead">시점 (V)</div>
+  <div class="seg" id="viewSeg">
+   <button data-v="third">3인칭 — 뒤에서 본다</button>
+   <button data-v="first">1인칭 — 앉아서 본다</button>
+  </div>
+
+  <div class="sechead">회전 방식</div>
+  <div class="seg" id="turnSeg">
+   <button data-t="tank">제자리 회전 가능</button>
+   <button data-t="speed">달릴수록 크게 돎</button>
+  </div>
+
+  <hr class="blk">
+  
+<div class="sechead">입력 장치</div>
+<div class="mouseInputPanel">
+ <div class="note">
+  사용 장치는 키보드 방향키가 아니라 마우스 포인터를 대체하는 보조 조이스틱입니다.
+  게임은 커서의 위치가 아니라 마우스 이동 방향과 이동속도를 사용합니다.
+ </div>
+ <div class="mouseActions">
+  <button class="btn" id="btnMouseLock">입력 활성화</button>
+  <button class="btn" id="btnMouseCal">6초 자동 보정</button>
+  <button class="btn ghost" id="btnMouseReset">보정 초기화</button>
+ </div>
+ <div class="mouseBars">
+  <div class="mouseBarRow">
+   <span>좌우 이동</span>
+   <div class="mouseBar"><i id="mouseXBar"></i></div>
+   <span id="mouseXVal">0%</span>
+  </div>
+  <div class="mouseBarRow">
+   <span>앞뒤 이동</span>
+   <div class="mouseBar"><i id="mouseYBar"></i></div>
+   <span id="mouseYVal">0%</span>
+  </div>
+ </div>
+ <div class="seg" id="mouseInvSeg" style="margin-top:10px">
+  <button data-i="f">앞뒤 반전</button>
+  <button data-i="t">좌우 반전</button>
+ </div>
+ <div id="mouseCalStatus">보정 전: 기본 감도로 사용할 수 있습니다.</div>
+</div>
+
+<div class="note" id="setupPadInfo"></div>
+  <div style="text-align:center"><button class="btn go" id="btnSetupClose">확인</button></div>
+ </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script type="module">
+/* ==========================================================
+  층층미로 v1.1 — STAGE SELECT
+  · 주 입력: 마우스 포인터를 대체하는 보조 조이스틱. 키보드는 개발·테스트용 대체 입력
+  · WST 관련 기술은 참고 매핑으로만 사용하며 공식 WST 점수는 산출하지 않음
+  · 1인칭 기준: 안정된 시선축, 낮은 주변시 자극, 최소 HUD, 연속 경사면을 우선
+  · 아이에게는 "미로 탈출", 치료사에게는 T 키로 WST 매핑을 노출
+  ========================================================== */
+
+
+window.addEventListener("error",(ev)=>{
+  const box=document.getElementById("errorFallback");
+  if(!box) return;
+  box.textContent="실행 오류: "+(ev.message||"알 수 없는 오류");
+  box.classList.add("on");
+});
+
+const CELL=2.4, WALL_H=2.9, R_CHAIR=0.62;
+
+/* ---------- 조종 설정 (전동휠체어 컨트롤러 파라미터에 대응) ---------- */
+const WHEEL={
+ maxFwd:3.8, maxRev:1.8, maxTurn:2.0, accel:4.6, brake:7.0,
+ dead:0.16, smooth:0.35, turnMode:"tank",
+ mouseInvF:false, mouseInvT:false
+};
+const PRESETS={
+ slow :{ maxFwd:2.6, maxRev:1.3, maxTurn:1.5, accel:3.2, brake:7.5, dead:0.20, smooth:0.50 },
+ normal:{ maxFwd:3.8, maxRev:1.8, maxTurn:2.0, accel:4.6, brake:7.0, dead:0.15, smooth:0.32 },
+ fast :{ maxFwd:5.4, maxRev:2.6, maxTurn:2.7, accel:6.4, brake:6.0, dead:0.09, smooth:0.16 }
+};
+
+/* ---------- 층 구성 — 난이도는 WST 항목의 누적으로 올라간다 ---------- */
+const FLOORS=[
+ { name:"넓은 회랑", tag:"FLOOR 1", gen:"snake", w:19, h:13, corridor:2, stubs:0, coinStep:2,
+  story:" 밝은 로비에서 시작한다.\n파랑·초록·주황 구간을 번갈아 조절해 본다.",
+  tasks:[" 조금 밀기 → 중간 → 끝까지"," 목표 입력을 2초 유지하기"],
+  tip:"색과 아이콘을 보고 손의 움직임 크기를 바꿔보자.",
+  recommend:"normal",
+  feats:{},
+  wst:["Rolls forward 10 m","Turns 90° while moving forward"] },
+
+ { name:"갈래길", tag:"FLOOR 2", gen:"snake", w:19, h:13, corridor:1, stubs:4, coinStep:2,
+  story:" 학교 복도처럼 길이 갈라진다.\n앞으로 갈지, 되돌아갈지 직접 고른다.",
+  tasks:["↔ 갈림길에서 방향 고르기","↩ 막다른 길에서 후진하기"],
+  tip:"앞으로만 가지 않아도 된다. 필요하면 멈추고 후진한다.",
+  recommend:"normal",
+  feats:{},
+  wst:["Rolls backward 2 m","Turns 180° in place"] },
+
+ { name:"좁아진 문", tag:"FLOOR 3", gen:"maze", w:19, h:15, corridor:1, stubs:0, coinStep:2,
+  story:" 좁은 문과 실내 통로가 나타난다.\n속도를 줄이고 가운데를 맞춰 통과한다.",
+  tasks:[" 문 가운데로 들어가기"," 벽에 닿지 않고 방향 바꾸기"],
+  tip:"문 앞에서는 속도를 줄이고 정면으로 맞춰 들어간다.",
+  recommend:"normal",
+  feats:{ doors:3 },
+  wst:["Gets through hinged door","Maneuvers in confined space"] },
+
+ { name:"기울어진 층", tag:"FLOOR 4", gen:"maze", w:21, h:15, corridor:1, stubs:0, coinStep:2,
+  story:" 야외 길로 나왔다.\n오르막과 옆경사에서 조이스틱 크기를 바꿔야 한다.",
+  tasks:[" 연속 경사로 오르내리기","↔ 옆경사에서 방향 지키기"],
+  tip:"경사로는 매끈한 한 면이다. 계단은 반복되는 단으로 표시되며 주행 경로가 아니다.",
+  recommend:"normal",
+  feats:{ ramps:2, slopes:2, doors:1 },
+  wst:["Ascends 5° incline","Descends 5° incline","Rolls across side-slope"] },
+
+ { name:"헝클어진 정원", tag:"FLOOR 5", gen:"maze", w:21, h:17, corridor:1, stubs:0, coinStep:2,
+  story:" 공원에는 잔디·턱·움직이는 로봇이 있다.\n빠르게 갈 때와 기다릴 때를 구분한다.",
+  tasks:[" 잔디 지나가기"," 턱 넘기"," 움직이는 대상 기다리기"],
+  tip:"턱은 천천히 가면 못 넘는다. 속도를 붙여서.",
+  recommend:"normal",
+  feats:{ soft:4, thresholds:2, movers:3, doors:1 },
+  wst:["Rolls on soft surface","Gets over 5 cm threshold","Avoids moving obstacles"] }
+];
+
+/* ==========================================================
+  맵 생성 — 연결성을 코드로 보장한다
+  grid[z][x] : 0 벽 / 1 바닥 / 2 엘리베이터칸 / 3 버튼벽
+  ========================================================== */
+let G=null;
+function newGrid(w,h){
+ const g={ w, h, c:[], hgt:[], soft:[], thr:[], slope:[], posts:[], movers:[], coins:[], ramps:[], thresholds:[], sideSlopes:[], stairRefs:[] };
+ for(let z=0;z<h;z++){
+  g.c.push(new Array(w).fill(0));
+  g.hgt.push(new Array(w).fill(0));
+  g.soft.push(new Array(w).fill(0));
+  g.thr.push(new Array(w).fill(0));
+  g.slope.push(new Array(w).fill(0));
+ }
+ return g;
+}
+const inB=(g,x,z)=>x>=1&&z>=1&&x<g.w-1&&z<g.h-1;
+
+/* 뱀 모양 복도 — 예측 가능하고 넓다 (1~2층) */
+function genSnake(g,cw,stubs){
+ const bandH=cw, step=cw+1;
+ const bands=[];
+ for(let z=1; z+bandH-1<g.h-1; z+=step) bands.push(z);
+ bands.forEach((z0,i)=>{
+  for(let z=z0;z<z0+bandH;z++) for(let x=1;x<g.w-1;x++) g.c[z][x]=1;
+  if(i<bands.length-1){ // 끝단 연결 통로
+   const nz=bands[i+1];
+   const cx = (i%2===0) ? g.w-2-(cw-1) : 1;
+   for(let x=cx;x<cx+cw;x++) for(let z=z0+bandH;z<nz;z++) if(inB(g,x,z)) g.c[z][x]=1;
+  }
+ });
+ // 막다른 곁가지 — 후진 연습용
+ for(let n=0;n<stubs;n++){
+  const b=bands[1+((n*3)%Math.max(1,bands.length-1))];
+  const x=3+((n*5)%(g.w-7));
+  const dir=(n%2)?1:-1;
+  for(let k=1;k<=2;k++){ const z=b+dir*k; if(inB(g,x,z)) g.c[z][x]=1; }
+ }
+ return { sx:1+((cw-1)>>1), sz:1+((cw-1)>>1) };
+}
+
+/* 재귀 백트래커 미로 — 막다른 길이 자연스럽게 생긴다 (3~5층) */
+function genMaze(g){
+ const cw=Math.floor((g.w-1)/2), ch=Math.floor((g.h-1)/2);
+ const vis=[]; for(let i=0;i<ch;i++) vis.push(new Array(cw).fill(false));
+ const cx=(i)=>1+i*2;
+ const st=[[0,0]]; vis[0][0]=true; g.c[cx(0)][cx(0)]=1;
+ while(st.length){
+  const [i,j]=st[st.length-1];
+  const nb=[];
+  if(i>0&&!vis[j][i-1]) nb.push([i-1,j,-1,0]);
+  if(i<cw-1&&!vis[j][i+1]) nb.push([i+1,j,1,0]);
+  if(j>0&&!vis[j-1][i]) nb.push([i,j-1,0,-1]);
+  if(j<ch-1&&!vis[j+1][i]) nb.push([i,j+1,0,1]);
+  if(!nb.length){ st.pop(); continue; }
+  const [ni,nj,dx,dz]=nb[(Math.random()*nb.length)|0];
+  vis[nj][ni]=true;
+  g.c[cx(j)][cx(i)]=1;
+  g.c[cx(j)+dz][cx(i)+dx]=1;
+  g.c[cx(nj)][cx(ni)]=1;
+  st.push([ni,nj]);
+ }
+ return { sx:1, sz:1 };
+}
+
+/* 엘리베이터실 5×5 — 북쪽에서 진입, 남쪽 벽에 버튼 */
+function carveElevator(g,cx,cz){
+ for(let z=cz-2;z<=cz+2;z++) for(let x=cx-2;x<=cx+2;x++){
+  if(x<0||z<0||x>=g.w||z>=g.h) continue;
+  const edge=(x===cx-2||x===cx+2||z===cz-2||z===cz+2);
+  g.c[z][x]= edge?0:2;
+  g.hgt[z][x]=0;
+ }
+ g.c[cz-2][cx]=1;         // 출입구
+ if(cz+2<g.h) g.c[cz+2][cx]=3;  // 버튼 벽
+ return { cx, cz, entX:cx, entZ:cz-2, btnX:cx, btnZ:cz+2 };
+}
+
+/* 출발 홀 — 미로 층에서만, 최소 크기로.
+  뱀 모양 복도(1·2층)에 파면 굽이를 가로지르는 지름길이 생겨 주행 거리가 반토막 난다 */
+function carveStartRoom(g,cx,cz,r){
+ for(let z=cz-r;z<=cz+r;z++) for(let x=cx-r;x<=cx+r;x++)
+  if(inB(g,x,z)&&g.c[z][x]===0) g.c[z][x]=1;
+}
+
+/* 시작점에서 실제로 갈 수 있는 칸들의 집합 */
+function reachableFrom(g,sx,sz){
+ const key=(x,z)=>z*g.w+x;
+ const seen=new Set([key(sx,sz)]), q=[[sx,sz]];
+ while(q.length){
+  const [x,z]=q.shift();
+  for(const [dx,dz] of [[1,0],[-1,0],[0,1],[0,-1]]){
+   const nx=x+dx, nz=z+dz;
+   if(nx<0||nz<0||nx>=g.w||nz>=g.h) continue;
+   if(g.c[nz][nx]!==1&&g.c[nz][nx]!==2) continue;
+   if(seen.has(key(nx,nz))) continue;
+   seen.add(key(nx,nz)); q.push([nx,nz]);
+  }
+ }
+ return seen;
+}
+
+/* 엘리베이터 입구를 기존 통로망에 '최단'으로 잇는다.
+  길게 뚫으면 미로를 가로지르는 지름길이 생기므로 벽을 최소한만 부수고,
+  반드시 '시작점에서 도달 가능한' 통로에만 연결한다(고립 구역 방지) */
+function connectToNearest(g,sx,sz,reach){
+ const key=(x,z)=>z*g.w+x;
+ const prev=new Map(), q=[[sx,sz]]; prev.set(key(sx,sz),null);
+ let found=null;
+ while(q.length){
+  const [x,z]=q.shift();
+  if(g.c[z][x]===1 && reach.has(key(x,z))){ found=[x,z]; break; }
+  for(const [dx,dz] of [[1,0],[-1,0],[0,1],[0,-1]]){
+   const nx=x+dx, nz=z+dz;
+   if(!inB(g,nx,nz)) continue;
+   if(g.c[nz][nx]===2||g.c[nz][nx]===3) continue;  // 엘리베이터실은 통과하지 않는다
+   if(prev.has(key(nx,nz))) continue;
+   prev.set(key(nx,nz),[x,z]); q.push([nx,nz]);
+  }
+ }
+ if(!found) return false;
+ let cur=found;
+ while(cur){ if(g.c[cur[1]][cur[0]]===0) g.c[cur[1]][cur[0]]=1; cur=prev.get(key(cur[0],cur[1])); }
+ return true;
+}
+
+/* 시작점에서 목표까지 BFS 경로 */
+function bfsPath(g,sx,sz,tx,tz){
+ const key=(x,z)=>z*g.w+x;
+ const prev=new Map(), q=[[sx,sz]]; prev.set(key(sx,sz),null);
+ const pass=(x,z)=>x>=0&&z>=0&&x<g.w&&z<g.h&&(g.c[z][x]===1||g.c[z][x]===2);
+ while(q.length){
+  const [x,z]=q.shift();
+  if(x===tx&&z===tz) break;
+  [[1,0],[-1,0],[0,1],[0,-1]].forEach(([dx,dz])=>{
+   const nx=x+dx, nz=z+dz;
+   if(pass(nx,nz)&&!prev.has(key(nx,nz))){ prev.set(key(nx,nz),[x,z]); q.push([nx,nz]); }
+  });
+ }
+ if(!prev.has(key(tx,tz))) return null;
+ const path=[]; let cur=[tx,tz];
+ while(cur){ path.push(cur); cur=prev.get(key(cur[0],cur[1])); }
+ return path.reverse();
+}
+
+/* 경로 위에 WST 과제를 배치한다 */
+function placeFeatures(g,path,f){
+ const mid=path.slice(4,Math.max(5,path.length-6)); // 시작·도착 근처는 비워 둔다
+ const pick=n=>{
+  const out=[], step=Math.max(1,Math.floor(mid.length/(n+1)));
+  for(let i=1;i<=n;i++){ const c=mid[i*step]; if(c) out.push(c); }
+  return out;
+ };
+ const straightRuns=(len)=>{ // 같은 방향으로 len칸 이어지는 구간 찾기
+  const runs=[];
+  for(let i=1;i<path.length-len-1;i++){
+   const dx=path[i+1][0]-path[i][0], dz=path[i+1][1]-path[i][1];
+   let ok=true;
+   for(let k=1;k<len;k++){
+    const ax=path[i+k+1][0]-path[i+k][0], az=path[i+k+1][1]-path[i+k][1];
+    if(ax!==dx||az!==dz){ ok=false; break; }
+   }
+   if(ok && i>4 && i+len<path.length-5){ runs.push({ i, dx, dz }); i+=len; }
+  }
+  return runs;
+ };
+
+ if(f.doors){
+  // 문은 반드시 '직선 통로'에만 세운다.
+  // 교차로에 세우면 수직 방향 통행이 완전히 막혀 길이 끊긴다.
+  const straightIdx=[];
+  for(let i=5;i<path.length-6;i++){
+   const [px,pz]=path[i-1], [x,z]=path[i], [nx,nz]=path[i+1];
+   const d1x=x-px, d1z=z-pz, d2x=nx-x, d2z=nz-z;
+   if(d1x!==d2x||d1z!==d2z) continue;         // 코너는 제외
+   let nb=0;
+   [[1,0],[-1,0],[0,1],[0,-1]].forEach(([dx,dz])=>{
+    const ax=x+dx, az=z+dz;
+    if(ax>=0&&az>=0&&ax<g.w&&az<g.h&&(g.c[az][ax]===1||g.c[az][ax]===2)) nb++;
+   });
+   if(nb!==2) continue;                // 갈림길도 제외
+   straightIdx.push({ i, dx:d2x, dz:d2z });
+  }
+  const step=Math.max(1,Math.floor(straightIdx.length/(f.doors+1)));
+  for(let k=1;k<=f.doors;k++){
+   const s=straightIdx[k*step-1];
+   if(!s) break;
+   const [x,z]=path[s.i];
+   const wx=(x+0.5)*CELL, wz=(z+0.5)*CELL;
+   (g.doorCells=g.doorCells||[]).push({ x:wx, z:wz });   // 통과 계측용
+   const gap=0.30; // 통과 여유 ±28cm — 복도(±58cm)의 절반. 이보다 두꺼우면 휠체어가 못 지난다
+   if(s.dx!==0){  // 동서로 지나간다 → 남북 벽면에 문설주
+    g.posts.push({ x:wx, z:wz-CELL/2+gap/2, w:0.55, d:gap });
+    g.posts.push({ x:wx, z:wz+CELL/2-gap/2, w:0.55, d:gap });
+   }else{      // 남북으로 지나간다 → 동서 벽면에 문설주
+    g.posts.push({ x:wx-CELL/2+gap/2, z:wz, w:gap, d:0.55 });
+    g.posts.push({ x:wx+CELL/2-gap/2, z:wz, w:gap, d:0.55 });
+   }
+  }
+ }
+
+ if(f.soft) pick(f.soft).forEach(([x,z])=>{
+  [[0,0],[1,0],[0,1],[-1,0],[0,-1]].forEach(([dx,dz])=>{
+   const nx=x+dx,nz=z+dz;
+   if(nx>=0&&nz>=0&&nx<g.w&&nz<g.h&&g.c[nz][nx]===1) g.soft[nz][nx]=1;
+  });
+ });
+
+ if(f.thresholds) pick(f.thresholds).forEach(([x,z])=>{
+  if(g.c[z][x]!==1) return;
+  g.thr[z][x]=1;
+  const idx=path.findIndex(([px,pz])=>px===x&&pz===z);
+  if(idx>=0){
+   const a=path[Math.max(0,idx-1)], b=path[Math.min(path.length-1,idx+1)];
+   const dx=Math.sign(b[0]-a[0]), dz=Math.sign(b[1]-a[1]);
+   g.thresholds.push({x,z,dx,dz});
+  }
+ });
+
+ if(f.slopes) pick(f.slopes).forEach(([x,z])=>{
+  const sideSign=(x+z)%2?1:-1;
+  const idx=path.findIndex(([px,pz])=>px===x&&pz===z);
+  const a=path[Math.max(0,idx-1)], b=path[Math.min(path.length-1,idx+1)];
+  const pdx=idx>=0?Math.sign(b[0]-a[0]):0, pdz=idx>=0?Math.sign(b[1]-a[1]):1;
+  const cells=[];
+  [[0,0],[1,0],[-1,0],[0,1],[0,-1]].forEach(([ox,oz])=>{
+   const nx=x+ox,nz=z+oz;
+   if(nx>=0&&nz>=0&&nx<g.w&&nz<g.h&&g.c[nz][nx]===1){
+    g.slope[nz][nx]=sideSign;
+    cells.push([nx,nz]);
+   }
+  });
+  g.sideSlopes.push({x,z,dx:pdx,dz:pdz,sign:sideSign,cells});
+ });
+
+ if(f.ramps){
+  const runs=straightRuns(6);
+  runs.slice(0,f.ramps).forEach((r,ri)=>{
+   const prof=[0,0.35,0.7,0.7,0.35,0]; // 물리 높이: 연속 보간용
+   const cells=[];
+   for(let k=0;k<prof.length;k++){
+    const [x,z]=path[r.i+k];
+    g.hgt[z][x]=prof[k];
+    cells.push([x,z]);
+   }
+   g.ramps.push({index:ri,dx:r.dx,dz:r.dz,cells,heights:prof.slice()});
+  });
+
+  // 4층 시작부에는 '계단은 주행 경로가 아님'을 시각적으로 보여주는 작은 비교 구조를 둔다.
+  if(g.ramps.length){
+   const a=path[1], b=path[Math.min(3,path.length-1)];
+   const dx=Math.sign(b[0]-a[0]), dz=Math.sign(b[1]-a[1]);
+   const sx=(path[0][0]+0.5)*CELL, sz=(path[0][1]+0.5)*CELL;
+   const side={x:-dz,z:dx};
+   g.stairRefs.push({x:sx+side.x*2.25,z:sz+side.z*2.25,dx,dz});
+  }
+ }
+
+ if(f.movers){
+  const runs=straightRuns(4);
+  runs.slice(0,f.movers).forEach(r=>{
+   const a=path[r.i], b=path[r.i+4];
+   g.movers.push({
+    ax:(a[0]+0.5)*CELL, az:(a[1]+0.5)*CELL,
+    bx:(b[0]+0.5)*CELL, bz:(b[1]+0.5)*CELL,
+    t:Math.random(), dir:1, spd:0.16+Math.random()*0.12
+   });
+  });
+ }
+}
+
+/* 동선 위에 동전을 뿌린다.
+  보상이자 이정표다 — 아이는 '길 찾기'가 아니라 '동전 따라가기'를 한다.
+  몇 초마다 반응이 오므로 긴 복도의 지루함도 줄어든다 */
+function placeCoins(g,path,step){
+ const s=Math.max(1,step||2);
+ let seq=0;
+ for(let i=2;i<path.length-2;i+=s){
+  const [x,z]=path[i];
+  if(g.c[z][x]!==1) continue;
+
+  // 최대조정 동전은 직선에서만 등장한다. 코너에서 최대 입력을 강요하지 않는다.
+  const p0=path[Math.max(0,i-1)], p1=path[i], p2=path[Math.min(path.length-1,i+1)];
+  const d1=[p1[0]-p0[0],p1[1]-p0[1]], d2=[p2[0]-p1[0],p2[1]-p1[1]];
+  const straight=(d1[0]===d2[0] && d1[1]===d2[1]);
+
+  // 보통 동전 사이에 가끔 '조작 방식'을 바꾸는 특수 동전을 섞는다.
+  // fine: 작은 입력 유지 / max: 거의 끝까지 밀기.
+  let kind="normal";
+  if(seq>1 && seq%9===3) kind="fine";
+  else if(seq>2 && seq%9===6) kind="mid";
+  else if(seq>3 && seq%9===8 && straight) kind="max";
+
+  g.coins.push({
+   x:(x+0.5)*CELL, z:(z+0.5)*CELL, y:g.hgt[z][x],
+   got:false, kind, armedAt:0
+  });
+  seq++;
+ }
+}
+
+/* 시작점에서의 통행 거리(칸 수) */
+function distanceField(g,sx,sz){
+ const D=[]; for(let z=0;z<g.h;z++) D.push(new Array(g.w).fill(-1));
+ D[sz][sx]=0; const q=[[sx,sz]];
+ while(q.length){
+  const [x,z]=q.shift();
+  for(const [dx,dz] of [[1,0],[-1,0],[0,1],[0,-1]]){
+   const nx=x+dx, nz=z+dz;
+   if(nx<0||nz<0||nx>=g.w||nz>=g.h) continue;
+   if(g.c[nz][nx]!==1&&g.c[nz][nx]!==2) continue;
+   if(D[nz][nx]>=0) continue;
+   D[nz][nx]=D[z][x]+1; q.push([nx,nz]);
+  }
+ }
+ return D;
+}
+
+/* 격자 스냅샷 (엘리베이터 배치 시도를 되돌리기 위해) */
+function snapshotCells(g){ return g.c.map(r=>r.slice()); }
+function restoreCells(g,snap){ for(let z=0;z<g.h;z++) g.c[z]=snap[z].slice(); }
+
+/* 통로 끝에 엘리베이터를 놓는다.
+   고정 위치(우하단)에 두면 최단 연결이 벽을 뚫어 지름길을 만들고,
+   그 뒤의 통로 전체가 쓰이지 않는 죽은 구역이 된다. */
+function placeElevatorAtEnd(g,sx,sz){
+ const D=distanceField(g,sx,sz);
+ let maxD=0;
+ const cand=[];
+ for(let z=3;z<g.h-2;z++) for(let x=2;x<g.w-2;x++){
+  if(D[z][x]<0) continue;                        // 갈 수 없는 곳
+  if(x-2<0||x+2>=g.w||z+2>=g.h||z-2<1) continue; // 5×5 여유
+  if(D[z][x]>maxD) maxD=D[z][x];
+  cand.push({ x, z, d:D[z][x] });
+ }
+ cand.sort((a,b)=>b.d-a.d);                       // 가장 먼 곳부터
+ const want=Math.max(8,Math.floor(maxD*0.62));    // 이보다 짧아지면 지름길이 뚫린 것
+
+ let best=null;
+ for(const c of cand.slice(0,45)){
+  const snap=snapshotCells(g);
+  const elev=carveElevator(g,c.x,c.z);
+  const reach=reachableFrom(g,sx,sz);
+  // 벽을 뚫지 않고 이미 이어져 있는 배치를 우선한다
+  const already=reach.has(elev.entZ*g.w+elev.entX);
+  const ok = already || connectToNearest(g,elev.entX,elev.entZ-1,reach);
+  const path = ok ? bfsPath(g,sx,sz,elev.entX,elev.entZ) : null;
+  if(path){
+   const len=path.length + (already?3:0);          // 터널을 뚫은 배치에 불이익
+   if(len>=want && already) return elev;           // 충분히 멀고 자연스럽다 → 즉시 채택
+   if(!best || len>best.len) best={ x:c.x, z:c.z, len };
+  }
+  restoreCells(g,snap);
+ }
+ if(!best) return null;
+ const elev=carveElevator(g,best.x,best.z);
+ const reach=reachableFrom(g,sx,sz);
+ if(!reach.has(elev.entZ*g.w+elev.entX)) connectToNearest(g,elev.entX,elev.entZ-1,reach);
+ return bfsPath(g,sx,sz,elev.entX,elev.entZ) ? elev : null;
+}
+
+/* 동선과 무관한 구역을 벽으로 되돌린다.
+   미로 층은 오답 갈림길이 훈련 요소이므로 짧은 곁가지는 남긴다. */
+function pruneUnusedAreas(g,path,keep){
+ const near=new Set();
+ path.forEach(([x,z])=>{
+  for(let dz=-keep;dz<=keep;dz++) for(let dx=-keep;dx<=keep;dx++){
+   if(Math.abs(dx)+Math.abs(dz)>keep) continue;
+   near.add((z+dz)*g.w+(x+dx));
+  }
+ });
+ let removed=0;
+ for(let z=1;z<g.h-1;z++) for(let x=1;x<g.w-1;x++){
+  if(g.c[z][x]!==1) continue;
+  if(near.has(z*g.w+x)) continue;
+  g.c[z][x]=0; removed++;
+ }
+ return removed;
+}
+
+function buildFloorGrid(def){
+ for(let attempt=0;attempt<10;attempt++){
+  const g=newGrid(def.w,def.h);
+  const s = def.gen==="snake" ? genSnake(g,def.corridor,def.stubs) : genMaze(g);
+  if(def.gen==="maze"){ s.sx=3; s.sz=3; carveStartRoom(g,3,3,1); } // 미로에만 3×3 출발 홀
+  const elev=placeElevatorAtEnd(g,s.sx,s.sz);
+  if(!elev) continue;
+  let path=bfsPath(g,s.sx,s.sz,elev.entX,elev.entZ);
+  if(!path) continue;
+  // 실제 동선 밖의 확장 구역 정리 → 아이가 헤맬 여지를 줄인다
+  pruneUnusedAreas(g,path,def.gen==="snake"?1:2);
+  path=bfsPath(g,s.sx,s.sz,elev.entX,elev.entZ);
+  if(!path) continue;
+  g.start=s; g.elev=elev; g.path=path;
+  placeFeatures(g,path,def.feats||{});
+  placeCoins(g,path,def.coinStep);
+  return g;
+ }
+ return null;
+}
+
+/* ==========================================================
+  렌더링 — 복셀 블록. 재질별 InstancedMesh 로 드로우콜 최소화
+  ========================================================== */
+let scene,cam,renderer,worldGroup,chair,chairWheels=[],moverMeshes=[],doorMeshes=[];
+let btnPanel=null, btnLight=null, elevDoors=[], coinMeshes=[];
+let elevIndicator=null, elevCallLamp=null, elevFloorBtns=[], elevArrivalDone=false;
+let eventVisuals=[], guideBot=null, stopVisual=null, choiceVisuals=[], guideEyeMat=null;
+let fpGuideGroup=null, themeDecorGroup=null, stairReferenceGroup=null;
+
+const MAT={
+ wall : new THREE.MeshLambertMaterial({ color:0x8C8C8C }),
+ wallT : new THREE.MeshLambertMaterial({ color:0xA8A8A8 }),
+ floorA: new THREE.MeshLambertMaterial({ color:0xD9CBAE }),
+ floorB: new THREE.MeshLambertMaterial({ color:0xC3B393 }),
+ soft : new THREE.MeshLambertMaterial({ color:0x6FA84B }),
+ thr  : new THREE.MeshLambertMaterial({ color:0xB0762E }),
+ slope : new THREE.MeshLambertMaterial({ color:0x9A8FB5 }),
+ elev : new THREE.MeshLambertMaterial({ color:0x4A4A52 }),
+ elevW : new THREE.MeshLambertMaterial({ color:0x6E6E7A }),
+ brass : new THREE.MeshLambertMaterial({ color:0xE8B23A }),
+ post : new THREE.MeshLambertMaterial({ color:0x8A5A32 }),
+ mover : new THREE.MeshLambertMaterial({ color:0xE8802B }),
+ coin : new THREE.MeshLambertMaterial({ color:0xFFC93C }),
+ coinIn: new THREE.MeshLambertMaterial({ color:0xFFE9A0 }),
+ fine : new THREE.MeshLambertMaterial({ color:0x59BFEA }),
+ fineIn: new THREE.MeshLambertMaterial({ color:0xD8F5FF }),
+ power : new THREE.MeshLambertMaterial({ color:0xE8802B }),
+ powerIn:new THREE.MeshLambertMaterial({ color:0xFFE0B8 }),
+ mid  : new THREE.MeshLambertMaterial({ color:0x78B85A }),
+ midIn : new THREE.MeshLambertMaterial({ color:0xD9F0CC }),
+ stopZone:new THREE.MeshLambertMaterial({ color:0x63D77D, transparent:true, opacity:0.62 }),
+ eventDark:new THREE.MeshLambertMaterial({ color:0x33423A }),
+ guide :new THREE.MeshLambertMaterial({ color:0x5FADE1 }),
+ choiceA:new THREE.MeshLambertMaterial({ color:0xB184E8 }),
+ choiceB:new THREE.MeshLambertMaterial({ color:0xE8B23A })
+};
+const BOX=new THREE.BoxGeometry(1,1,1);
+
+function instance(list,mat,parent){
+ if(!list.length) return null;
+ const im=new THREE.InstancedMesh(BOX,mat,list.length);
+ const m=new THREE.Matrix4(), q=new THREE.Quaternion(),
+    p=new THREE.Vector3(), s=new THREE.Vector3();
+ list.forEach((b,i)=>{
+  p.set(b[0],b[1],b[2]); s.set(b[3],b[4],b[5]);
+  m.compose(p,q,s); im.setMatrixAt(i,m);
+ });
+ im.instanceMatrix.needsUpdate=true;
+ parent.add(im);
+ return im;
+}
+
+
+function makeColorMat(color, basic=false, extra={}){
+ return basic ? new THREE.MeshBasicMaterial({ color, ...extra }) : new THREE.MeshLambertMaterial({ color, ...extra });
+}
+function getFloorVisualStyle(i){
+ const styles=[
+  {
+   sky:0xDCEEFF, fog:0xDCEEFF,
+   wall:0xCBD8E6, wallT:0xF4F8FC,
+   floorA:0xE8EEF3, floorB:0xDCE6EE,
+   soft:0x7EBB67, thr:0xC69456, slope:0xA6B6D8,
+   elev:0x516070, elevW:0x7B8997,
+   decor:[0x7FC4E8,0x6EB86E,0xF1C45E], kind:'lobby'
+  },
+  {
+   sky:0xF8F1D8, fog:0xF8F1D8,
+   wall:0xE3D4AB, wallT:0xFFF8DF,
+   floorA:0xD5C3A4, floorB:0xC8B38E,
+   soft:0x94BA64, thr:0xBC8248, slope:0xC4A3D7,
+   elev:0x685B52, elevW:0x8E7F70,
+   decor:[0x84A8E6,0xE28F61,0xBFA8F0], kind:'school'
+  },
+  {
+   sky:0xE7EDF5, fog:0xE7EDF5,
+   wall:0xD9E0E7, wallT:0xFFFFFF,
+   floorA:0xECECEC, floorB:0xD8DCE1,
+   soft:0xA7C478, thr:0xC89A5E, slope:0xA6B2CC,
+   elev:0x5C6674, elevW:0x8A95A3,
+   decor:[0x90C9E8,0xF2B367,0xB0D994], kind:'clinic'
+  },
+  {
+   sky:0xCFE9C5, fog:0xCFE9C5,
+   wall:0x7FA46C, wallT:0x97BD82,
+   floorA:0xD9CAA4, floorB:0xCCBA8E,
+   soft:0x6FB35A, thr:0xA87E45, slope:0xB2A7D8,
+   elev:0x55715D, elevW:0x6E8C76,
+   decor:[0x75C071,0x6EB3D8,0xEAC163], kind:'outdoor'
+  },
+  {
+   sky:0xD7EBC7, fog:0xD7EBC7,
+   wall:0x8AAE76, wallT:0xA7C88F,
+   floorA:0xE5D9B6, floorB:0xD6C89D,
+   soft:0x63B04F, thr:0xB58445, slope:0xC39DDD,
+   elev:0x5D7456, elevW:0x78906F,
+   decor:[0xF07B6A,0x78BDF0,0xF2D05F], kind:'festival'
+  }
+ ];
+ return calmStyle(styles[i]||styles[0]);
+}
+
+/* 화면 대부분을 채우는 바닥·하늘이 너무 밝으면 눈이 금세 피로해진다.
+   색조는 유지한 채 밝기와 채도만 낮춘다. 한 곳에서만 손댄다. */
+const CALM_TONE={ light:0.86, sat:0.82 };      // 밝기 · 채도 배율
+function calmHex(hex,extraLight){
+ const c=new THREE.Color(hex);
+ const hsl={}; c.getHSL(hsl);
+ c.setHSL(hsl.h, hsl.s*CALM_TONE.sat, Math.min(0.94, hsl.l*(extraLight??CALM_TONE.light)));
+ return c.getHex();
+}
+function calmStyle(s){
+ if(s.__calm) return s;
+ const out={ ...s, __calm:true };
+ ["sky","fog","wall","wallT","floorA","floorB","soft","thr","slope","elev","elevW"]
+  .forEach(k=>{ if(out[k]!=null) out[k]=calmHex(out[k]); });
+ // 바닥은 시야를 가장 많이 차지하므로 조금 더 낮춘다
+ ["floorA","floorB"].forEach(k=>{ if(out[k]!=null) out[k]=calmHex(out[k],0.94); });
+ if(Array.isArray(out.decor)) out.decor=out.decor.map(c=>calmHex(c,0.92));
+ return out;
+}
+
+function buildThemeDecor(g,style){
+ const deco=new THREE.Group();
+ deco.name="themeDecor";
+ worldGroup.add(deco);
+ themeDecorGroup=deco;
+
+ const lam=c=>new THREE.MeshLambertMaterial({color:c});
+ const bas=c=>new THREE.MeshBasicMaterial({color:c});
+ const box=(sx,sy,sz,x,y,z,mat)=>{
+  const m=new THREE.Mesh(BOX,mat);
+  m.scale.set(sx,sy,sz);
+  m.position.set(x,y,z);
+  deco.add(m);
+  return m;
+ };
+
+ const path=g.path||[];
+ const pick=(ratio)=>{
+  const idx=Math.max(2,Math.min(path.length-3,Math.floor(path.length*ratio)));
+  const [cx,cz]=path[idx];
+  return {idx,...worldOfCell(cx,cz),dir:eventDirection(path,idx)};
+ };
+ const wallSide=(spot,flip=1)=>{
+  const side={x:-spot.dir.z*flip,z:spot.dir.x*flip};
+  return {
+   x:spot.x+side.x*(CELL*0.46),
+   z:spot.z+side.z*(CELL*0.46),
+   side
+  };
+ };
+ /* 안내 표지판 — 정체를 알 수 없던 벽 판(shallowPanel)과 바닥 띠(edgeStrip)를
+    "기둥 + 게시판 + 그림문자" 구성의 표지판 하나로 통합한다.
+    벽에서 살짝 띄워 세우므로 지나가며 읽을 수 있고, 발치의 받침이
+    바닥에 붙어 있던 이유 모를 막대를 대신한다. */
+ const postMat=lam(0x5B6169);
+ const glyphMat=lam(0x272B2F);          // 게시판 위 그림문자 — 어두운 단일색으로 판독성 확보
+ const faceMat=c=>bas(c);
+
+ const sign=(spot,flip,color,kind)=>{
+  const p=wallSide(spot,flip);
+  const wallX=Math.abs(p.side.x)>0.5;    // true: 벽이 남북으로 뻗음(표지판이 x쪽을 향함)
+  const nSign=wallX?Math.sign(p.side.x||1):Math.sign(p.side.z||1);
+
+  const postH=1.10, plateY=1.58;
+  box(0.05,postH,0.05, p.x,postH/2,p.z, postMat);      // 기둥
+  box(0.16,0.035,0.16, p.x,0.018,p.z, postMat);        // 받침 — 바닥 막대의 자리를 대신한다
+
+  const plateW=0.56, plateH=0.38, plateT=0.05;
+  box(wallX?plateT:plateW, plateH, wallX?plateW:plateT, p.x,plateY,p.z, faceMat(color));
+
+  // 게시판 위 그림문자 — u(가로) · v(세로)는 게시판 로컬 좌표
+  const off=plateT/2+0.02;
+  const gx=p.x+(wallX?nSign*off:0), gz=p.z+(wallX?0:nSign*off);
+  const mk=(u,v,su,sv)=>{
+   if(wallX) box(0.022,sv,su, gx, plateY+v, p.z+u, glyphMat);
+   else      box(su,sv,0.022, p.x+u, plateY+v, gz, glyphMat);
+  };
+  ICONS[kind](mk);
+ };
+
+ // 그림문자 라이브러리 — 회전 없이 막대·점의 조합만으로 읽히도록 구성
+ const ICONS={
+  lobby:  mk=>{ [0,1,2].forEach(i=>{ const s=0.05+i*0.02; mk((i-1)*0.15,-0.02,s,s); }); },     // 진행 방향 점
+  school: mk=>{ [-0.08,0,0.08].forEach(v=>mk(0,v,0.30,0.035)); },                                // 줄 세 개(문서)
+  clinic: mk=>{ mk(0,0,0.06,0.30); mk(0,0,0.30,0.06); },                                          // 십자(의료)
+  outdoor:mk=>{ mk(0,-0.11,0.30,0.06); mk(0,-0.02,0.20,0.06); mk(0,0.07,0.11,0.06); },            // 나무
+  festival:mk=>{ mk(0,0,0.05,0.26); mk(0,0,0.26,0.05);
+                 [[-0.13,0.11],[0.13,0.11],[-0.13,-0.11],[0.13,-0.11]].forEach(([u,v])=>mk(u,v,0.05,0.05)); } // 반짝임
+ };
+
+ const a=pick(.18), b=pick(.48), c=pick(.76);
+
+ // 공통 원칙:
+ // 1) 천장 장식 없음
+ // 2) 통로 중앙에 3D 소품 없음
+ // 3) 경로 위 세 지점에 표지판 하나씩 — 벽에서 띄워 세워 지나가며 읽을 수 있게
+ if(style.kind==="lobby"){
+  sign(a,-1,0x92CDE8,"lobby"); sign(b,1,0xB9DCA4,"lobby"); sign(c,-1,0xF0D27A,"lobby");
+ }else if(style.kind==="school"){
+  sign(a,-1,0x87A9DF,"school"); sign(b,1,0xD99672,"school"); sign(c,-1,0xB7A3DF,"school");
+ }else if(style.kind==="clinic"){
+  sign(a,-1,0x9DCDE5,"clinic"); sign(b,1,0xD6E4ED,"clinic"); sign(c,-1,0xB3D79E,"clinic");
+ }else if(style.kind==="outdoor"){
+  sign(a,-1,0x78B76A,"outdoor"); sign(b,1,0xE1C36E,"outdoor"); sign(c,-1,0x7BB6CF,"outdoor");
+ }else if(style.kind==="festival"){
+  sign(a,-1,0xE9867A,"festival"); sign(b,1,0x7EB6E3,"festival"); sign(c,-1,0xE3C65E,"festival");
+ }
+}
+
+
+function cellKey(x,z){ return x+","+z; }
+
+function buildRampMeshes(g,VIS){
+ const group=new THREE.Group();
+ group.name="rampSurfaces";
+ worldGroup.add(group);
+
+ const rampMat=new THREE.MeshLambertMaterial({
+  color:0xD9C9A5,
+  side:THREE.DoubleSide
+ });
+ const edgeMat=new THREE.MeshBasicMaterial({
+  color:0xE8C75B,
+  side:THREE.DoubleSide
+ });
+ const stripeMat=new THREE.MeshBasicMaterial({color:0xF6E6A0});
+
+ const makeRibbon=(points,width,mat,yLift=0)=>{
+  if(points.length<2) return null;
+  const pos=[], idx=[];
+  for(let i=0;i<points.length;i++){
+   const p=points[i];
+   let dx,dz;
+   if(i===0){ dx=points[1].x-p.x; dz=points[1].z-p.z; }
+   else if(i===points.length-1){ dx=p.x-points[i-1].x; dz=p.z-points[i-1].z; }
+   else{ dx=points[i+1].x-points[i-1].x; dz=points[i+1].z-points[i-1].z; }
+   const len=Math.hypot(dx,dz)||1;
+   const sx=-dz/len*(width/2), sz=dx/len*(width/2);
+   pos.push(p.x+sx,p.y+yLift,p.z+sz);
+   pos.push(p.x-sx,p.y+yLift,p.z-sz);
+   if(i<points.length-1){
+    const b=i*2;
+    idx.push(b,b+1,b+2, b+2,b+1,b+3);
+   }
+  }
+  const geo=new THREE.BufferGeometry();
+  geo.setAttribute("position",new THREE.Float32BufferAttribute(pos,3));
+  geo.setIndex(idx);
+  geo.computeVertexNormals();
+  const mesh=new THREE.Mesh(geo,mat);
+  group.add(mesh);
+  return mesh;
+ };
+
+ g.ramps.forEach(r=>{
+  if(!r.cells||r.cells.length<2) return;
+
+  const dir={x:r.dx,z:r.dz};
+  const pts=r.cells.map(([cx,cz],k)=>({
+   x:(cx+0.5)*CELL,
+   y:r.heights[k]+0.035,
+   z:(cz+0.5)*CELL
+  }));
+
+  // 양 끝을 반 셀 연장해 일반 바닥과 끊김 없이 연결한다.
+  const first=pts[0], last=pts[pts.length-1];
+  const extStart={
+   x:first.x-dir.x*CELL*0.48,
+   y:first.y,
+   z:first.z-dir.z*CELL*0.48
+  };
+  const extEnd={
+   x:last.x+dir.x*CELL*0.48,
+   y:last.y,
+   z:last.z+dir.z*CELL*0.48
+  };
+  const ribbon=[extStart,...pts,extEnd];
+
+  // 경사면 본체: 셀별 회전 박스를 쓰지 않아 공중 부유/큰 돌출이 생기지 않는다.
+  makeRibbon(ribbon,CELL*0.88,rampMat,0);
+
+  // 양옆 낮은 경계선: 강한 반복 패턴 대신 두 개의 연속 선만 사용.
+  const side={x:-dir.z,z:dir.x};
+  const left=ribbon.map(p=>({
+   x:p.x+side.x*CELL*0.40,
+   y:p.y+0.025,
+   z:p.z+side.z*CELL*0.40
+  }));
+  const right=ribbon.map(p=>({
+   x:p.x-side.x*CELL*0.40,
+   y:p.y+0.025,
+   z:p.z-side.z*CELL*0.40
+  }));
+  makeRibbon(left,0.045,edgeMat,0);
+  makeRibbon(right,0.045,edgeMat,0);
+
+  // 시작/끝만 한 번 표시한다.
+  for(const p of [extStart,extEnd]){
+   const mark=new THREE.Mesh(BOX,stripeMat);
+   if(Math.abs(dir.x)>0) mark.scale.set(0.09,0.018,CELL*0.68);
+   else mark.scale.set(CELL*0.68,0.018,0.09);
+   mark.position.set(p.x,p.y+0.035,p.z);
+   group.add(mark);
+  }
+ });
+}
+
+function buildThresholdMeshes(g){
+ const group=new THREE.Group(); worldGroup.add(group);
+ const bodyMat=new THREE.MeshLambertMaterial({color:0xB67A32});
+ const edgeMat=new THREE.MeshBasicMaterial({color:0xFFE58B});
+ g.thresholds.forEach(t=>{
+  const wx=(t.x+0.5)*CELL,wz=(t.z+0.5)*CELL,hy=g.hgt[t.z][t.x];
+  const bar=new THREE.Mesh(BOX,bodyMat);
+  if(Math.abs(t.dx)>0) bar.scale.set(0.22,0.13,CELL*0.82);
+  else bar.scale.set(CELL*0.82,0.13,0.22);
+  bar.position.set(wx,hy+0.07,wz); group.add(bar);
+  const mark=new THREE.Mesh(BOX,edgeMat);
+  if(Math.abs(t.dx)>0) mark.scale.set(0.05,0.02,CELL*0.84);
+  else mark.scale.set(CELL*0.84,0.02,0.05);
+  mark.position.set(wx,hy+0.15,wz); group.add(mark);
+ });
+}
+function buildSideSlopeMeshes(g){
+ const group=new THREE.Group(); worldGroup.add(group);
+ const surfMat=new THREE.MeshLambertMaterial({color:0xAAA0D2});
+ const markMat=new THREE.MeshBasicMaterial({color:0xE7E1FF});
+ const tilt=THREE.MathUtils.degToRad(7);
+ const done=new Set();
+ g.sideSlopes.forEach(seg=>{
+  seg.cells.forEach(([cx,cz])=>{
+   const key=cellKey(cx,cz); if(done.has(key)) return; done.add(key);
+   const hy=g.hgt[cz][cx];
+   const tile=new THREE.Mesh(BOX,surfMat);
+   tile.scale.set(CELL*0.98,0.12,CELL*0.98);
+   tile.position.set((cx+0.5)*CELL,hy-0.01,(cz+0.5)*CELL);
+   const cross={x:-seg.dz,z:seg.dx};
+   if(Math.abs(cross.x)>0) tile.rotation.z=tilt*seg.sign*cross.x;
+   else tile.rotation.x=-tilt*seg.sign*cross.z;
+   group.add(tile);
+
+   // 횡방향 화살표 같은 3줄 표식
+   for(let n=-1;n<=1;n++){
+    const m=new THREE.Mesh(BOX,markMat);
+    if(Math.abs(seg.dx)>0) m.scale.set(0.42,0.018,0.055);
+    else m.scale.set(0.055,0.018,0.42);
+    m.position.set(tile.position.x + (seg.dx? n*0.45:0), hy+0.10, tile.position.z + (seg.dz? n*0.45:0));
+    m.rotation.copy(tile.rotation); group.add(m);
+   }
+  });
+ });
+}
+function buildStairReferences(g){
+ if(!g.stairRefs||!g.stairRefs.length) return;
+ const group=new THREE.Group();
+ group.name="stairReference";
+ worldGroup.add(group);
+ stairReferenceGroup=group;
+ const stepMat=new THREE.MeshLambertMaterial({color:0x8C9198});
+ const edgeMat=new THREE.MeshBasicMaterial({color:0xF4F4F4});
+ const noMat=new THREE.MeshBasicMaterial({color:0xE85F4F});
+ g.stairRefs.forEach(s=>{
+  const side={x:-s.dz,z:s.dx};
+  for(let i=0;i<4;i++){
+   const step=new THREE.Mesh(BOX,stepMat);
+   const length=0.55;
+   step.scale.set(Math.abs(s.dx)>0?length:1.45,0.18*(i+1),Math.abs(s.dz)>0?length:1.45);
+   step.position.set(s.x+s.dx*i*0.48,0.09*(i+1),s.z+s.dz*i*0.48);
+   group.add(step);
+   const lip=new THREE.Mesh(BOX,edgeMat);
+   lip.scale.set(Math.abs(s.dx)>0?0.06:1.42,0.025,Math.abs(s.dz)>0?0.06:1.42);
+   lip.position.set(step.position.x+s.dx*0.25,step.position.y+step.scale.y/2+0.03,step.position.z+s.dz*0.25);
+   group.add(lip);
+  }
+  // 빨간 X 표식: 계단은 주행 경로가 아님
+  const post=new THREE.Mesh(BOX,new THREE.MeshLambertMaterial({color:0x5B4A3A}));
+  post.scale.set(0.10,1.1,0.10); post.position.set(s.x-side.x*0.8,0.55,s.z-side.z*0.8); group.add(post);
+  const a=new THREE.Mesh(BOX,noMat), b=new THREE.Mesh(BOX,noMat);
+  a.scale.set(0.08,0.7,0.08); b.scale.copy(a.scale);
+  a.position.set(post.position.x,1.25,post.position.z); b.position.copy(a.position);
+  a.rotation.z=Math.PI/4; b.rotation.z=-Math.PI/4; group.add(a,b);
+ });
+}
+function buildElevatorCabin(g,VIS){
+ const e=g.elev;
+ const group=new THREE.Group(); worldGroup.add(group);
+ const centerX=(e.cx+0.5)*CELL, centerZ=(e.cz+0.5)*CELL;
+ const width=3*CELL, depth=3*CELL, H=2.82, T=0.12;
+ const xL=(e.cx-1)*CELL, xR=(e.cx+2)*CELL;
+ const zF=(e.cz-1)*CELL, zB=(e.cz+2)*CELL;
+ const panelMat=new THREE.MeshLambertMaterial({color:0xD9DEE4});
+ const trimMat=new THREE.MeshLambertMaterial({color:0x69747F});
+ const floorMat=new THREE.MeshLambertMaterial({color:0x48545F});
+ const railMat=new THREE.MeshLambertMaterial({color:0xAEB8C0});
+ const lightMat=new THREE.MeshBasicMaterial({color:0xFFF5CE});
+ const seamMat=new THREE.MeshLambertMaterial({color:0xB8C0C8});
+ const doorMat=new THREE.MeshLambertMaterial({color:0x9EA8B2});
+ const mk=(sx,sy,sz,x,y,z,mat)=>{const m=new THREE.Mesh(BOX,mat);m.scale.set(sx,sy,sz);m.position.set(x,y,z);group.add(m);return m;};
+
+ // 하나의 연속 바닥/천장 — 기존 타일/블록 느낌 제거
+ mk(width,0.10,depth,centerX,-0.05,centerZ,floorMat);
+ mk(width,0.10,depth,centerX,H+0.02,centerZ,trimMat);
+
+ // 얇은 캐빈 내벽
+ mk(T,H,depth, xL+T/2,H/2,centerZ,panelMat);
+ mk(T,H,depth, xR-T/2,H/2,centerZ,panelMat);
+ mk(width,H,T, centerX,H/2,zB-T/2,panelMat);
+
+ // 전면은 문 개구부를 남긴 얇은 패널
+ const doorW=1.08*CELL;
+ const sideW=(width-doorW)/2;
+ mk(sideW,H,T, centerX-doorW/2-sideW/2,H/2,zF+T/2,panelMat);
+ mk(sideW,H,T, centerX+doorW/2+sideW/2,H/2,zF+T/2,panelMat);
+
+ // 패널 seam — 내부에서 캐빈처럼 보이도록
+ for(const off of [-CELL,0,CELL]){
+  if(off!==0) mk(0.035,H*0.86,0.025,centerX+off,H*0.51,zB-T-0.01,seamMat);
+ }
+ for(const x of [xL+T+0.02,xR-T-0.02]){
+  for(const off of [-CELL*0.55,CELL*0.55]) mk(0.025,H*0.84,0.035,x,H*0.5,centerZ+off,seamMat);
+ }
+
+ // 손잡이
+ mk(width*0.74,0.055,0.055,centerX,0.84,zB-T-0.10,railMat);
+ mk(0.055,0.055,depth*0.66,xL+T+0.10,0.84,centerZ,railMat);
+ mk(0.055,0.055,depth*0.66,xR-T-0.10,0.84,centerZ,railMat);
+
+ // 천장 조명
+ mk(width*0.58,0.035,depth*0.34,centerX,H-0.08,centerZ,lightMat);
+
+ // 문틀
+ mk(0.12,H,0.18,centerX-doorW/2-0.07,H/2,zF+0.03,trimMat);
+ mk(0.12,H,0.18,centerX+doorW/2+0.07,H/2,zF+0.03,trimMat);
+ mk(doorW+0.26,0.14,0.18,centerX,H-0.12,zF+0.03,trimMat);
+
+ // 실제 슬라이딩 도어: 처음에는 양옆으로 열려 있고 버튼 후 중앙으로 닫힘
+ elevDoors=[];
+ const panelW=doorW/2;
+ [-1,1].forEach(sgn=>{
+  const d=mk(panelW,2.52,0.08,
+   centerX+sgn*doorW*0.25,1.26,zF+0.02,doorMat);   // 처음엔 닫혀 있다
+  d.userData.openX=centerX+sgn*doorW*0.75;
+  d.userData.closedX=centerX+sgn*doorW*0.25;
+  d.userData.panelW=panelW;
+  d.userData.q=0;                                   // 0 닫힘 · 1 열림
+  elevDoors.push(d);
+ });
+
+ // 버튼 패널: 뒤쪽 얇은 내벽에 부착
+ btnPanel=new THREE.Mesh(BOX,MAT.brass);
+ btnPanel.position.set(centerX,1.30,zB-T-0.10);
+ btnPanel.scale.set(0.62,1.46,0.10); group.add(btnPanel);
+
+ /* 층 버튼 열 — 엘리베이터를 엘리베이터로 만드는 것은 '숫자 버튼'이다.
+    현재 층은 꺼져 있고, 올라갈 층 버튼만 살아 있다. */
+ elevFloorBtns=[];
+ const total=FLOORS.length+1;                    // 마지막 층 위는 옥상
+ for(let n=0;n<total;n++){
+  const btn=new THREE.Mesh(BOX,new THREE.MeshBasicMaterial({color:0x6A5A3A}));
+  btn.scale.set(0.19,0.19,0.05);
+  btn.position.set(centerX+(n%2?0.16:-0.16), 0.72+Math.floor(n/2)*0.30, zB-T-0.17);
+  group.add(btn);
+  elevFloorBtns.push(btn);
+  // 버튼 옆 숫자 — 블록 점으로 층수를 센다
+  for(let k=0;k<=n;k++){
+   if(k>4) break;
+   const dot=new THREE.Mesh(BOX,new THREE.MeshBasicMaterial({color:0xCBB68A}));
+   dot.scale.set(0.03,0.03,0.03);
+   dot.position.set(btn.position.x-0.11, btn.position.y+0.07-k*0.035, zB-T-0.18);
+   group.add(dot);
+  }
+ }
+ btnLight=elevFloorBtns[Math.min(ST.floor+1,elevFloorBtns.length-1)];
+
+ /* 캐빈 안 층 표시기 — 현재 층을 막대 개수로 보여준다 */
+ elevIndicator=new THREE.Group();
+ for(let n=0;n<total;n++){
+  const seg=new THREE.Mesh(BOX,new THREE.MeshBasicMaterial({color:0x2B2B2B}));
+  seg.scale.set(0.13,0.13,0.04);
+  seg.position.set(centerX-((total-1)*0.09)+n*0.18, 2.32, zB-T-0.14);
+  elevIndicator.add(seg);
+ }
+ group.add(elevIndicator);
+ const indBack=new THREE.Mesh(BOX,new THREE.MeshLambertMaterial({color:0x1C1C1C}));
+ indBack.scale.set(total*0.20,0.26,0.05);
+ indBack.position.set(centerX,2.32,zB-T-0.11); group.add(indBack);
+
+ /* 문 바깥쪽 — 호출 램프와 상행 화살표. 밖에서 봐도 엘리베이터임을 안다 */
+ const callBack=new THREE.Mesh(BOX,new THREE.MeshLambertMaterial({color:0x37414B}));
+ callBack.scale.set(0.34,0.52,0.08);
+ callBack.position.set(centerX+doorW/2+0.42,1.42,zF+0.10); group.add(callBack);
+ elevCallLamp=new THREE.Mesh(BOX,new THREE.MeshBasicMaterial({color:0x4A3A18}));
+ elevCallLamp.scale.set(0.20,0.20,0.05);
+ elevCallLamp.position.set(centerX+doorW/2+0.42,1.55,zF+0.15); group.add(elevCallLamp);
+ const upArrow=new THREE.Mesh(BOX,new THREE.MeshBasicMaterial({color:0x8A8A8A}));
+ upArrow.scale.set(0.12,0.12,0.05);
+ upArrow.rotation.z=Math.PI/4;
+ upArrow.position.set(centerX+doorW/2+0.42,1.28,zF+0.15); group.add(upArrow);
+
+ /* 문 위 층 표시 — 밖에서 보이는 얇은 띠 */
+ const lintel=new THREE.Mesh(BOX,new THREE.MeshLambertMaterial({color:0x1C1C1C}));
+ lintel.scale.set(doorW*0.8,0.24,0.06);
+ lintel.position.set(centerX,2.60,zF+0.12); group.add(lintel);
+ for(let n=0;n<total;n++){
+  const seg=new THREE.Mesh(BOX,new THREE.MeshBasicMaterial({color:0x2B2B2B}));
+  seg.scale.set(0.11,0.11,0.04);
+  seg.position.set(centerX-((total-1)*0.085)+n*0.17,2.60,zF+0.16);
+  elevIndicator.add(seg);
+ }
+
+ elevArrivalDone=false;
+ refreshElevatorLamps();
+}
+
+/* 층 표시기·버튼 점등 상태를 현재 층에 맞춘다 */
+function refreshElevatorLamps(){
+ if(!elevIndicator) return;
+ const total=FLOORS.length+1;
+ elevIndicator.children.forEach((seg,i)=>{
+  const n=i%total;                                  // 캐빈 안·문 위 두 벌
+  seg.material.color.setHex(n===ST.floor ? 0xFFC93C : 0x2B2B2B);
+ });
+ elevFloorBtns.forEach((b,n)=>{
+  b.material.color.setHex(n===ST.floor+1 ? 0x7A3E1A : 0x6A5A3A);
+ });
+}
+
+
+function buildFirstPersonGuide(g){
+ const group=new THREE.Group();
+ group.name="firstPersonGuide";
+ worldGroup.add(group);
+ fpGuideGroup=group;
+
+ const mat=new THREE.MeshBasicMaterial({
+  color:0xC8D4D9,
+  transparent:true,
+  opacity:0.34,
+  depthWrite:false
+ });
+
+ const path=g.path||[];
+ for(let i=0;i<path.length-1;i++){
+  const [x0,z0]=path[i], [x1,z1]=path[i+1];
+  const p0=worldOfCell(x0,z0), p1=worldOfCell(x1,z1);
+  const dx=p1.x-p0.x, dz=p1.z-p0.z;
+  const len=Math.hypot(dx,dz);
+  if(len<0.1) continue;
+
+  const m=new THREE.Mesh(BOX,mat);
+  if(Math.abs(dx)>Math.abs(dz)) m.scale.set(len*0.82,0.018,0.055);
+  else m.scale.set(0.055,0.018,len*0.82);
+  m.position.set(
+   (p0.x+p1.x)/2,
+   (g.hgt[z0][x0]+g.hgt[z1][x1])/2 + 0.075,
+   (p0.z+p1.z)/2
+  );
+  group.add(m);
+ }
+ group.visible=(ST.view==="first");
+}
+
+function buildWorld(g){
+ if(worldGroup){ scene.remove(worldGroup); }
+ worldGroup=new THREE.Group(); scene.add(worldGroup);
+ moverMeshes=[]; elevDoors=[]; eventVisuals=[]; stopVisual=null; choiceVisuals=[]; guideBot=null; // guide bot intentionally unused to keep scene clean
+
+ const wall=[],wallT=[],fA=[],fB=[],soft=[],post=[];
+ const e=g.elev;
+ const rampCells=new Set((g.ramps||[]).flatMap(r=>r.cells.map(([x,z])=>cellKey(x,z))));
+ const sideSlopeCells=new Set((g.sideSlopes||[]).flatMap(r=>r.cells.map(([x,z])=>cellKey(x,z))));
+ const inElevatorShell=(x,z)=>x>=e.cx-2&&x<=e.cx+2&&z>=e.cz-2&&z<=e.cz+2&&(x===e.cx-2||x===e.cx+2||z===e.cz-2||z===e.cz+2);
+
+ for(let z=0;z<g.h;z++) for(let x=0;x<g.w;x++){
+  const t=g.c[z][x], wx=(x+0.5)*CELL, wz=(z+0.5)*CELL, hy=g.hgt[z][x];
+  if((t===0||t===3)&&inElevatorShell(x,z)){
+   // 엘리베이터 외곽 블록은 그리지 않는다. 얇은 cabin panel로 별도 렌더링.
+   continue;
+  }
+  if(t===0){
+   wall.push([wx,WALL_H/2,wz,CELL,WALL_H,CELL]);
+   wallT.push([wx,WALL_H+0.14,wz,CELL,0.28,CELL]);
+  }else if(t===3){
+   continue;
+  }else if(t===2){
+   continue; // cabin floor를 하나의 연속 면으로 별도 렌더링
+  }else{
+   const key=cellKey(x,z);
+   if(rampCells.has(key)||sideSlopeCells.has(key)) continue;
+   if(g.soft[z][x]) soft.push([wx,hy-0.14,wz,CELL,0.3,CELL]);
+   else ((x+z)%2 ? fA:fB).push([wx,hy-0.15,wz,CELL,0.3,CELL]);
+  }
+ }
+ g.posts.forEach(p=>post.push([p.x,0.9,p.z,p.w,1.8,p.d]));
+
+ const VIS=getFloorVisualStyle(ST.floor||0);
+ const wallMat=makeColorMat(VIS.wall), wallTMat=makeColorMat(VIS.wallT),
+    floorAMat=makeColorMat(VIS.floorA), floorBMat=makeColorMat(VIS.floorB),
+    softMat=makeColorMat(VIS.soft);
+
+ instance(wall,wallMat,worldGroup); instance(wallT,wallTMat,worldGroup);
+ instance(fA,floorAMat,worldGroup); instance(fB,floorBMat,worldGroup);
+ instance(soft,softMat,worldGroup); instance(post,MAT.post,worldGroup);
+ buildRampMeshes(g,VIS);
+ buildThresholdMeshes(g);
+ buildSideSlopeMeshes(g);
+ buildStairReferences(g);
+ buildThemeDecor(g,VIS);
+ buildElevatorCabin(g,VIS);
+ buildFirstPersonGuide(g);
+
+ // 동전 — 길을 알려주는 이정표이자 보상
+ coinMeshes=[];
+ const coinGeo=new THREE.CylinderGeometry(0.30,0.30,0.07,14);
+ const coreGeo=new THREE.CylinderGeometry(0.19,0.19,0.09,12);
+ g.coins.forEach(c=>{
+  const grp=new THREE.Group();         // 이 그룹만 돌린다 (바퀴와 같은 원리)
+  const faceMat = c.kind==="fine" ? MAT.fine : c.kind==="mid" ? MAT.mid : c.kind==="max" ? MAT.power : MAT.coin;
+  const coreMat = c.kind==="fine" ? MAT.fineIn : c.kind==="mid" ? MAT.midIn : c.kind==="max" ? MAT.powerIn : MAT.coinIn;
+  const face=new THREE.Mesh(coinGeo,faceMat);
+  face.rotation.x=Math.PI/2;          // 동전을 세운다
+  grp.add(face);
+  const core=new THREE.Mesh(coreGeo,coreMat);
+  core.rotation.x=Math.PI/2;
+  grp.add(core);
+  grp.position.set(c.x,c.y+0.85,c.z);
+  worldGroup.add(grp);
+  if(c.kind==="fine") grp.scale.set(0.82,0.82,0.82);    // 미세조정: 작은 파란 동전
+  if(c.kind==="mid") grp.scale.set(1.0,1.0,1.0);      // 중간조정: 초록 동전
+  if(c.kind==="max") grp.scale.set(1.22,1.22,1.22);    // 최대조정: 큰 주황 동전
+  coinMeshes.push({ grp, c, base:c.y+0.85 });
+ });
+
+ // 움직이는 청소 로봇
+ g.movers.forEach(mv=>{
+  const grp=new THREE.Group();
+  const body=new THREE.Mesh(BOX,MAT.mover); body.scale.set(0.95,0.6,0.95); body.position.y=0.35; grp.add(body);
+  const top=new THREE.Mesh(BOX,MAT.wallT); top.scale.set(0.55,0.25,0.55); top.position.y=0.78; grp.add(top);
+  worldGroup.add(grp);
+  moverMeshes.push({ grp, mv });
+ });
+}
+
+
+/* ==========================================================
+  EVENT ENGINE — 게임 사건과 조작 기술을 분리해서 관리
+  ========================================================== */
+const EVENT_TYPE={
+ STOP:"stop",
+ WAIT:"wait",
+ CHOICE:"choice",
+ PRECISION:"precision"
+};
+
+let GAME_EVENTS=[];
+let ACTIVE_EVENT=null;
+
+function passableCell(g,x,z){
+ return x>=0&&z>=0&&x<g.w&&z<g.h&&(g.c[z][x]===1||g.c[z][x]===2);
+}
+function worldOfCell(x,z){
+ return { x:(x+0.5)*CELL, z:(z+0.5)*CELL };
+}
+function dist2D(a,b){
+ return Math.hypot(a.x-b.x,a.z-b.z);
+}
+function nearestPathIndex(x,z){
+ if(!G||!G.path) return 0;
+ let bi=0,bd=Infinity;
+ G.path.forEach(([cx,cz],i)=>{
+  const p=worldOfCell(cx,cz);
+  const d=Math.hypot(p.x-x,p.z-z);
+  if(d<bd){bd=d;bi=i;}
+ });
+ return bi;
+}
+function straightPathIndex(path,ratio=.55){
+ if(path.length<5) return Math.max(1,Math.floor(path.length*ratio));
+ const target=Math.floor(path.length*ratio);
+ for(let r=0;r<path.length;r++){
+  for(const i of [target+r,target-r]){
+   if(i<2||i>=path.length-2) continue;
+   const a=path[i-1],b=path[i],c=path[i+1];
+   const d1=[b[0]-a[0],b[1]-a[1]], d2=[c[0]-b[0],c[1]-b[1]];
+   if(d1[0]===d2[0]&&d1[1]===d2[1]) return i;
+  }
+ }
+ return target;
+}
+function eventDirection(path,i){
+ const a=path[Math.max(0,i-1)], b=path[Math.min(path.length-1,i+1)];
+ const dx=b[0]-a[0], dz=b[1]-a[1];
+ const n=Math.hypot(dx,dz)||1;
+ return {x:dx/n,z:dz/n};
+}
+function addBox(parent,mat,sx,sy,sz,x,y,z){
+ const m=new THREE.Mesh(BOX,mat);
+ m.scale.set(sx,sy,sz);
+ m.position.set(x,y,z);
+ parent.add(m);
+ return m;
+}
+function createGuideBot(g){ /* removed: visual guide bot intentionally omitted */ }
+function createStopVisual(ev){
+ const p=ev.pos, dir=ev.dir;
+ const zone=new THREE.Mesh(BOX,MAT.stopZone);
+ zone.scale.set(CELL*0.82,0.06,CELL*0.82);
+ zone.position.set(p.x,0.04,p.z);
+ worldGroup.add(zone);
+
+ // 진행 방향의 옆에 작은 신호등을 배치
+ const side={x:-dir.z,z:dir.x};
+ const pole=new THREE.Group();
+ addBox(pole,MAT.eventDark,0.16,1.25,0.16,0,0.62,0);
+ const lampMat=new THREE.MeshBasicMaterial({color:0xE8B23A});
+ addBox(pole,lampMat,0.46,0.46,0.20,0,1.35,0);
+ pole.position.set(p.x+side.x*1.15,0,p.z+side.z*1.15);
+ worldGroup.add(pole);
+
+ // 성공 시 올라가는 얇은 게이트 바 — 충돌판정에는 사용하지 않는다.
+ const barMat=new THREE.MeshLambertMaterial({color:0xE8802B});
+ const gate=addBox(worldGroup,barMat,
+  Math.abs(dir.x)>0.5?0.15:CELL*0.75,
+  0.15,
+  Math.abs(dir.z)>0.5?0.15:CELL*0.75,
+  p.x+dir.x*1.3,1.15,p.z+dir.z*1.3
+ );
+ stopVisual={zone,pole,lampMat,gate,gateBaseY:1.15};
+ eventVisuals.push(zone,pole,gate);
+}
+function findChoiceData(g){
+ const path=g.path;
+ const pkeys=new Set(path.map(([x,z])=>x+","+z));
+ for(let i=5;i<path.length-7;i++){
+  const [x,z]=path[i];
+  const prev=path[i-1], next=path[i+1];
+  const opts=[];
+  for(const [dx,dz] of [[1,0],[-1,0],[0,1],[0,-1]]){
+   const nx=x+dx,nz=z+dz;
+   if(!passableCell(g,nx,nz)) continue;
+   if((nx===prev[0]&&nz===prev[1])) continue;
+   opts.push([nx,nz]);
+  }
+  const extra=opts.find(([nx,nz])=>!(nx===next[0]&&nz===next[1]));
+  if(extra){
+   return {index:i,center:[x,z],a:next,b:extra};
+  }
+ }
+ return null;
+}
+function createChoiceVisual(ev){
+ choiceVisuals=[];
+ const make=(cell,mat,label)=>{
+  const p=worldOfCell(cell[0],cell[1]);
+  const g=new THREE.Group();
+  addBox(g,mat,0.55,1.0,0.55,0,0.5,0);
+  const top=new THREE.Mesh(BOX,new THREE.MeshBasicMaterial({color:label==="A"?0xE8D8FF:0xFFF0A0}));
+  top.scale.set(0.34,0.18,0.34); top.position.y=1.08; g.add(top);
+  g.position.set(p.x,0,p.z);
+  worldGroup.add(g);
+  choiceVisuals.push({grp:g,label,cell});
+  return {x:p.x,z:p.z};
+ };
+ ev.optionA.pos=make(ev.optionA.cell,MAT.choiceA,"A");
+ ev.optionB.pos=make(ev.optionB.cell,MAT.choiceB,"B");
+}
+function setupGameEvents(g){
+ GAME_EVENTS=[]; ACTIVE_EVENT=null;
+
+ // 1) Stop & Release — 모든 층에서 1회.
+ const stopIdx=straightPathIndex(g.path,ST.floor===0?0.48:0.58);
+ const [sx,sz]=g.path[stopIdx], sp=worldOfCell(sx,sz);
+ const stopEv={
+  id:`F${ST.floor+1}_STOP`,
+  type:EVENT_TYPE.STOP,
+  status:"pending",
+  pos:{x:sp.x,z:sp.z},
+  dir:eventDirection(g.path,stopIdx),
+  pathIndex:stopIdx,
+  state:"APPROACH",
+  hold:0,
+  approachAt:0,
+  neutralAt:0,
+  metrics:{overshoot:0,neutralReturnTime:null,stopError:null,reApproach:0}
+ };
+ GAME_EVENTS.push(stopEv);
+ createStopVisual(stopEv);
+
+ // 2) Precision — 기존 특수 Control Zone 동전과 연결.
+ const special=g.coins.find(c=>c.kind!=="normal");
+ if(special){
+  GAME_EVENTS.push({
+   id:`F${ST.floor+1}_PRECISION`,
+   type:EVENT_TYPE.PRECISION,
+   status:"pending",
+   sourceCoin:special,
+   skill:special.kind
+  });
+ }
+
+ // 3) Choice — 2층에서 실제 갈림길 하나를 탐험 선택으로 사용.
+ if(ST.floor===1){
+  const ch=findChoiceData(g);
+  if(ch){
+   const cp=worldOfCell(ch.center[0],ch.center[1]);
+   const ev={
+    id:"F2_CHOICE",
+    type:EVENT_TYPE.CHOICE,
+    status:"pending",
+    pos:{x:cp.x,z:cp.z},
+    optionA:{name:"음악실",icon:"",cell:ch.a},
+    optionB:{name:"체육관",icon:"",cell:ch.b}
+   };
+   GAME_EVENTS.push(ev);
+   createChoiceVisual(ev);
+  }
+ }
+
+ // 4) Wait — 5층의 첫 이동 로봇을 기다리는 사건.
+ if(ST.floor===4 && moverMeshes.length){
+  const mover=moverMeshes[0];
+  mover.grp.children[0].material=mover.grp.children[0].material.clone();
+  GAME_EVENTS.push({
+   id:"F5_WAIT",
+   type:EVENT_TYPE.WAIT,
+   status:"pending",
+   mover,
+   hold:0,
+   metrics:{waitTime:0,stopped:false}
+  });
+ }
+
+ updateEventToast();
+}
+function activeIncomplete(type){
+ return GAME_EVENTS.find(e=>e.type===type&&e.status!=="complete");
+}
+function eventComplete(ev,metrics={}){
+ if(!ev||ev.status==="complete") return;
+ if(ev.type===EVENT_TYPE.STOP){
+  wstAdd("stop",1);
+  const e=Math.abs(metrics.stopError??ev.metrics?.stopError??0);
+  WSTF.stopErrSum+=e; WSTF.stopErrN++; WSTT.stopErrSum+=e; WSTT.stopErrN++;
+ }
+ ev.status="complete";
+ ev.completedAt=performance.now();
+ ev.metrics={...(ev.metrics||{}),...metrics};
+ ST.eventLog.push({
+  floor:ST.floor+1,
+  eventId:ev.id,
+  type:ev.type,
+  metrics:{...(ev.metrics||{})}
+ });
+ ACTIVE_EVENT=null;
+ ST.activeEventId=null;
+ document.body.classList.remove("stop-active");
+ hide($("stopCoach"));
+
+ rewardWorldChange(ev.type==="stop"?"mid":"normal");
+ updateEventToast();
+ updateCollectionUI();
+}
+function updateStopEvent(dt,ev){
+ const dx=P.x-ev.pos.x,dz=P.z-ev.pos.z;
+ const dist=Math.hypot(dx,dz);
+ const signed=dx*ev.dir.x+dz*ev.dir.z; // + 값은 목표를 지나친 거리
+ const raw=Math.max(Math.abs(IN.rawF),Math.abs(IN.rawT));
+ const neutral=raw<=Math.max(0.11,WHEEL.dead*0.85);
+
+ if(ev.status==="pending"&&dist<7.0){
+  ev.status="active";
+  ev.state="APPROACH";
+  ev.approachAt=performance.now();
+  ACTIVE_EVENT=ev; ST.activeEventId=ev.id;
+  document.body.classList.add("stop-active");
+  show($("stopCoach"));
+ }
+ if(ev.status!=="active") return;
+
+ ev.metrics.overshoot=Math.max(ev.metrics.overshoot||0,Math.max(0,signed));
+
+ // 상태 진행
+ if(dist<4.3 && ev.state==="APPROACH") ev.state="DECELERATE";
+ if(neutral && dist<2.4){
+  if(!ev.neutralAt){
+   ev.neutralAt=performance.now();
+   ev.metrics.neutralReturnTime=(ev.neutralAt-ev.approachAt)/1000;
+  }
+  ev.state="RELEASE";
+ }
+
+ const stopped=Math.abs(P.v)<0.18 && Math.abs(P.w)<0.28;
+ if(dist<1.35 && neutral && stopped){
+  ev.state="STOP";
+  ev.hold+=dt;
+ }else if(ev.state==="STOP"){
+  ev.hold=Math.max(0,ev.hold-dt*1.8);
+ }
+
+ // 너무 지나쳤으면 다시 접근을 유도
+ if(signed>2.3 && ev.hold<0.2){
+  ev.metrics.reApproach++;
+  ev.state="APPROACH";
+  ev.approachAt=performance.now();
+  ev.neutralAt=0;
+  ev.hold=0;
+ }
+
+ updateStopCoach(ev,dist,neutral,stopped);
+
+ if(ev.hold>=1.0){
+  ev.metrics.stopError=dist;
+  if(stopVisual){
+   stopVisual.lampMat.color.setHex(0x63E676);
+   stopVisual.gate.userData.opening=true;
+  }
+  ST.collectibles.push(`정지 스티커 ${ST.floor+1}`);
+  banner("딱 멈췄다! 길이 열렸다.");
+  eventComplete(ev);
+ }
+}
+function updateStopCoach(ev,dist,neutral,stopped){
+ const states=["APPROACH","DECELERATE","RELEASE","STOP"];
+ const ids=["stopStepApproach","stopStepSlow","stopStepRelease","stopStepHold"];
+ ids.forEach((id,i)=>$(id).classList.toggle("on",states.indexOf(ev.state)>=i));
+ $("stopHoldFill").style.width=Math.min(100,ev.hold*100)+"%";
+ let msg="초록 영역을 향해 가세요.";
+ if(ev.state==="DECELERATE") msg="속도를 줄여 초록 영역 안으로 들어가세요.";
+ if(ev.state==="RELEASE") msg=neutral?"좋아요. 조이스틱을 놓은 채 멈춰보세요.":"조이스틱을 가운데로 놓아보세요.";
+ if(ev.state==="STOP") msg=stopped?"그대로 1초만 기다리기!":"조금 더 멈춰보세요.";
+ $("stopCoachText").textContent=msg;
+ $("missionChip").innerHTML=`<b>멈추기</b> 초록 영역 안에 정확히 정지`;
+}
+function completePrecisionEvent(c){
+ const ev=GAME_EVENTS.find(e=>e.type===EVENT_TYPE.PRECISION&&e.sourceCoin===c&&e.status!=="complete");
+ if(!ev) return;
+ ST.collectibles.push(
+  c.kind==="fine"?"파란 컨트롤 스티커":
+  c.kind==="mid"?"초록 컨트롤 스티커":"주황 컨트롤 스티커"
+ );
+ eventComplete(ev,{zone:c.kind,holdSeconds:ZONE_HOLD_SEC});
+}
+function updateChoiceEvent(ev){
+ if(ev.status==="complete") return;
+ const dCenter=Math.hypot(P.x-ev.pos.x,P.z-ev.pos.z);
+ if(ev.status==="pending"&&dCenter<5.0){
+  ev.status="active"; ACTIVE_EVENT=ev; ST.activeEventId=ev.id;
+  $("missionChip").innerHTML=`<b>어디로 갈까?</b> 보라 ${ev.optionA.name} · 금빛 ${ev.optionB.name}`;
+ }
+ if(ev.status!=="active") return;
+
+ for(const opt of [ev.optionA,ev.optionB]){
+  if(!opt.pos) continue;
+  if(Math.hypot(P.x-opt.pos.x,P.z-opt.pos.z)<0.9){
+   ev.choice=opt.name;
+   ST.collectibles.push(`${opt.name} 스티커`);
+   choiceVisuals.forEach(v=>{
+    if(v.cell[0]===opt.cell[0]&&v.cell[1]===opt.cell[1]) v.grp.scale.set(1.25,1.25,1.25);
+    else v.grp.visible=false;
+   });
+   banner(`${opt.name}을(를) 발견했다!`);
+   eventComplete(ev,{choice:opt.name});
+   break;
+  }
+ }
+}
+function updateWaitEvent(dt,ev){
+ if(ev.status==="complete"||!ev.mover) return;
+ const mp=ev.mover.grp.position;
+ const d=Math.hypot(P.x-mp.x,P.z-mp.z);
+ if(ev.status==="pending"&&d<5.0){
+  ev.status="active"; ACTIVE_EVENT=ev; ST.activeEventId=ev.id;
+ }
+ if(ev.status!=="active") return;
+
+ $("missionChip").innerHTML='<b>기다리기</b> 로봇이 지나갈 때 잠깐 멈춰';
+ const raw=Math.max(Math.abs(IN.rawF),Math.abs(IN.rawT));
+ const stopped=Math.abs(P.v)<0.16&&raw<=Math.max(.12,WHEEL.dead*.9);
+ if(d<3.2&&stopped){
+  ev.hold+=dt; ev.metrics.waitTime+=dt; ev.metrics.stopped=true;
+ }else if(!stopped){
+  ev.hold=Math.max(0,ev.hold-dt*1.2);
+ }
+ if(ev.hold>=1.0){
+  ev.mover.grp.children[0].material.color.setHex(0x63D77D);
+  ST.collectibles.push("기다림 스티커");
+  banner("먼저 보내줬다!");
+  eventComplete(ev,{waitTime:ev.metrics.waitTime});
+ }
+}
+function updateEventEngine(dt){
+ const stop=activeIncomplete(EVENT_TYPE.STOP);
+ if(stop) updateStopEvent(dt,stop);
+
+ const choice=activeIncomplete(EVENT_TYPE.CHOICE);
+ if(choice) updateChoiceEvent(choice);
+
+ const wait=activeIncomplete(EVENT_TYPE.WAIT);
+ if(wait) updateWaitEvent(dt,wait);
+
+ // 실제 월드 상태 변화 애니메이션
+ if(stopVisual&&stopVisual.gate.userData.opening){
+  stopVisual.gate.position.y += dt*1.8;
+  if(stopVisual.gate.position.y>3.2) stopVisual.gate.userData.opening=false;
+ }
+}
+function updateGuideBot(dt,t){ /* no-op: guide bot removed to reduce visual clutter */ }
+function updateCollectionUI(){
+ $("collectionMini").textContent=`발견 ${ST.collectibles.length}`;
+ $("collectionMini").classList.toggle("hidden",ST.phase!=="drive"&&ST.phase!=="beat");
+}
+function updateEventToast(){
+ if(!GAME_EVENTS.length){
+  $("eventToastText").textContent="사건 데이터 없음";
+  return;
+ }
+ const done=GAME_EVENTS.filter(e=>e.status==="complete").length;
+ const active=GAME_EVENTS.find(e=>e.status==="active");
+ $("eventToastText").textContent=active
+  ? `${active.id} · ${active.type.toUpperCase()} · ${active.state||"ACTIVE"}`
+  : `${done}/${GAME_EVENTS.length} events complete`;
+}
+function updateTherapistEventPanel(){
+ if(!ST.wstOpen) return;
+ const lastStop=[...ST.eventLog].reverse().find(e=>e.type==="stop");
+ const current=GAME_EVENTS.find(e=>e.status==="active");
+ const rows=[];
+ rows.push(`<div class="metricRow"><span>현재 사건</span><b>${current?current.type.toUpperCase():"—"}</b></div>`);
+ rows.push(`<div class="metricRow"><span>완료 사건</span><b>${ST.eventLog.length}</b></div>`);
+ rows.push(`<div class="metricRow"><span>발견 보상</span><b>${ST.collectibles.length}</b></div>`);
+ if(lastStop){
+  const m=lastStop.metrics||{};
+  rows.push(`<div class="metricRow"><span>중립 복귀</span><b>${m.neutralReturnTime!=null?m.neutralReturnTime.toFixed(2)+"s":"—"}</b></div>`);
+  rows.push(`<div class="metricRow"><span>정지 오차</span><b>${m.stopError!=null?m.stopError.toFixed(2)+"m":"—"}</b></div>`);
+  rows.push(`<div class="metricRow"><span>Overshoot</span><b>${m.overshoot!=null?m.overshoot.toFixed(2)+"m":"—"}</b></div>`);
+ }
+ $("skillMetricRows").innerHTML=rows.join("");
+ updateEventToast();
+}
+
+/* 휠체어 — 블록으로 조립. 아이가 자기 자리를 알아볼 수 있게 사람도 태운다 */
+function buildChair(){
+ chair=new THREE.Group(); chairWheels=[];
+ const add=(color,sx,sy,sz,x,y,z)=>{
+  const m=new THREE.Mesh(BOX,new THREE.MeshLambertMaterial({ color }));
+  m.scale.set(sx,sy,sz); m.position.set(x,y,z); chair.add(m); return m;
+ };
+ add(0x2A2A2A, 0.92,0.18,1.05, 0,0.42,0);    // 프레임
+ add(0x2FA8A0, 0.86,0.14,0.9, 0,0.56,0.02);  // 좌석
+ add(0x2FA8A0, 0.86,0.85,0.14, 0,0.98,-0.44);  // 등받이
+ add(0x1D1D1D, 0.9,0.12,0.3,  0,0.28,0.52);  // 발판
+ // 바퀴는 굴러야 한다 — 원통으로 만든다
+ const tyreGeo=new THREE.CylinderGeometry(0.36,0.36,0.13,16);
+ const rimGeo =new THREE.CylinderGeometry(0.15,0.15,0.15,12);
+ const castGeo=new THREE.CylinderGeometry(0.17,0.17,0.10,12);
+ const tyreMat=new THREE.MeshLambertMaterial({ color:0x141414 });
+ const rimMat =new THREE.MeshLambertMaterial({ color:0xB4B4B4 });
+ // 눕히는 회전과 굴리는 회전을 같은 오브젝트에 주면
+ // 오일러 XYZ 순서 때문에 굴림이 '수직축 회전(옆돌기)'이 된다.
+ // 축을 눕히는 바깥 그룹 / 굴러가는 안쪽 그룹으로 분리한다.
+ const mountWheel=(x,y,z,geo)=>{
+  const mount=new THREE.Group();       // 바깥: 축을 좌우로 눕힌다
+  mount.rotation.z=Math.PI/2;
+  mount.position.set(x,y,z);
+  const spin=new THREE.Group();        // 안쪽: 이 그룹만 굴린다
+  spin.add(new THREE.Mesh(geo,tyreMat));
+  mount.add(spin); chair.add(mount);
+  return spin;
+ };
+ [-1,1].forEach(s=>{
+  const spin=mountWheel(s*0.55,0.36,-0.12,tyreGeo);
+  spin.add(new THREE.Mesh(rimGeo,rimMat));
+  for(let k=0;k<4;k++){            // 스포크 — 굴러가는 게 눈에 보이도록
+   const sp=new THREE.Mesh(BOX,rimMat);
+   sp.scale.set(0.035,0.05,0.62);
+   sp.rotation.y=k*Math.PI/4;
+   spin.add(sp);
+  }
+  chairWheels.push({ spin, r:0.36 });
+  chairWheels.push({ spin:mountWheel(s*0.42,0.18,0.5,castGeo), r:0.17 });
+ });
+ // 조이스틱 — 실제 조작부가 보이면 자기가 뭘 쥐고 있는지 이해한다
+ add(0x2A2A2A, 0.26,0.1,0.26, 0.5,0.72,0.34);
+ const stick=add(0xE8B23A, 0.09,0.3,0.09, 0.5,0.9,0.34);
+ chair.userData.stick=stick;
+ // 탑승자
+ add(0xE8C39A, 0.34,0.34,0.32, 0,1.42,-0.18).userData.rider=true;  // 머리
+ add(0x4E7FA8, 0.5,0.5,0.36,  0,1.02,-0.18).userData.rider=true;  // 상체
+ scene.add(chair);
+}
+
+/* ==========================================================
+  WST 계측 — 선언한 항목이 실제로 수행되었는지 숫자로 남긴다.
+  지형은 구현되어 있었으나 수행도가 기록되지 않아 관리자 확인이 불가능했다.
+  ========================================================== */
+const WST_ITEMS=[
+ { id:"fwd",    name:"Rolls forward",            ko:"앞으로 주행",        unit:"m",  goal:60 },
+ { id:"rev",    name:"Rolls backward",           ko:"뒤로 주행",          unit:"m",  goal:2  },
+ { id:"turn90", name:"Turns 90° while moving",   ko:"달리며 90° 회전",     unit:"회", goal:6  },
+ { id:"turn180",name:"Turns 180° in place",      ko:"제자리 180° 회전",    unit:"회", goal:1  },
+ { id:"door",   name:"Gets through hinged door", ko:"좁은 문 통과",        unit:"회", goal:3  },
+ { id:"rampUp", name:"Ascends incline",          ko:"오르막 오르기",       unit:"회", goal:2  },
+ { id:"rampDn", name:"Descends incline",         ko:"내리막 내려가기",     unit:"회", goal:2  },
+ { id:"slope",  name:"Rolls across side-slope",  ko:"옆경사 통과",         unit:"m",  goal:5  },
+ { id:"soft",   name:"Rolls on soft surface",    ko:"푹신한 바닥 주행",     unit:"m",  goal:8  },
+ { id:"thr",    name:"Gets over threshold",      ko:"턱 넘기",            unit:"회", goal:2  },
+ { id:"mover",  name:"Avoids moving obstacles",  ko:"움직이는 장애물 회피", unit:"회", goal:3  },
+ { id:"stop",   name:"Stops on command",         ko:"정지 신호 준수",      unit:"회", goal:5  },
+ { id:"grade",  name:"Graded joystick control",  ko:"단계별 조이스틱 조절", unit:"회", goal:9  }
+];
+function newWST(){
+ const o={};
+ WST_ITEMS.forEach(it=>o[it.id]={ v:0, attempt:0, fail:0 });
+ o.contact=0;                 // 벽·문설주 접촉
+ o.moverContact=0;
+ o.stopErrSum=0; o.stopErrN=0;
+ return o;
+}
+let WSTF=newWST();            // 현재 층
+let WSTT=newWST();            // 누적 (전 층)
+function wstAdd(id,n,key){ const a=WSTF[id], b=WSTT[id]; if(!a) return; a[key||"v"]+=n; b[key||"v"]+=n; }
+function resetWSTFloor(){ WSTF=newWST(); TRK.refYaw=null; TRK.calm=0; TRK.settled=false; TRK.turnInPlace=true; TRK.onRamp=false; TRK.prevDoor=null; }
+function resetWSTTotal(){ WSTT=newWST(); WSTF=newWST(); }
+
+/* 회전·지형 추적 상태 */
+const TRK={ refYaw:null, calm:0, settled:false, turnInPlace:true, lastH:0, onRamp:false, prevDoor:null };
+function trackWST(dt,prevX,prevZ){
+ const dist=Math.hypot(P.x-prevX,P.z-prevZ);
+ if(P.v>=0) wstAdd("fwd",dist); else wstAdd("rev",dist);
+
+ /* 회전 — 누적각으로 세면 복도에서의 미세한 좌우 흔들림까지 회전으로 잡힌다.
+    방향이 '안정된 순간'의 진행각을 기억했다가, 다음 안정 구간과 비교해 판정한다. */
+ if(Math.abs(P.w)<0.22){
+  TRK.calm+=dt;
+  if(TRK.calm>0.30 && !TRK.settled){
+   TRK.settled=true;
+   if(TRK.refYaw!==null){
+    let d=P.yaw-TRK.refYaw;
+    while(d>Math.PI) d-=Math.PI*2; while(d<-Math.PI) d+=Math.PI*2;
+    const deg=Math.abs(d)*180/Math.PI;
+    if(deg>=150)      wstAdd(TRK.turnInPlace?"turn180":"turn90",1);
+    else if(deg>=62)  wstAdd("turn90",1);
+   }
+   TRK.refYaw=P.yaw; TRK.turnInPlace=true;
+  }
+ }else{
+  TRK.calm=0; TRK.settled=false;
+  if(Math.abs(P.v)>=0.25) TRK.turnInPlace=false;   // 돌면서 이동했다면 제자리 회전이 아니다
+ }
+
+ // 지형 누적
+ if(flagAt(G.soft,P.x,P.z)) wstAdd("soft",dist);
+ if(flagAt(G.slope,P.x,P.z)) wstAdd("slope",dist);
+
+ // 경사 — 올라갔다 내려오는 것을 각각 1회로
+ const h=heightAt(P.x,P.z);
+ if(!TRK.onRamp && h>0.45){ TRK.onRamp=true; wstAdd("rampUp",1); }
+ if(TRK.onRamp && h<0.12){ TRK.onRamp=false; wstAdd("rampDn",1); }
+ TRK.lastH=h;
+
+ // 좁은 문 통과
+ if(G.doorCells){
+  const cx=Math.floor(P.x/CELL), cz=Math.floor(P.z/CELL);
+  const hit=G.doorCells.find(d=>Math.floor(d.x/CELL)===cx&&Math.floor(d.z/CELL)===cz);
+  const key=hit?`${cx},${cz}`:null;
+  if(key && key!==TRK.prevDoor){ TRK.prevDoor=key; wstAdd("door",1); }
+  if(!hit) TRK.prevDoor=null;
+ }
+}
+
+/* ==========================================================
+  물리 — 차동 구동 근사 + 지형 반응
+  ========================================================== */
+const P={ x:0,z:0,yaw:0,v:0,w:0,y:0 };
+const IN={ f:0,t:0, rawF:0, rawT:0 };
+
+const MOUSE_INPUT={
+ locked:false,
+ active:false,
+ vx:0,
+ vy:0,
+ lastEventAt:0,
+ lastEventTs:0,
+ neutralMs:110,
+ maxRateX:650,
+ maxRateY:650,
+ calibrated:false,
+ calibrating:false,
+ pendingCalibration:false,
+ calPeakX:0,
+ calPeakY:0,
+ calTimer:null
+};
+
+function clamp1(v){ return Math.max(-1,Math.min(1,v)); }
+
+function updateMouseInputState(){
+ const el=$("mouseInputState");
+ if(!el) return;
+ el.classList.toggle("active",MOUSE_INPUT.locked&&!MOUSE_INPUT.calibrating);
+ el.classList.toggle("calibrating",MOUSE_INPUT.calibrating);
+ if(MOUSE_INPUT.calibrating){
+  el.textContent="입력 보정 중";
+ }else if(MOUSE_INPUT.locked){
+  el.textContent="마우스 조이스틱 활성";
+ }else{
+  el.textContent="입력 대기";
+ }
+}
+
+function updateMouseSetupStatus(){
+ const status=$("mouseCalStatus");
+ if(!status) return;
+ const x=Math.round(MOUSE_INPUT.maxRateX);
+ const y=Math.round(MOUSE_INPUT.maxRateY);
+ status.textContent=MOUSE_INPUT.calibrated
+  ? `보정 완료: 좌우 ${x}px/s · 앞뒤 ${y}px/s`
+  : `보정 전: 기본 기준 좌우 ${x}px/s · 앞뒤 ${y}px/s`;
+ $("setupPadInfo").textContent=
+  MOUSE_INPUT.locked
+   ? "마우스 대체 조이스틱 입력이 활성화되었습니다. ESC를 누르면 포인터 잠금이 해제됩니다."
+   : "주행 시 입력 활성화를 누르거나 게임 화면을 클릭해 포인터 잠금을 시작합니다.";
+}
+
+function requestMouseInput(){
+ const canvas=$("view");
+ if(!canvas||!canvas.requestPointerLock) return;
+ try{
+  const r=canvas.requestPointerLock();
+  if(r&&typeof r.catch==="function") r.catch(()=>{});
+ }catch(_){}
+}
+
+function releaseMouseInput(){
+ if(document.pointerLockElement && document.exitPointerLock){
+  document.exitPointerLock();
+ }
+}
+
+function startCalibrationNow(){
+ if(MOUSE_INPUT.calibrating) return;
+ MOUSE_INPUT.calibrating=true;
+ MOUSE_INPUT.lastCalStart=performance.now();
+ MOUSE_INPUT.pendingCalibration=false;
+ MOUSE_INPUT.calPeakX=0;
+ MOUSE_INPUT.calPeakY=0;
+ updateMouseInputState();
+ updateMouseSetupStatus();
+ $("mouseCalStatus").textContent=
+  "6초 동안 조이스틱을 앞·뒤·좌·우로 각각 끝까지 움직여 주세요.";
+
+ clearTimeout(MOUSE_INPUT.calTimer);
+ MOUSE_INPUT.calTimer=setTimeout(()=>{
+  MOUSE_INPUT.calibrating=false;
+  // 한 방향이 충분히 움직이지 않았을 경우 기존 값은 유지한다.
+  if(MOUSE_INPUT.calPeakX>=80) MOUSE_INPUT.maxRateX=MOUSE_INPUT.calPeakX;
+  if(MOUSE_INPUT.calPeakY>=80) MOUSE_INPUT.maxRateY=MOUSE_INPUT.calPeakY;
+  MOUSE_INPUT.calibrated=(MOUSE_INPUT.calPeakX>=80||MOUSE_INPUT.calPeakY>=80);
+  updateMouseInputState();
+  updateMouseSetupStatus();
+ },6000);
+}
+
+function beginMouseCalibration(){
+ MOUSE_INPUT.pendingCalibration=true;
+ if(document.pointerLockElement===$("view")){
+  startCalibrationNow();
+ }else{
+  requestMouseInput();
+ }
+}
+
+function resetMouseCalibration(){
+ MOUSE_INPUT.maxRateX=650;
+ MOUSE_INPUT.maxRateY=650;
+ MOUSE_INPUT.calibrated=false;
+ MOUSE_INPUT.calPeakX=0;
+ MOUSE_INPUT.calPeakY=0;
+ updateMouseSetupStatus();
+}
+
+addEventListener("pointerlockchange",()=>{
+ MOUSE_INPUT.locked=(document.pointerLockElement===$("view"));
+ MOUSE_INPUT.active=MOUSE_INPUT.locked;
+ if(!MOUSE_INPUT.locked){
+  MOUSE_INPUT.vx=0;
+  MOUSE_INPUT.vy=0;
+  IN.rawF=0; IN.rawT=0;
+  if(MOUSE_INPUT.calibrating){
+   clearTimeout(MOUSE_INPUT.calTimer);
+   MOUSE_INPUT.calibrating=false;
+  }
+ }
+ updateMouseInputState();
+ updateMouseSetupStatus();
+
+ if(MOUSE_INPUT.locked && MOUSE_INPUT.pendingCalibration){
+  startCalibrationNow();
+ }
+ if(MOUSE_INPUT.locked) hide($("mouseGate"));
+ // ESC로 풀렸을 때도 갇히지 않도록 같은 메뉴로 내보낸다
+ if(!MOUSE_INPUT.locked && ST.phase==="drive") enterPauseMenu();
+});
+
+addEventListener("mousemove",e=>{
+ if(document.pointerLockElement!==$("view")) return;
+ const now=performance.now();
+ const dtMs=Math.max(4,Math.min(80,now-(MOUSE_INPUT.lastEventTs||now-16)));
+ MOUSE_INPUT.lastEventTs=now;
+ MOUSE_INPUT.lastEventAt=now;
+
+ const instVX=(e.movementX||0)/(dtMs/1000);
+ const instVY=(e.movementY||0)/(dtMs/1000);
+
+ // 이벤트 주기 차이를 완화하기 위한 짧은 EMA.
+ MOUSE_INPUT.vx=MOUSE_INPUT.vx*0.58+instVX*0.42;
+ MOUSE_INPUT.vy=MOUSE_INPUT.vy*0.58+instVY*0.42;
+
+ if(MOUSE_INPUT.calibrating){
+  MOUSE_INPUT.calPeakX=Math.max(MOUSE_INPUT.calPeakX,Math.abs(MOUSE_INPUT.vx));
+  MOUSE_INPUT.calPeakY=Math.max(MOUSE_INPUT.calPeakY,Math.abs(MOUSE_INPUT.vy));
+ }
+});
+
+/* 조이스틱 버튼 하나로 두 가지를 구분한다.
+   짧게 누름 → 엘리베이터 버튼 (주행 중 필요한 동작)
+   길게 누름 → 포인터 모드로 나가기 (메뉴를 조작해야 할 때)
+   키보드 없이도 주행과 메뉴를 오갈 수 있어야 하기 때문이다. */
+const HOLD_MS=700;
+let holdTimer=null, holdFired=false;
+
+addEventListener("mousedown",e=>{
+ if(e.button!==0) return;
+ if(ST.phase!=="drive") return;
+ if(document.pointerLockElement!==$("view")){
+  requestMouseInput();
+  return;
+ }
+ holdFired=false;
+ clearTimeout(holdTimer);
+ holdTimer=setTimeout(()=>{
+  holdFired=true;
+  SND.beep();
+  enterPauseMenu();
+ },HOLD_MS);
+});
+
+addEventListener("mouseup",e=>{
+ if(e.button!==0) return;
+ clearTimeout(holdTimer);
+ if(holdFired){ holdFired=false; return; }      // 길게 누름은 이미 처리됨
+ if(ST.phase!=="drive") return;
+ if(document.pointerLockElement!==$("view")) return;
+ pressButton();
+});
+
+let bumps=0, tStart=0, lastBump=0, shake=0;
+
+const cellAt=(x,z)=>{
+ const cx=Math.floor(x/CELL), cz=Math.floor(z/CELL);
+ if(cx<0||cz<0||cx>=G.w||cz>=G.h) return { t:0,cx,cz };
+ return { t:G.c[cz][cx], cx, cz };
+};
+function heightAt(x,z){ // 셀 높이의 이중선형 보간 → 매끄러운 경사
+ const fx=x/CELL-0.5, fz=z/CELL-0.5;
+ const x0=Math.floor(fx), z0=Math.floor(fz), tx=fx-x0, tz=fz-z0;
+ const H=(a,b)=>(a>=0&&b>=0&&a<G.w&&b<G.h)?G.hgt[b][a]:0;
+ const h00=H(x0,z0),h10=H(x0+1,z0),h01=H(x0,z0+1),h11=H(x0+1,z0+1);
+ return (h00*(1-tx)+h10*tx)*(1-tz)+(h01*(1-tx)+h11*tx)*tz;
+}
+function flagAt(arr,x,z){
+ const cx=Math.floor(x/CELL), cz=Math.floor(z/CELL);
+ if(cx<0||cz<0||cx>=G.w||cz>=G.h) return 0;
+ return arr[cz][cx];
+}
+
+function readInput(dt){
+ let f=0,t=0;
+ const now=performance.now();
+
+ // ----------------------------------------------------------
+ // Primary input: mouse-emulation joystick
+ // ----------------------------------------------------------
+ if(MOUSE_INPUT.locked){
+  const idle=now-MOUSE_INPUT.lastEventAt;
+
+  // 조이스틱을 놓으면 mousemove가 멈춘다.
+  // 일정 시간 이벤트가 없으면 중립으로 복귀하도록 속도 추정을 빠르게 감쇠한다.
+  if(idle>MOUSE_INPUT.neutralMs){
+   const decay=Math.exp(-dt*32);
+   MOUSE_INPUT.vx*=decay;
+   MOUSE_INPUT.vy*=decay;
+   if(Math.abs(MOUSE_INPUT.vx)<3) MOUSE_INPUT.vx=0;
+   if(Math.abs(MOUSE_INPUT.vy)<3) MOUSE_INPUT.vy=0;
+  }
+
+  // 일반적인 마우스 에뮬레이터:
+  // 위로 이동 = 전진, 아래 = 후진, 오른쪽 = 우회전, 왼쪽 = 좌회전.
+  f=clamp1(-MOUSE_INPUT.vy/Math.max(80,MOUSE_INPUT.maxRateY));
+  t=clamp1( MOUSE_INPUT.vx/Math.max(80,MOUSE_INPUT.maxRateX));
+
+  if(WHEEL.mouseInvF) f=-f;
+  if(WHEEL.mouseInvT) t=-t;
+ }
+
+ // ----------------------------------------------------------
+ // Development/test fallback only
+ // ----------------------------------------------------------
+ const keyboardActive=
+   K.has("w")||K.has("s")||K.has("a")||K.has("d")||
+   K.has("arrowup")||K.has("arrowdown")||K.has("arrowleft")||K.has("arrowright");
+
+ if(keyboardActive){
+  f=0; t=0;
+  if(K.has("w")||K.has("arrowup")) f=1;
+  if(K.has("s")||K.has("arrowdown")) f=-1;
+  if(K.has("a")||K.has("arrowleft")) t=-1;
+  if(K.has("d")||K.has("arrowright")) t=1;
+ }
+
+ IN.rawF=f;
+ IN.rawT=t;
+
+ // 정규화된 마우스 속도에도 기존 dead-zone / smoothing을 동일하게 적용한다.
+ const dz=v=>{
+  const m=Math.abs(v);
+  return m<WHEEL.dead ? 0 : Math.sign(v)*((m-WHEEL.dead)/(1-WHEEL.dead));
+ };
+ const tf=dz(f), tt=dz(t);
+ const k=1-Math.pow(WHEEL.smooth,Math.max(dt,0.001)*60);
+ IN.f+=(tf-IN.f)*(WHEEL.smooth>0?k:1);
+ IN.t+=(tt-IN.t)*(WHEEL.smooth>0?k:1);
+}
+
+function stepChair(dt){
+ const _px=P.x, _pz=P.z;
+ const softHere=flagAt(G.soft,P.x,P.z);
+ const maxF=WHEEL.maxFwd*(softHere?0.62:1);
+ const targetV = IN.f>=0 ? IN.f*maxF : IN.f*WHEEL.maxRev;
+ const turnScale = WHEEL.turnMode==="speed"
+   ? 0.30+0.70*Math.min(1,Math.abs(P.v)/Math.max(0.6,WHEEL.maxFwd))
+   : 1;
+ const targetW = -IN.t*WHEEL.maxTurn*turnScale;
+
+ const aV = (Math.abs(targetV)>Math.abs(P.v) && Math.sign(targetV)===Math.sign(P.v||targetV))
+       ? WHEEL.accel : WHEEL.brake;
+ P.v += Math.max(-aV*dt, Math.min(aV*dt, targetV-P.v));
+ P.w += Math.max(-8*dt, Math.min(8*dt, targetW-P.w));
+ if(softHere) P.v*=(1-0.9*dt);      // 푹신한 바닥은 굴러가지 않는다
+
+ P.yaw += P.w*dt;
+ const fx=Math.sin(P.yaw), fz=Math.cos(P.yaw);
+
+ // 경사 — 오르막은 힘이 빠지고 내리막은 밀린다
+ const h0=heightAt(P.x,P.z);
+ const hAhead=heightAt(P.x+fx*0.6,P.z+fz*0.6);
+ const grade=(hAhead-h0)/0.6;
+ P.v -= grade*5.4*dt;
+
+ let nx=P.x+fx*P.v*dt, nz=P.z+fz*P.v*dt;
+
+ // 옆경사 — 진행 방향과 무관하게 옆으로 밀린다
+ const sl=flagAt(G.slope,P.x,P.z);
+ if(sl){ nx += sl*0.9*dt; }
+
+ // 턱 — 속도가 붙어야 넘어간다
+ const nextThr=flagAt(G.thr,nx,nz), curThr=flagAt(G.thr,P.x,P.z);
+ const thrNeed=Math.min(1.05,WHEEL.maxFwd*0.55);  // 느린 설정에서도 넘을 수 있게 비례
+ if(nextThr&&!curThr){ wstAdd("thr",1,"attempt"); if(Math.abs(P.v)>=thrNeed) wstAdd("thr",1); }
+ if(nextThr&&!curThr&&Math.abs(P.v)<thrNeed){
+  nx=P.x; nz=P.z; P.v=0;
+  if(performance.now()-lastBump>420){ lastBump=performance.now(); SND.bump(0.5); banner("턱을 넘지 못했다.\n조금 물러났다가 속도를 붙여라."); }
+ }
+
+ const res=resolve(nx,nz);
+ P.x=res.x; P.z=res.z;
+ if(res.hit){
+  const impact=Math.abs(P.v);
+  P.v*=0.15;
+  if(impact>0.45 && performance.now()-lastBump>320){
+   lastBump=performance.now(); bumps++; WSTF.contact++; WSTT.contact++; shake=Math.min(0.34,impact*0.1); ST.combo=0;
+   SND.bump(Math.min(1,impact/2.4));
+   $("bumpChip").textContent="부딪힘 "+bumps;
+  }
+ }
+ P.y=heightAt(P.x,P.z);
+ trackWST(dt,_px,_pz);
+}
+
+/* 원 ↔ 사각형 충돌 해소 (벽 · 문설주 · 로봇) */
+function resolve(nx,nz){
+ let hit=false;
+ const push=(bx,bz,bw,bd)=>{
+  const hw=bw/2+R_CHAIR, hd=bd/2+R_CHAIR;
+  const dx=nx-bx, dz=nz-bz;
+  if(Math.abs(dx)<hw && Math.abs(dz)<hd){
+   hit=true;
+   if(hw-Math.abs(dx) < hd-Math.abs(dz)) nx = bx + Math.sign(dx||1)*hw;
+   else                  nz = bz + Math.sign(dz||1)*hd;
+  }
+ };
+ const c0x=Math.floor(nx/CELL), c0z=Math.floor(nz/CELL);
+ for(let z=c0z-1;z<=c0z+1;z++) for(let x=c0x-1;x<=c0x+1;x++){
+  if(x<0||z<0||x>=G.w||z>=G.h){ continue; }
+  if(G.c[z][x]===0||G.c[z][x]===3) push((x+0.5)*CELL,(z+0.5)*CELL,CELL,CELL);
+ }
+ G.posts.forEach(p=>push(p.x,p.z,p.w,p.d));
+ const _hb=hit;
+ moverMeshes.forEach(m=>push(m.grp.position.x,m.grp.position.z,1.0,1.0));
+ if(hit&&!_hb){ WSTF.moverContact++; WSTT.moverContact++; }
+ // 엘리베이터 문이 닫히면 밖으로 못 나간다
+ // 문은 열린 만큼만 통과할 수 있다 (닫혀 있으면 막힌다)
+ elevDoors.forEach(d=>{ if((d.userData.q||0)<0.72) push(d.position.x,d.position.z,d.userData.panelW||d.scale.x,0.18); });
+ return { x:nx, z:nz, hit };
+}
+
+
+const CONTROL_ZONES={
+ fine:{ name:"미세조정", min:0.20, max:0.35, cls:"fine", color:"파란" },
+ mid :{ name:"중간조정", min:0.45, max:0.65, cls:"mid", color:"초록" },
+ max :{ name:"최대조정", min:0.85, max:1.00, cls:"max", color:"주황" }
+};
+const ZONE_HOLD_SEC=2.0;
+
+function resetZoneChallenge(){
+ ST.zoneTarget=null; ST.zoneHold=0; ST.zoneCoin=null;
+ hide($("zoneChallenge"));
+ $("zcHold").style.width="0%";
+}
+
+function beginZoneChallenge(c){
+ const z=CONTROL_ZONES[c.kind];
+ if(!z) return;
+ if(ST.zoneCoin!==c){
+  ST.zoneCoin=c; ST.zoneTarget=c.kind; ST.zoneHold=0;
+ }
+ const box=$("zoneChallenge");
+ box.classList.remove("fine","mid","max");
+ box.classList.add(z.cls);
+ $("zcName").textContent=z.name;
+ $("zcRange").textContent=Math.round(z.min*100)+"~"+Math.round(z.max*100)+"%";
+ $("zcTarget").style.left=(z.min*100)+"%";
+ $("zcTarget").style.width=((z.max-z.min)*100)+"%";
+ show(box);
+}
+
+function updateZoneChallenge(dt,c){
+ const z=CONTROL_ZONES[c.kind];
+ if(!z) return false;
+ beginZoneChallenge(c);
+
+ // 목표 입력은 '가장 큰 조이스틱 변위' 기준. 최대조정은 전진 방향 필수.
+ const mag=Math.min(1,Math.max(Math.abs(IN.rawF),Math.abs(IN.rawT)));
+ $("zcInput").style.width=(mag*100)+"%";
+
+ let inZone = mag>=z.min && mag<=z.max;
+ if(c.kind==="max") inZone = inZone && IN.rawF>0.70;
+
+ if(inZone){
+  ST.zoneHold += dt;
+ }else{
+  // 완전히 리셋하지 않고 빠르게 감소시켜 순간 이탈은 허용하되 지속 제어를 요구한다.
+  ST.zoneHold = Math.max(0,ST.zoneHold-dt*1.7);
+ }
+
+ const pct=Math.min(1,ST.zoneHold/ZONE_HOLD_SEC);
+ $("zcHold").style.width=(pct*100)+"%";
+ return ST.zoneHold>=ZONE_HOLD_SEC;
+}
+
+function updateCoins(dt,t){
+ let got=0;
+ let nearest=null, nearestD=Infinity;
+
+ coinMeshes.forEach(({grp,c,base})=>{
+  if(c.got){ grp.visible=false; got++; return; }
+  if(ST.view==="first" && c.kind==="normal"){ grp.visible=false; }
+  else grp.visible=true;
+
+  grp.rotation.y+=dt*(c.kind==="max"?4.0:2.6);
+  grp.position.y=base+Math.sin(t*2.6+c.x)*0.09;
+
+  const dist=Math.hypot(c.x-P.x,c.z-P.z);
+  if(dist<nearestD){ nearestD=dist; nearest=c; }
+
+  // 특수 동전은 3.0m 전부터 Control Zone Challenge를 시작한다.
+  if(CONTROL_ZONES[c.kind] && dist<3.0 && !c.got){
+   const success=updateZoneChallenge(dt,c);
+   if(success && dist<1.55){
+    c.got=true; got++;
+    ST.combo++; ST.bestCombo=Math.max(ST.bestCombo,ST.combo);
+    if(c.kind!=="normal") wstAdd("grade",1);
+    if(c.kind==="fine") ST.fineHits++;
+    if(c.kind==="mid") ST.midHits++;
+    if(c.kind==="max") ST.maxHits++;
+    SND.coin(ST.combo,c.kind);
+    banner(CONTROL_ZONES[c.kind].name+" 2초 유지 성공!");
+    rewardWorldChange(c.kind);
+    completePrecisionEvent(c);
+    resetZoneChallenge();
+   }
+   return;
+  }
+
+  // 일반 동전은 기존처럼 통과하며 획득한다.
+  if(c.kind==="normal" && dist<1.05){
+   c.got=true; got++;
+   ST.combo++; ST.bestCombo=Math.max(ST.bestCombo,ST.combo);
+   SND.coin(ST.combo,c.kind);
+   if(ST.combo>0 && ST.combo%6===0){
+    banner(ST.combo+"개 연속!");
+    rewardWorldChange("normal");
+   }
+  }
+ });
+
+ // 현재 특수 과제에서 멀어졌으면 challenge UI를 정리한다.
+ if(!nearest || nearestD>=3.2 || !CONTROL_ZONES[nearest.kind]){
+  if(ST.zoneCoin && (!nearest || ST.zoneCoin!==nearest)) resetZoneChallenge();
+ }
+
+ ST.coins=got;
+ $("coinChip").textContent="동전 "+got+"/"+G.coins.length;
+ $("comboChip").textContent = ST.combo>=3 ? "연속 "+ST.combo : "\u00A0";
+ $("comboChip").classList.toggle("hot",ST.combo>=5);
+
+ if(nearest && nearestD<8 && nearest.kind==="fine")
+  $("missionChip").innerHTML="<b>미세조정</b> 20~35%를 2초 유지";
+ else if(nearest && nearestD<8 && nearest.kind==="mid")
+  $("missionChip").innerHTML="<b>중간조정</b> 45~65%를 2초 유지";
+ else if(nearest && nearestD<10 && nearest.kind==="max")
+  $("missionChip").innerHTML="<b>최대조정</b> 85~100%를 2초 유지";
+ else
+  $("missionChip").innerHTML="<b>이동</b> 길을 따라 다음 지점으로";
+}
+
+/* 엘리베이터 도착 — 가까이 가면 벨이 울리고 문이 열린다.
+   밖에서 볼 때 '닫힌 문'이어야 엘리베이터로 읽힌다. */
+function updateElevatorDoors(dt){
+ if(!elevDoors.length||!G) return;
+ const e=G.elev;
+ const ex=(e.entX+0.5)*CELL, ez=(e.entZ+0.5)*CELL;
+ const near=Math.hypot(ex-P.x,ez-P.z)<7.5;
+ const wantOpen = ST.doorClosed ? 0 : (near?1:0);
+
+ if(near && !elevArrivalDone && !ST.doorClosed){
+  elevArrivalDone=true;
+  SND.ding();
+  if(elevCallLamp) elevCallLamp.material.color.setHex(0xFFC93C);
+  banner("엘리베이터가 도착했다.");
+ }
+ elevDoors.forEach(d=>{
+  d.userData.q += (wantOpen-d.userData.q)*Math.min(1,dt*3.2);
+  d.position.x = d.userData.closedX+(d.userData.openX-d.userData.closedX)*d.userData.q;
+ });
+}
+
+function updateMovers(dt){
+ // 로봇 옆을 부딪히지 않고 통과하면 '회피 성공'으로 센다
+ moverMeshes.forEach(m=>{
+  const d=Math.hypot(m.grp.position.x-P.x,m.grp.position.z-P.z);
+  if(d<2.2 && !m._near){ m._near=true; m._contactAt=WSTT.moverContact; }
+  if(d>3.4 && m._near){
+   m._near=false;
+   if(WSTT.moverContact===m._contactAt) wstAdd("mover",1);
+  }
+ });
+ moverMeshes.forEach(({grp,mv})=>{
+  mv.t += mv.dir*mv.spd*dt;
+  if(mv.t>1){ mv.t=1; mv.dir=-1; } if(mv.t<0){ mv.t=0; mv.dir=1; }
+  grp.position.set(mv.ax+(mv.bx-mv.ax)*mv.t, 0, mv.az+(mv.bz-mv.az)*mv.t);
+  grp.rotation.y += dt*1.6;
+ });
+}
+
+/* ==========================================================
+  소리 — 모터음이 속도에 반응한다 (조작 피드백)
+  ========================================================== */
+const SND={
+ ctx:null, master:null,
+ init(){
+  if(this.ctx) return;
+  this.ctx=new (window.AudioContext||window.webkitAudioContext)();
+  this.master=this.ctx.createGain();
+  this.master.gain.value=0.34;  // 전체 효과음도 낮게. 지속 엔진음은 사용하지 않는다.
+  this.master.connect(this.ctx.destination);
+ },
+ drive(v){ /* 의도적으로 비움: 지속 엔진음 제거 */ },
+ tone(fr,dur,type="sine",vol=0.08,delay=0){
+  if(!this.ctx) return;
+  const t=this.ctx.currentTime+delay;
+  const o=this.ctx.createOscillator(), g=this.ctx.createGain();
+  o.type=type; o.frequency.setValueAtTime(fr,t);
+  g.gain.setValueAtTime(0.0001,t);
+  g.gain.exponentialRampToValueAtTime(vol,t+0.008);
+  g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+  o.connect(g); g.connect(this.master); o.start(t); o.stop(t+dur+0.03);
+ },
+ bump(v){ this.tone(92,0.10,"sine",0.045+v*0.035); },
+ beep(){ this.tone(760,0.07,"sine",0.055); },
+ ding(){ this.tone(1046,0.16,"triangle",0.06); this.tone(1318,0.18,"triangle",0.045,0.08); },
+ dock(){ this.tone(620,0.06,"sine",0.045); },
+ hint(){ this.tone(430,0.05,"sine",0.035); },
+ coin(n,kind="normal"){
+  if(kind==="fine"){
+   this.tone(880,0.055,"sine",0.05);
+   this.tone(1175,0.07,"triangle",0.035,0.045);
+   return;
+  }
+  if(kind==="mid"){
+   this.tone(560,0.055,"sine",0.045);
+   this.tone(760,0.07,"triangle",0.032,0.04);
+   return;
+  }
+  if(kind==="max"){
+   this.tone(330,0.055,"triangle",0.05);
+   this.tone(660,0.08,"sine",0.04,0.04);
+   return;
+  }
+  const s=[0,2,4,7,9,12][Math.min(n-1,5)]||0;
+  const f=620*Math.pow(2,s/12);
+  this.tone(f,0.045,"sine",0.042);
+ }
+};
+
+/* ==========================================================
+  상태 · 화면 흐름
+  ========================================================== */
+const $=id=>document.getElementById(id);
+const K=new Set();
+const ST={ phase:"title", floor:0, padName:null, docked:false, doorClosed:false, coins:0, combo:0, bestCombo:0, beatT:0, pending:0, riseT:0, view:"third",
+      totalBumps:0, totalTime:0, wstOpen:false, fineHits:0, midHits:0, maxHits:0, inputZone:"neutral", zoneChangedAt:0, zoneTarget:null, zoneHold:0, zoneCoin:null, activeEventId:null, eventLog:[], collectibles:[] };
+
+function show(el){ el.classList.remove("hidden"); }
+function hide(el){ el.classList.add("hidden"); }
+function banner(text){
+ const b=$("banner"); b.textContent=text;
+ b.classList.remove("on"); void b.offsetWidth; b.classList.add("on");
+}
+
+function initThree(){
+ const canvas=$("view");
+ renderer=new THREE.WebGLRenderer({ canvas, antialias:true });
+ renderer.setPixelRatio(Math.min(devicePixelRatio,1.6));   // 선명하게 — 계단 현상 제거
+ renderer.setSize(innerWidth,innerHeight);
+ scene=new THREE.Scene();
+ scene.background=new THREE.Color(0x9FD4F0);
+ scene.fog=new THREE.Fog(0x9FD4F0,26,64);
+ cam=new THREE.PerspectiveCamera(62,innerWidth/innerHeight,0.1,200);
+ scene.add(new THREE.HemisphereLight(0xF2F4F6,0x6E7278,0.88));
+ const sun=new THREE.DirectionalLight(0xFFF6E4,0.46); sun.position.set(20,34,14); scene.add(sun);
+ buildChair();
+}
+
+
+function applyFloorTheme(i){
+ document.body.classList.remove("theme1","theme2","theme3","theme4","theme5","rewarded");
+ document.body.classList.add("theme"+(i+1));
+ const th=getFloorVisualStyle(i);
+ if(scene){
+  scene.background=new THREE.Color(th.sky);
+  scene.fog=new THREE.Fog(th.fog,24,66);
+ }
+}
+function rewardWorldChange(kind){
+ const f=$("rewardFlash");
+ f.classList.remove("on"); void f.offsetWidth; f.classList.add("on");
+ document.body.classList.add("rewarded");
+ setTimeout(()=>document.body.classList.remove("rewarded"),900);
+
+ if(scene){
+  const glow=new THREE.PointLight(
+   kind==="fine"?0x79D7FF:kind==="mid"?0xA9D68D:kind==="max"?0xFFB45E:0xFFF0A0,
+   1.8,12,2
+  );
+  glow.position.set(P.x,P.y+2.2,P.z);
+  scene.add(glow);
+  let life=0;
+  const timer=setInterval(()=>{
+   life+=0.05;
+   glow.intensity=Math.max(0,1.8-life*2.8);
+   if(glow.intensity<=0){
+    clearInterval(timer);
+    scene.remove(glow);
+   }
+  },50);
+ }
+}
+
+const SAVE_KEYS={
+ lastFloor:"layeredLabyrinth.lastFloor",
+ completed:"layeredLabyrinth.completedFloors"
+};
+const STAGE_META=[
+ {icon:"",short:"로비",skills:["조이스틱 세기","기본 이동"]},
+ {icon:"",short:"학교 복도",skills:["방향 선택","후진"]},
+ {icon:"",short:"문과 실내",skills:["미세조정","정확히 멈추기"]},
+ {icon:"",short:"야외 길",skills:["경사","속도 조절"]},
+ {icon:"",short:"공원",skills:["기다리기","상황 판단"]}
+];
+function getLastFloor(){
+ const n=parseInt(localStorage.getItem(SAVE_KEYS.lastFloor)||"",10);
+ return Number.isInteger(n)&&n>=0&&n<FLOORS.length?n:null;
+}
+function getCompletedFloors(){
+ try{
+  const arr=JSON.parse(localStorage.getItem(SAVE_KEYS.completed)||"[]");
+  return Array.isArray(arr)?arr.filter(n=>Number.isInteger(n)&&n>=0&&n<FLOORS.length):[];
+ }catch(e){ return []; }
+}
+function saveLastFloor(i){
+ try{ localStorage.setItem(SAVE_KEYS.lastFloor,String(i)); }catch(e){}
+ refreshStartMenu();
+}
+function markFloorCompleted(i){
+ try{
+  const set=new Set(getCompletedFloors()); set.add(i);
+  localStorage.setItem(SAVE_KEYS.completed,JSON.stringify([...set].sort((a,b)=>a-b)));
+ }catch(e){}
+}
+function resetSessionForEntry(){
+ ST.totalBumps=0; ST.totalTime=0; ST.eventLog=[]; ST.collectibles=[]; ST.activeEventId=null;
+}
+function enterStage(i,{showCard=true}={}){
+ const idx=Math.max(0,Math.min(FLOORS.length-1,i|0));
+ SND.init();
+ resetSessionForEntry();
+ ST.floor=idx;
+ applyPreset(FLOORS[idx].recommend);
+ hide($("scrTitle")); hide($("scrStageSelect"));
+ if(showCard) showFloorCard(idx); else startFloor(idx);
+}
+function renderStageSelect(){
+ const grid=$("stageGrid");
+ const last=getLastFloor(), completed=new Set(getCompletedFloors());
+ grid.innerHTML=FLOORS.map((f,i)=>{
+  const m=STAGE_META[i]||{icon:"",short:f.name,skills:[]};
+  return `<button class="stageCard s${i+1}${last===i?" current":""}${completed.has(i)?" done":""}" data-stage="${i}">
+   <span class="stageNo">STAGE ${i+1}</span>
+   
+   <strong class="stageName">${m.short}</strong>
+   <div class="stageSkills">${m.skills.map(s=>`· ${s}`).join("<br>")}</div>
+   ${last===i?`<div class="stageRecent">최근 플레이</div>`:""}
+  </button>`;
+ }).join("");
+ grid.querySelectorAll("[data-stage]").forEach(btn=>btn.addEventListener("click",()=>enterStage(Number(btn.dataset.stage))));
+}
+function openStageSelect(){
+ renderStageSelect();
+ hide($("scrTitle")); show($("scrStageSelect"));
+}
+function refreshStartMenu(){
+ const last=getLastFloor();
+ const btn=$("btnContinue"), info=$("resumeInfo");
+ if(!btn||!info) return;
+ if(last==null){
+  btn.disabled=true;
+  info.textContent="마지막 플레이 기록이 없습니다.";
+ }else{
+  btn.disabled=false;
+  const m=STAGE_META[last];
+  info.textContent=`최근: ${last+1}단계 · ${m?m.short:FLOORS[last].name}`;
+ }
+}
+
+function startFloor(i){
+ ST.floor=i; ST.docked=false; ST.doorClosed=false;
+ saveLastFloor(i);
+ applyFloorTheme(i);
+ const def=FLOORS[i];
+ G=buildFloorGrid(def);
+ if(!G){ banner("층을 만들지 못했다. 다시 시도한다."); G=buildFloorGrid(FLOORS[0]); }
+ buildWorld(G);
+ setupGameEvents(G);
+ P.x=(G.start.sx+0.5)*CELL; P.z=(G.start.sz+0.5)*CELL;
+ // 길이 있는 쪽을 바라보고 출발한다 — 처음부터 벽을 마주보지 않게
+ const look=G.path[Math.min(6,G.path.length-1)];
+ P.yaw=Math.atan2((look[0]+0.5)*CELL-P.x,(look[1]+0.5)*CELL-P.z);
+ camYaw=P.yaw; fpEyeY=1.36;
+ P.v=0; P.w=0; P.y=0;
+ IN.f=0; IN.t=0;
+ bumps=0; tStart=performance.now();
+ ST.beatT=0;
+ $("bumpChip").textContent="부딪힘 0";
+ resetWSTFloor();
+ ST.coins=0; ST.combo=0; ST.bestCombo=0; ST.fineHits=0; ST.midHits=0; ST.maxHits=0; ST.inputZone="neutral"; resetZoneChallenge();
+ $("coinChip").textContent="동전 0/"+G.coins.length;
+ $("comboChip").textContent="\u00A0"; $("comboChip").classList.remove("hot");
+ $("floorChip").textContent=(i+1)+"층 · "+def.name;
+ refreshWST();
+ ST.phase="beat";            // 미로에 던져 넣기 전에 숨 한 번
+ show($("hud")); show($("compass")); show($("pad")); show($("controlDial")); show($("collectionMini"));
+ if(!MOUSE_INPUT.locked) show($("mouseGate")); else hide($("mouseGate"));
+ banner(def.name+"\n"+def.story.replace(/\n/g," "));
+}
+
+function showFloorCard(i){
+ releaseMouseInput();
+ const def=FLOORS[i];
+ ST.phase="card"; ST.pending=i;   // 카드에 띄운 층을 기억한다 (실제 진입은 '들어가기'에서)
+ $("floorTag").textContent=def.tag;
+ $("floorName").textContent=def.name;
+ $("floorStory").textContent=def.story;
+ $("floorTasks").innerHTML=def.tasks.map(t=>`<li>· ${t}</li>`).join("");
+ $("floorTip").textContent=def.tip;
+ hide($("hud")); hide($("compass")); hide($("pad")); hide($("dock")); hide($("zoneChallenge")); hide($("controlDial")); hide($("stopCoach")); hide($("collectionMini"));
+ show($("scrFloor"));
+}
+
+/* 도킹 판정 — 버튼 정면에, 가까이, 멈춘 상태 */
+function dockState(){
+ const e=G.elev;
+ const bx=(e.btnX+0.5)*CELL, bz=(e.btnZ+0.5)*CELL;
+ const dx=bx-P.x, dz=bz-P.z;
+ const dist=Math.hypot(dx,dz);
+ if(dist>3.4) return null;
+ const toBtn=Math.atan2(dx,dz);
+ let da=toBtn-P.yaw;
+ while(da>Math.PI) da-=Math.PI*2;
+ while(da<-Math.PI) da+=Math.PI*2;
+ const aim=1-Math.min(1,Math.abs(da)/(Math.PI/3));   // 정면일수록 1
+ const near=1-Math.min(1,Math.max(0,dist-1.3)/2.0);   // 가까울수록 1
+ const still=1-Math.min(1,Math.abs(P.v)/0.8);      // 멈출수록 1
+ return { score:Math.max(0,aim*0.45+near*0.35+still*0.20),
+      ready:(aim>0.55&&dist<2.6&&Math.abs(P.v)<0.35) };
+}
+
+function pressButton(){
+ if(ST.phase!=="drive"||ST.docked) return;
+ const d=dockState();
+ if(!d||!d.ready) return;
+ ST.docked=true; ST.doorClosed=true; ST.phase="elev";  // 문이 닫히는 동안 조작 잠금
+ btnLight.material.color.setHex(0x7BE04A);
+ SND.beep(); SND.ding();
+ banner("문이 닫힌다.\n올라간다.");
+ hide($("dock")); hide($("stopCoach")); document.body.classList.remove("stop-active");
+ // 문이 닫히는 연출 → 페이드 → 다음 층
+ let t=0;
+ const anim=setInterval(()=>{
+  t+=0.05;
+  const q=Math.max(0,1-t);
+  elevDoors.forEach(d2=>{
+   d2.userData.q=q;
+   d2.position.x=d2.userData.closedX+(d2.userData.openX-d2.userData.closedX)*q;
+  });
+  if(t>=1){
+   clearInterval(anim);
+   if(elevIndicator){                              // 표시기가 다음 층으로 넘어간다
+    const total=FLOORS.length+1;
+    elevIndicator.children.forEach((seg,i)=>{
+     seg.material.color.setHex((i%total)===Math.min(ST.floor+1,total-1)?0xFFC93C:0x2B2B2B);
+    });
+   }
+   SND.ding();
+   ST.phase="rise"; ST.riseT=0;
+  }
+ },30);
+}
+
+function finishFloor(){
+ releaseMouseInput();
+ ST.phase="clear";
+ markFloorCompleted(ST.floor);
+ const secs=Math.round((performance.now()-tStart)/1000);
+ ST.totalBumps+=bumps; ST.totalTime+=secs;
+ const rate = G.coins.length ? Math.round((ST.coins/G.coins.length)*100) : 100;
+ const stars = bumps<=2 ? "A" : bumps<=6 ? "B" : "C";
+ {
+  $("fade").classList.add("on");
+  setTimeout(()=>{
+   $("clearTitle").textContent=(ST.floor+2<=FLOORS.length)?(ST.floor+2)+"층으로":"옥상으로";
+   $("clearStats").innerHTML=
+    `<li>걸린 시간 <b>${Math.floor(secs/60)}분 ${secs%60}초</b></li>`+
+    `<li>부딪힌 횟수 <b>${bumps}</b></li>`+
+    (G.coins.length?`<li>주운 동전 <b>${ST.coins}/${G.coins.length}</b> (${rate}%)</li>`:"")+
+    (ST.bestCombo>=3?`<li>최고 연속 <b>${ST.bestCombo}개</b></li>`:"")+
+    ((ST.fineHits+ST.midHits+ST.maxHits)>0?`<li>조작 챌린지 <b>미세 ${ST.fineHits} · 중간 ${ST.midHits} · 최대 ${ST.maxHits}</b></li>`:"")+
+    `<li>해결한 사건 <b>${GAME_EVENTS.filter(e=>e.status==="complete").length}/${GAME_EVENTS.length}</b></li>`+
+    `<li>발견한 보상 <b>${ST.collectibles.length}</b></li>`+
+    `<li>운전 점수 <b>${stars}</b></li>`;
+   hide($("hud")); hide($("compass")); hide($("pad"));
+   show($("scrClear"));
+   $("fade").classList.remove("on");
+  },520);
+ }
+}
+
+function nextFloor(){
+ hide($("scrClear"));
+ const n=ST.floor+1;
+ if(n>=FLOORS.length){
+  $("endStats").innerHTML=
+   `<li>전체 시간 <b>${Math.floor(ST.totalTime/60)}분 ${ST.totalTime%60}초</b></li>`+
+   `<li>전체 부딪힘 <b>${ST.totalBumps}</b></li>`+
+   `<li>오른 층 <b>${FLOORS.length}층</b></li>`;
+  ST.phase="end"; show($("scrEnd")); return;
+ }
+ showFloorCard(n);
+}
+
+/* ---------- 시점 전환 ---------- */
+
+function setView(v){
+ ST.view=v;
+ const first=(v==="first");
+ document.body.classList.toggle("first-person",first);
+ $("viewChip").textContent = first ? "시점 1인칭" : "시점 3인칭";
+ document.querySelectorAll("#viewSeg button").forEach(
+  b=>b.classList.toggle("sel",b.dataset.v===v)
+ );
+
+ // 1인칭은 넓은 화각 대신 안정적인 54° FOV를 사용한다.
+ if(cam){
+  cam.fov=first?54:62;
+  cam.updateProjectionMatrix();
+ }
+
+ if(chair){
+  chair.children.forEach(m=>{
+   if(m.userData.rider) m.visible=!first;
+  });
+ }
+
+ // 1인칭에서는 normal coin의 시각적 반복을 제거하고 특수 과제만 남긴다.
+ coinMeshes.forEach(({grp,c})=>{
+  grp.visible = !first || c.kind!=="normal" || c.got;
+ });
+
+ if(fpGuideGroup) fpGuideGroup.visible=first;
+ if(stairReferenceGroup) stairReferenceGroup.visible=!first;
+
+ // 배경 장식은 완전히 제거하지 않되 1인칭에서는 강도를 낮춘다.
+ if(themeDecorGroup){
+  themeDecorGroup.visible=true;
+  themeDecorGroup.children.forEach(o=>{
+   if(o.material && "opacity" in o.material){
+    o.material.transparent=first;
+    o.material.opacity=first?0.72:1;
+   }
+  });
+ }
+}
+
+function toggleView(){ setView(ST.view==="first"?"third":"first"); }
+$("viewChip").addEventListener("click",toggleView);
+
+/* ---------- 프롤로그 ---------- */
+const PROLOG=[
+ { t:"층층미로에 들어섰다",   s:"한 층이 통째로 미로다.\n같은 길은 두 번 나오지 않는다." },
+ { t:"동전이 길을 알려준다",  s:"미로가 삼킨 동전이 길을 따라 떠 있다.\n동전 줄을 놓치면 길도 놓친다." },
+ { t:"엘리베이터를 찾아라",  s:"동전을 따라가면 문이 나온다.\n버튼을 누르면 위층의 미로가 새로 짜인다." }
+];
+let prologI=0;
+function showProlog(i){
+ prologI=i; ST.phase="prolog";
+ const p=PROLOG[i];
+ $("prologTag").textContent="PROLOGUE "+(i+1)+" / "+PROLOG.length;
+ $("prologLine").textContent=p.t;
+ $("prologSub").textContent=p.s;
+ $("prologDots").textContent=PROLOG.map((_,k)=>k===i?"●":"○").join(" ");
+ $("btnProlog").textContent = i<PROLOG.length-1 ? "다음" : "타워로";
+ show($("scrProlog"));
+}
+$("btnProlog").addEventListener("click",()=>{
+ if(prologI<PROLOG.length-1){ showProlog(prologI+1); return; }
+ hide($("scrProlog")); showFloorCard(0);
+});
+
+/* ---------- WST 오버레이 (치료사용) ---------- */
+function refreshWST(){
+ document.body.classList.toggle("therapist",ST.wstOpen);
+ if(ST.wstOpen) updateTherapistEventPanel();
+ const def=FLOORS[ST.floor];
+ $("wstList").innerHTML=def.wst.map(w=>`<li>${w}</li>`).join("");
+ $("wstMeta").textContent=
+  `입력 — 마우스 대체 조이스틱 · 보정 X ${Math.round(MOUSE_INPUT.maxRateX)}px/s · Y ${Math.round(MOUSE_INPUT.maxRateY)}px/s · 중립 ${WHEEL.dead.toFixed(2)} · 떨림완화 ${WHEEL.smooth.toFixed(2)} · ${WHEEL.turnMode==="tank"?"제자리회전":"속도비례조향"}`;
+}
+
+/* ==========================================================
+  관리자 리포트 — 선언한 WST 항목이 실제로 얼마나 수행되었는지
+  ========================================================== */
+function wstRows(){
+ return WST_ITEMS.map(it=>{
+  const v=WSTT[it.id]?WSTT[it.id].v:0;
+  const at=WSTT[it.id]?WSTT[it.id].attempt:0;
+  const ratio=it.goal?v/it.goal:0;
+  const level = ratio>=1 ? "done" : (ratio>=0.4 ? "part" : "miss");
+  const shown = it.unit==="m" ? v.toFixed(1) : String(Math.round(v));
+  return { ...it, v, at, shown, level,
+           mark: level==="done"?"달성":level==="part"?"부분":"미수행" };
+ });
+}
+function renderReport(){
+ const rows=wstRows();
+ const done=rows.filter(r=>r.level==="done").length;
+ const part=rows.filter(r=>r.level==="part").length;
+ $("reportMeta").textContent=
+  `달성 ${done} · 부분 ${part} · 미수행 ${rows.length-done-part} / 총 ${rows.length}항목`+
+  `   ·   총 시간 ${Math.floor(ST.totalTime/60)}분 ${ST.totalTime%60}초`;
+
+ let html="<tr><th>WST 항목</th><th>수행</th><th>목표</th><th>판정</th></tr>";
+ rows.forEach(r=>{
+  html+=`<tr class="${r.level}">`+
+   `<td>${r.ko}<br><span style="color:#8A8A8A;font-size:10px">${r.name}</span></td>`+
+   `<td class="num">${r.shown}${r.unit}${r.at?` <span style="color:#8A8A8A">(시도 ${r.at})</span>`:""}</td>`+
+   `<td class="num">${r.goal}${r.unit}</td>`+
+   `<td class="mark">${r.mark}</td></tr>`;
+ });
+ $("reportTable").innerHTML=html;
+
+ const avgErr=WSTT.stopErrN?(WSTT.stopErrSum/WSTT.stopErrN):null;
+ $("reportNote").textContent=
+  `벽·문설주 접촉 ${WSTT.contact}회 · 이동 장애물 접촉 ${WSTT.moverContact}회`+
+  (avgErr!==null?` · 정지선 평균 오차 ${avgErr.toFixed(2)}m`:"")+
+  `   ·   조종값: 전진 ${WHEEL.maxFwd.toFixed(1)} / 회전 ${WHEEL.maxTurn.toFixed(1)} / 중립 ${WHEEL.dead.toFixed(2)} / 떨림완화 ${WHEEL.smooth.toFixed(2)}`+
+  `   ·   본 수치는 게임 내 기록이며 공식 WST 점수가 아닙니다.`;
+}
+function reportText(){
+ const rows=wstRows();
+ const L=[`층층미로 WST 수행 기록`,
+          `일시\t${new Date().toLocaleString("ko-KR")}`,
+          `총 시간\t${Math.floor(ST.totalTime/60)}분 ${ST.totalTime%60}초`,
+          `접촉\t벽 ${WSTT.contact} / 장애물 ${WSTT.moverContact}`,
+          `조종값\t전진 ${WHEEL.maxFwd} / 회전 ${WHEEL.maxTurn} / 중립 ${WHEEL.dead} / 떨림완화 ${WHEEL.smooth}`,
+          ``,`항목\t수행\t목표\t판정`];
+ rows.forEach(r=>L.push(`${r.ko}(${r.name})\t${r.shown}${r.unit}\t${r.goal}${r.unit}\t${r.mark}`));
+ L.push(``,`※ 게임 내 기록이며 공식 WST 점수가 아님`);
+ return L.join("\n");
+}
+function openReport(){
+ renderReport();
+ ST.phase="report";
+ hide($("scrEnd"));
+ show($("scrReport"));
+}
+
+/* ==========================================================
+  설정 화면
+  ========================================================== */
+const SL=[["sMaxFwd","vMaxFwd","maxFwd",1],["sMaxRev","vMaxRev","maxRev",1],
+     ["sMaxTurn","vMaxTurn","maxTurn",1],["sAccel","vAccel","accel",1],
+     ["sBrake","vBrake","brake",1],["sDead","vDead","dead",2],
+     ["sSmooth","vSmooth","smooth",2]];
+function syncSetup(){
+ SL.forEach(([sid,vid,key,dp])=>{ $(sid).value=WHEEL[key]; $(vid).textContent=(+WHEEL[key]).toFixed(dp); });
+ document.querySelectorAll("#turnSeg button").forEach(b=>
+  b.classList.toggle("sel", (b.dataset.t==="tank")===(WHEEL.turnMode==="tank")));
+ document.querySelectorAll("#viewSeg button").forEach(b=>b.classList.toggle("sel",b.dataset.v===ST.view));
+ document.querySelectorAll("#mouseInvSeg button").forEach(b=>{
+  const active=(b.dataset.i==="f"&&WHEEL.mouseInvF)||(b.dataset.i==="t"&&WHEEL.mouseInvT);
+  b.classList.toggle("sel",active);
+ });
+ updateMouseSetupStatus();
+ refreshWST();
+}
+function applyPreset(name){
+ Object.assign(WHEEL,PRESETS[name]);
+ document.querySelectorAll("#presetSeg button").forEach(b=>b.classList.toggle("sel",b.dataset.p===name));
+ syncSetup();
+}
+SL.forEach(([sid,vid,key,dp])=>{
+ $(sid).addEventListener("input",e=>{
+  WHEEL[key]=parseFloat(e.target.value);
+  $(vid).textContent=WHEEL[key].toFixed(dp);
+  document.querySelectorAll("#presetSeg button").forEach(b=>b.classList.remove("sel"));
+  refreshWST();
+ });
+});
+document.querySelectorAll("#presetSeg button").forEach(b=>b.addEventListener("click",()=>applyPreset(b.dataset.p)));
+document.querySelectorAll("#viewSeg button").forEach(b=>b.addEventListener("click",()=>setView(b.dataset.v)));
+document.querySelectorAll("#turnSeg button").forEach(b=>b.addEventListener("click",()=>{
+ WHEEL.turnMode=b.dataset.t==="tank"?"tank":"speed"; syncSetup();
+}));
+$("mouseInvSeg").addEventListener("click",e=>{
+ const b=e.target.closest("button");
+ if(!b) return;
+ if(b.dataset.i==="f") WHEEL.mouseInvF=!WHEEL.mouseInvF;
+ if(b.dataset.i==="t") WHEEL.mouseInvT=!WHEEL.mouseInvT;
+ syncSetup();
+});
+
+$("btnMouseLock").addEventListener("click",requestMouseInput);
+$("btnMouseCal").addEventListener("click",beginMouseCalibration);
+$("btnMouseReset").addEventListener("click",resetMouseCalibration);
+$("btnMouseActivate").addEventListener("click",requestMouseInput);
+
+let setupReturn="title";
+/* ==========================================================
+  포인터 모드 — 조이스틱 마우스 사용자는 이 조이스틱이 유일한 포인터다.
+  주행 중 포인터를 잠가 두면 메뉴·설정을 누를 방법이 없어진다.
+  버튼을 길게 누르면 잠금을 풀고 이 메뉴로 나온다.
+  ========================================================== */
+function enterPauseMenu(){
+ if(ST.phase!=="drive") return;
+ ST.phase="paused";
+ ST.pauseAt=performance.now();
+ releaseMouseInput();
+ hide($("mouseGate")); hide($("dock"));
+ $("pauseTasks").innerHTML=
+  `<li>지금 층 <b>${ST.floor+1}층 ${FLOORS[ST.floor].name}</b></li>`+
+  `<li>동전 <b>${ST.coins}/${G?G.coins.length:0}</b> · 부딪힘 <b>${bumps}</b></li>`+
+  `<li>다시 주행하려면 <b>주행으로 돌아가기</b></li>`;
+ show($("scrPause"));
+}
+function resumeDrive(){
+ hide($("scrPause"));
+ if(ST.pauseAt){ tStart+=performance.now()-ST.pauseAt; ST.pauseAt=0; }  // 멈춘 시간은 기록에서 뺀다
+ ST.phase="drive";
+ show($("hud")); show($("compass")); show($("pad")); show($("controlDial"));
+ requestMouseInput();
+ // 브라우저는 잠금 해제 직후 잠시 재잠금을 거부한다.
+ // 실패하면 조작 불능이 되므로, 한 번 더 누를 수 있는 안내를 띄운다.
+ setTimeout(()=>{
+  if(ST.phase==="drive" && document.pointerLockElement!==$("view")) show($("mouseGate"));
+ },900);
+}
+$("btnResume").addEventListener("click",resumeDrive);
+$("btnPauseSetup").addEventListener("click",()=>{ hide($("scrPause")); openSetup("pause"); });
+$("btnPauseReport").addEventListener("click",()=>{
+ hide($("scrPause")); renderReport(); ST.phase="report"; ST.reportReturn="pause"; show($("scrReport"));
+});
+$("btnPauseHome").addEventListener("click",()=>{
+ hide($("scrPause")); releaseMouseInput();
+ hide($("hud")); hide($("compass")); hide($("pad")); hide($("controlDial"));
+ ST.phase="title"; show($("scrTitle"));
+});
+
+function openSetup(from){
+ setupReturn=from;
+ ST.phase="setup";
+ releaseMouseInput();
+ syncSetup();
+ show($("scrSetup"));
+}
+$("btnSetup").addEventListener("click",()=>{ hide($("scrTitle")); openSetup("title"); });
+$("btnFloorSetup").addEventListener("click",()=>{ hide($("scrFloor")); openSetup("card"); });
+$("btnSetupClose").addEventListener("click",()=>{
+ hide($("scrSetup"));
+ if(setupReturn==="title"){ ST.phase="title"; show($("scrTitle")); }
+ else if(setupReturn==="card"){ ST.phase="card"; show($("scrFloor")); }
+ else if(setupReturn==="pause"){ ST.phase="paused"; show($("scrPause")); }
+ else {
+  ST.phase="drive";
+  show($("mouseGate")); show($("hud")); show($("compass")); show($("pad")); show($("controlDial")); }
+});
+
+/* ==========================================================
+  입력 바인딩
+  ========================================================== */
+$("btnStart").addEventListener("click",()=>{
+ SND.init(); hide($("scrTitle"));
+ resetSessionForEntry(); resetWSTTotal(); ST.floor=0;
+ applyPreset(FLOORS[0].recommend);
+ showProlog(0);
+});
+$("btnContinue").addEventListener("click",()=>{
+ const last=getLastFloor();
+ if(last!=null) enterStage(last);
+});
+$("btnStageSelect").addEventListener("click",openStageSelect);
+$("btnStageBack").addEventListener("click",()=>{
+ hide($("scrStageSelect")); refreshStartMenu(); show($("scrTitle"));
+});
+$("btnGo").addEventListener("click",()=>{
+ hide($("scrFloor"));
+ startFloor(ST.pending);
+ requestMouseInput();
+});
+$("btnNext").addEventListener("click",nextFloor);
+$("btnReport").addEventListener("click",openReport);
+$("btnReportClose").addEventListener("click",()=>{
+ hide($("scrReport"));
+ if(ST.reportReturn==="pause"){ ST.reportReturn=null; ST.phase="paused"; show($("scrPause")); }
+ else { ST.phase="end"; show($("scrEnd")); }
+});
+$("btnReportCopy").addEventListener("click",()=>{
+ const t=reportText();
+ if(navigator.clipboard&&navigator.clipboard.writeText){
+  navigator.clipboard.writeText(t).then(()=>{ $("btnReportCopy").textContent="복사됨"; setTimeout(()=>$("btnReportCopy").textContent="기록 복사",1400); });
+ }else{
+  const ta=document.createElement("textarea"); ta.value=t; document.body.appendChild(ta);
+  ta.select(); try{ document.execCommand("copy"); }catch(e){}
+  document.body.removeChild(ta);
+  $("btnReportCopy").textContent="복사됨"; setTimeout(()=>$("btnReportCopy").textContent="기록 복사",1400);
+ }
+});
+$("btnRestart").addEventListener("click",()=>{
+ releaseMouseInput();
+ hide($("scrEnd"));
+ hide($("hud")); hide($("compass")); hide($("pad")); hide($("controlDial")); hide($("collectionMini"));
+ ST.phase="title"; refreshStartMenu(); show($("scrTitle"));
+});
+
+addEventListener("keydown",e=>{
+ const k=e.key.toLowerCase();
+ if(["arrowup","arrowdown","arrowleft","arrowright"," "].includes(k)) e.preventDefault();
+ K.add(k);
+ if(k===" ") pressButton();
+ if(k==="v") toggleView();
+ if(k==="w"&&e.shiftKey){                       // 치료사용: 언제든 수행도 확인
+  if(ST.phase==="report"){ hide($("scrReport")); ST.phase=ST.floor>=FLOORS.length-1?"end":"card"; }
+  else { renderReport(); ST.phase="report"; show($("scrReport")); }
+ }
+ if(k==="t"){ ST.wstOpen=!ST.wstOpen; $("wst").classList.toggle("hidden",!ST.wstOpen); refreshWST(); }
+ if(k==="p"&&ST.phase==="drive"){ openSetup("drive"); hide($("hud")); hide($("compass")); hide($("pad")); }
+});
+addEventListener("keyup",e=>K.delete(e.key.toLowerCase()));
+addEventListener("resize",()=>{
+ cam.aspect=innerWidth/innerHeight; cam.updateProjectionMatrix();
+ renderer.setSize(innerWidth,innerHeight);
+});
+
+function updatePadStatus(){
+ updateMouseInputState();
+ updateMouseSetupStatus();
+ $("padStatus").textContent = MOUSE_INPUT.locked
+  ? "마우스 대체 조이스틱 입력 활성"
+  : "마우스 대체 조이스틱: 단계 진입 후 입력 활성화";
+ $("pad").innerHTML =
+  "조이스틱 이동: 주행 · 클릭: 환경 조작 · ESC: 포인터 해제 · V: 시점 · P: 설정";
+}
+
+/* ==========================================================
+  카메라 · HUD · 루프
+  ========================================================== */
+/* 층에 들어선 순간의 연출 — 카메라가 휠체어를 한 바퀴 돌아 제자리에 선다 */
+function updateBeat(dt){
+ ST.beatT+=dt;
+ const T=2.6, k=Math.min(1,ST.beatT/T), e=1-Math.pow(1-k,3);
+ const ang=P.yaw+Math.PI*1.15*(1-e);
+ const back=3.4+4.6*(1-e)+2.0*e;
+ const up=2.2+5.4*(1-e);
+ cam.position.set(P.x-Math.sin(ang)*back, P.y+up, P.z-Math.cos(ang)*back);
+ cam.lookAt(P.x,P.y+0.9,P.z);
+ if(k>=1){
+  ST.phase="drive";
+  tStart=performance.now();      // 연출 시간은 기록에서 뺀다
+  camYaw=P.yaw;
+  banner(FLOORS[ST.floor].tasks.join("  ·  "));
+ }
+}
+
+/* 카메라 뒤쪽에 벽이 있으면 그만큼 당겨온다.
+  좁은 복도·출발 홀 구석에서 시점이 벽 속으로 들어가는 것을 막는다 */
+function freeBackDistance(want){
+ const margin=0.55, steps=16;
+ let ok=0;
+ for(let i=1;i<=steps;i++){
+  const d=want*i/steps;
+  const x=P.x-Math.sin(camYaw)*d, z=P.z-Math.cos(camYaw)*d;
+  const cx=Math.floor(x/CELL), cz=Math.floor(z/CELL);
+  const solid = cx<0||cz<0||cx>=G.w||cz>=G.h || G.c[cz][cx]===0 || G.c[cz][cx]===3;
+  if(solid) break;
+  // 벽에 바싹 붙지 않도록 여유를 본다
+  const nx=P.x-Math.sin(camYaw)*(d+margin), nz=P.z-Math.cos(camYaw)*(d+margin);
+  const mx=Math.floor(nx/CELL), mz=Math.floor(nz/CELL);
+  const nearWall = mx<0||mz<0||mx>=G.w||mz>=G.h || G.c[mz][mx]===0 || G.c[mz][mx]===3;
+  if(nearWall){ ok=d; break; }
+  ok=d;
+ }
+ return ok;  // 0이 나올 수 있다 — 뒤가 꽉 막힌 경우
+}
+
+
+let camYaw=0;
+let fpEyeY=1.36;
+
+function updateCamera(dt){
+ const first=(ST.view==="first");
+ const yawRate=first?3.1:4.5;
+ camYaw += (P.yaw-camYaw)*Math.min(1,dt*yawRate);
+
+ if(first){
+  // 1인칭: 회전은 camYaw로 완충하고, 경사에서의 눈높이 변화도 저역통과한다.
+  // 시야의 roll/pitch는 만들지 않아 수평 기준을 유지한다.
+  const fx=Math.sin(camYaw), fz=Math.cos(camYaw);
+  const targetEyeY=P.y+1.36;
+  fpEyeY += (targetEyeY-fpEyeY)*Math.min(1,dt*3.2);
+
+  const tx=P.x+fx*0.34;
+  const tz=P.z+fz*0.34;
+  cam.position.x += (tx-cam.position.x)*Math.min(1,dt*14);
+  cam.position.z += (tz-cam.position.z)*Math.min(1,dt*14);
+  cam.position.y += (fpEyeY-cam.position.y)*Math.min(1,dt*10);
+
+  // 고정된 수평 시선. 바닥을 과하게 내려다보지 않는다.
+  cam.lookAt(
+   cam.position.x+fx*10,
+   cam.position.y-0.035,
+   cam.position.z+fz*10
+  );
+
+  // 회전 중에만 주변부를 약간 더 어둡게 해 optic flow를 줄인다.
+  const turn=Math.min(1,Math.abs(P.w)/Math.max(0.5,WHEEL.maxTurn));
+  const speed=Math.min(1,Math.abs(P.v)/Math.max(0.8,WHEEL.maxFwd));
+  const comfort=0.18 + turn*0.20 + speed*0.05;
+  $("comfortVignette").style.opacity=String(Math.min(0.43,comfort));
+  return;
+ }
+
+ $("comfortVignette").style.opacity="0";
+ const want=6.2;
+ const back=Math.max(0,freeBackDistance(want)-0.4);
+ const up=4.0+(want-back)*0.66;
+ const tx=P.x-Math.sin(camYaw)*back, tz=P.z-Math.cos(camYaw)*back;
+ cam.position.x += (tx-cam.position.x)*Math.min(1,dt*8);
+ cam.position.z += (tz-cam.position.z)*Math.min(1,dt*8);
+ cam.position.y += (P.y+up-cam.position.y)*Math.min(1,dt*8);
+ if(shake>0){
+  cam.position.x+=(Math.random()-0.5)*shake;
+  cam.position.y+=(Math.random()-0.5)*shake;
+  shake*=0.86;
+  if(shake<0.005) shake=0;
+ }
+ cam.lookAt(
+  P.x+Math.sin(P.yaw)*1.6,
+  P.y+1.0,
+  P.z+Math.cos(P.yaw)*1.6
+ );
+}
+
+function updateHUD(){
+ // 물리 속도와 별도로 '조이스틱을 얼마나 밀었는가'를 직접 보여준다.
+ const rawMag=Math.min(1,Math.max(Math.abs(IN.rawF),Math.abs(IN.rawT)));
+ $("inputFill").style.width=(rawMag*100)+"%";
+ $("dialNeedle").style.left=(rawMag*100)+"%";
+ $("dialPct").textContent="입력 "+Math.round(rawMag*100)+"%";
+
+ let zone="neutral", label="중립";
+ if(rawMag>=0.85){ zone="max"; label="최대 "+Math.round(rawMag*100)+"%"; }
+ else if(rawMag>Math.max(0.10,WHEEL.dead*0.8) && rawMag<=0.45){
+  zone="fine"; label="미세 "+Math.round(rawMag*100)+"%";
+ }else if(rawMag>Math.max(0.10,WHEEL.dead*0.8)){
+  zone="mid"; label="중간 "+Math.round(rawMag*100)+"%";
+ }
+ $("controlState").textContent=label;
+ $("controlChip").classList.toggle("fine",zone==="fine");
+ $("controlChip").classList.toggle("max",zone==="max");
+
+ // 미세 ↔ 최대를 처음 오갈 때만 짧게 알려주어 차이를 의식하게 한다.
+ if(zone!==ST.inputZone){
+  const now=performance.now();
+  if((zone==="fine"||zone==="max") && now-ST.zoneChangedAt>700){
+   ST.zoneChangedAt=now;
+  }
+  ST.inputZone=zone;
+ }
+
+ const sp=Math.min(1,Math.abs(P.v)/Math.max(0.8,WHEEL.maxFwd));
+ $("speedFill").style.width=(sp*100)+"%";
+ $("revMark").textContent = P.v<-0.05 ? "후진" : "\u00A0";
+ const secs=Math.round((performance.now()-tStart)/1000);
+ $("timeChip").textContent=Math.floor(secs/60)+":"+String(secs%60).padStart(2,"0");
+
+ // 나침반 — 아이가 길을 잃지 않게
+ const e=G.elev, gx=(e.entX+0.5)*CELL, gz=(e.entZ+0.5)*CELL;
+ const dx=gx-P.x, dz=gz-P.z, dist=Math.hypot(dx,dz);
+ let a=Math.atan2(dx,dz)-P.yaw;
+ while(a>Math.PI) a-=Math.PI*2; while(a<-Math.PI) a+=Math.PI*2;
+ const arrows=["앞","◥","▶","◢","▼","◣","◀","◤"];
+ const idx=Math.round(((a+Math.PI*2)%(Math.PI*2))/(Math.PI/4))%8;
+ $("compassArrow").textContent=arrows[idx];
+ $("compassText").textContent="엘리베이터 "+Math.round(dist)+"m";
+}
+
+function updateDockUI(){
+ if(ST.docked){ hide($("dock")); return; }
+ const d=dockState();
+ if(!d){ hide($("dock")); return; }
+ show($("dock"));
+ $("dockFill").style.width=Math.round(d.score*100)+"%";
+ $("dock").classList.toggle("ready",d.ready);
+ $("dockKey").textContent = d.ready
+  ? (ST.padName?"지금 버튼을 누르세요":"지금 Space")
+  : "버튼 정면으로 · 가까이 · 멈춘 채로";
+ if(d.ready && !updateDockUI.was){ SND.dock(); }
+ updateDockUI.was=d.ready;
+}
+
+/* 마우스 대체 조이스틱 버튼으로 엘리베이터 버튼 누르기 */
+let padPrev=false;
+function pollPadButton(){ /* mouse click handler가 환경 조작을 담당한다. */ }
+
+/* 설정 화면의 축 반응 막대 */
+function updateAxisBars(){
+ const nx=clamp1(MOUSE_INPUT.vx/Math.max(80,MOUSE_INPUT.maxRateX));
+ const ny=clamp1(-MOUSE_INPUT.vy/Math.max(80,MOUSE_INPUT.maxRateY));
+
+ const setBar=(id,val,valId)=>{
+  const el=$(id), tx=$(valId);
+  if(!el||!tx) return;
+  const pct=Math.abs(val)*50;
+  el.style.left=(val>=0?50:50-pct)+"%";
+  el.style.width=pct+"%";
+  tx.textContent=Math.round(val*100)+"%";
+ };
+ setBar("mouseXBar",nx,"mouseXVal");
+ setBar("mouseYBar",ny,"mouseYVal");
+
+ if(MOUSE_INPUT.calibrating){
+  const left=Math.max(0,Math.ceil(
+   (6000-(performance.now()-(MOUSE_INPUT.lastCalStart||performance.now())))/1000
+  ));
+  // 실제 종료는 timer가 담당하므로 시각 표시만 업데이트.
+  $("mouseCalStatus").textContent=
+   `보정 중: 앞·뒤·좌·우를 끝까지 움직여 주세요. 현재 최고 좌우 ${Math.round(MOUSE_INPUT.calPeakX)} · 앞뒤 ${Math.round(MOUSE_INPUT.calPeakY)} px/s`;
+ }
+}
+
+let prev=performance.now();
+function loop(now){
+ requestAnimationFrame(loop);
+ const dt=Math.min((now-prev)/1000,0.05); prev=now;
+
+ if(ST.phase==="setup") updateAxisBars();
+
+ if(ST.phase==="drive"){
+  readInput(dt);
+  stepChair(dt);
+  updateCoins(dt,now/1000);
+  updateMovers(dt);
+  updateElevatorDoors(dt);
+  updateEventEngine(dt);
+  updateGuideBot(dt,now/1000);
+  pollPadButton();
+  updateHUD();
+  updateDockUI();
+  updateTherapistEventPanel();
+  updateCollectionUI();
+  // 휠체어 자세 반영
+  chair.position.set(P.x,P.y,P.z);
+  chair.rotation.y=P.yaw;
+  const sl=flagAt(G.slope,P.x,P.z);
+  chair.rotation.z=(chair.rotation.z*0.85)+((sl?-sl*0.12:0)*0.15);  // 옆경사에서 기운다
+  chairWheels.forEach(w=>{ w.spin.rotation.y -= (P.v*dt)/w.r; });
+  if(chair.userData.stick){                     // 조이스틱이 입력대로 기운다
+   chair.userData.stick.rotation.z=-IN.t*0.5;
+   chair.userData.stick.rotation.x=IN.f*0.5;
+  }
+ }
+
+ if(ST.phase==="rise"){         // 칸이 위로 올라간다
+  ST.riseT+=dt;
+  cam.position.y+=dt*5.2;
+  cam.position.x+=(P.x-cam.position.x)*Math.min(1,dt*3);
+  cam.position.z+=(P.z-cam.position.z)*Math.min(1,dt*3);
+  cam.lookAt(P.x,P.y+1.0,P.z);
+  if(ST.riseT>1.15){ ST.phase="clearing"; finishFloor(); }
+ }
+
+ if(ST.phase==="beat"){
+  chair.position.set(P.x,P.y,P.z); chair.rotation.y=P.yaw;
+  updateBeat(dt);
+  updateMovers(dt);
+  updateGuideBot(dt,now/1000);
+  updateCollectionUI();
+ }
+
+ if(scene&&cam){
+  if(ST.phase==="drive") updateCamera(dt);
+  renderer.render(scene,cam);
+ }
+}
+
+initThree();
+refreshStartMenu();
+setView("first");
+updatePadStatus();
+updateMouseSetupStatus();
+applyPreset("normal");
+requestAnimationFrame(loop);
+setInterval(updatePadStatus,2000);
+</script>
+</body>
+</html>

@@ -56,7 +56,7 @@ export default function ContentForm({ editing }: { editing: ContentItem | null }
           <input id="c-path" name="app_path" defaultValue={editing?.app_path ?? ""} />
         </div>
         <div className="admin-field">
-          <label htmlFor="c-cat">카테고리 (kiosk/hand/gaze 등)</label>
+          <label htmlFor="c-cat">카테고리 (kiosk/hand/gaze/assistive 등)</label>
           <input id="c-cat" name="category" defaultValue={editing?.category ?? ""} />
         </div>
         <div className="admin-field">

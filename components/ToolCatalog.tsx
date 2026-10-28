@@ -143,7 +143,9 @@ export default function ToolCatalog({
         <div className="catalog-grid">
           {filtered.map((item) => {
             const kind: WorkspaceIconKind =
-              item.category === "hand" || item.category === "gaze"
+              item.category === "hand" ||
+              item.category === "gaze" ||
+              item.category === "assistive"
                 ? item.category
                 : "kiosk";
             return (
