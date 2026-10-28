@@ -762,19 +762,25 @@ body.first-person canvas#view{
 #mouseInputState.active{ color:#BFD8B0; }
 #mouseInputState.calibrating{ color:#E8C75B; }
 
+/* 주행 화면을 가리지 않는 상단 띠. 배경 막을 두지 않아
+   포인터 잠금이 거부돼도 미로가 그대로 보이고 키보드 조작도 막히지 않는다. */
 #mouseGate{
  position:fixed;
- inset:0;
+ left:50%;
+ top:58px;
+ transform:translateX(-50%);
  z-index:80;
- display:flex;
- align-items:center;
- justify-content:center;
- background:rgba(8,12,14,.76);
+ pointer-events:none;
 }
 #mouseGate .gatePanel{
- width:min(520px,88vw);
- padding:22px;
- text-align:center;
+ pointer-events:auto;
+ display:flex;
+ align-items:center;
+ gap:12px;
+ width:max-content;
+ max-width:92vw;
+ padding:8px 10px 8px 14px;
+ text-align:left;
  background:#3C4144;
  color:#ECEFEF;
  box-shadow:inset 3px 3px 0 rgba(255,255,255,.12),
@@ -782,15 +788,15 @@ body.first-person canvas#view{
             0 0 0 4px #202528;
 }
 #mouseGate .gateTitle{
- font-size:18px;
- margin-bottom:12px;
+ font-size:12px;
 }
 #mouseGate .gateText{
  font-size:11px;
- line-height:1.8;
+ line-height:1.5;
  color:#C8D1D5;
- margin-bottom:16px;
 }
+#mouseGate .btn{ padding:6px 12px; font-size:12px; }
+#mouseGate .note{ display:none; }
 #mouseGate.hidden{ display:none; }
 
 .mouseInputPanel{
@@ -1040,11 +1046,9 @@ body.first-person #comfortVignette{ opacity:.2; }
 <div id="mouseInputState">입력 대기</div>
 <div id="mouseGate" class="hidden">
  <div class="gatePanel">
-  <div class="gateTitle">조이스틱 입력 시작</div>
-  <div class="gateText">
-   이 게임은 마우스 포인터를 움직이는 보조 조이스틱을 사용합니다.<br>
-   화면 끝에 닿아도 계속 조작할 수 있도록 주행 중 포인터를 잠급니다.<br>
-   조이스틱의 클릭 기능은 엘리베이터 버튼 동작으로 사용됩니다.
+  <div>
+   <div class="gateTitle">조이스틱 입력 시작</div>
+   <div class="gateText" id="mouseGateText">게임 화면을 클릭하거나 버튼을 누르면 포인터를 잠그고 주행합니다.</div>
   </div>
   <button class="btn go" id="btnMouseActivate">입력 활성화</button>
   <div class="note">키보드 방향키와 WASD는 개발·테스트용으로만 사용할 수 있습니다.</div>
@@ -3115,9 +3119,18 @@ addEventListener("pointerlockchange",()=>{
  if(MOUSE_INPUT.locked && MOUSE_INPUT.pendingCalibration){
   startCalibrationNow();
  }
- if(MOUSE_INPUT.locked) hide($("mouseGate"));
+ if(MOUSE_INPUT.locked){
+  hide($("mouseGate"));
+  $("mouseGateText").textContent="게임 화면을 클릭하거나 버튼을 누르면 포인터를 잠그고 주행합니다.";
+ }
  // ESC로 풀렸을 때도 갇히지 않도록 같은 메뉴로 내보낸다
  if(!MOUSE_INPUT.locked && ST.phase==="drive") enterPauseMenu();
+});
+
+// 브라우저가 잠금을 거부한 경우(해제 직후 재요청 등) 이유를 띠에 알린다.
+addEventListener("pointerlockerror",()=>{
+ $("mouseGateText").textContent="브라우저가 포인터 잠금을 거부했습니다. 1초 뒤 다시 눌러 주세요.";
+ if(ST.phase==="drive"||ST.phase==="beat") show($("mouseGate"));
 });
 
 addEventListener("mousemove",e=>{
@@ -3149,11 +3162,12 @@ let holdTimer=null, holdFired=false;
 
 addEventListener("mousedown",e=>{
  if(e.button!==0) return;
- if(ST.phase!=="drive") return;
+ if(ST.phase!=="drive"&&ST.phase!=="beat") return;
  if(document.pointerLockElement!==$("view")){
-  requestMouseInput();
+  if(e.target===$("view")) requestMouseInput();
   return;
  }
+ if(ST.phase!=="drive") return;
  holdFired=false;
  clearTimeout(holdTimer);
  holdTimer=setTimeout(()=>{
