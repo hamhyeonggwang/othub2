@@ -45,6 +45,9 @@ it("combines category and camera requirements", () => {
 it("accepts the assistive category", () => {
   expect(toolCategory("assistive")).toBe("assistive");
 });
+it("accepts the cognitive category", () => {
+  expect(toolCategory("cognitive")).toBe("cognitive");
+});
 it.each([undefined, null, "", "unknown", "<script>"])(
   "falls back safely for category %s",
   (value) => {

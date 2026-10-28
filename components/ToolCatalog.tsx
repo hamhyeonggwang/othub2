@@ -145,7 +145,8 @@ export default function ToolCatalog({
             const kind: WorkspaceIconKind =
               item.category === "hand" ||
               item.category === "gaze" ||
-              item.category === "assistive"
+              item.category === "assistive" ||
+              item.category === "cognitive"
                 ? item.category
                 : "kiosk";
             return (

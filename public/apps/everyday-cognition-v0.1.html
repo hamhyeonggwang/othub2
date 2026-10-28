@@ -1,0 +1,1171 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>일상 인지활동</title>
+<!--
+  일상 인지활동 (가칭 everyday) v0.1 — OTHub 참여형 인지활동 웹앱 PRD v0.2의 P0 범위.
+  - 세션 흐름 5단계: 체크인 → 주제 고르기 → 내 이야기 → 활동 → 나누기·약속
+  - 활동 패턴 5개(숫자 엮기·차례 찾기·나눠 담기·순서 세우기·기억 꺼내기) × 주제 2개(오늘·부엌)
+  - '내 이야기' 답은 이 페이지 메모리에만 두며 서버·브라우저 저장소에 쓰지 않는다.
+  - 문항·카드 문구는 모두 새로 작성했다. 외부 활동지의 문구·양식은 쓰지 않는다.
+-->
+<style>
+:root{
+  --bg:#F6F3EC; --paper:#FFFFFF; --ink:#22262A; --ink2:#4E565E; --line:#D9D3C7;
+  --accent:#2F6F8F; --accent-ink:#FFFFFF; --accent-soft:#E3EFF5;
+  --ok:#2E7D4F; --ok-soft:#E3F2E8; --warm:#B5651D; --warm-soft:#FBEBDC;
+  --focus:#F2B84B;
+}
+*{ box-sizing:border-box; }
+html,body{ margin:0; background:var(--bg); color:var(--ink); }
+body{
+  font-family:"Pretendard","Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",system-ui,sans-serif;
+  font-size:24px; line-height:1.5; min-height:100vh;
+  -webkit-tap-highlight-color:transparent;
+}
+button{ font:inherit; color:inherit; }
+button:focus-visible,input:focus-visible{ outline:4px solid var(--focus); outline-offset:2px; }
+
+/* ---------- 상단 진행 표시 ---------- */
+#top{
+  position:sticky; top:0; z-index:10; display:flex; align-items:center; gap:12px;
+  padding:10px 16px; background:var(--bg); border-bottom:1px solid var(--line);
+}
+#steps{ display:flex; gap:6px; flex:1; flex-wrap:wrap; }
+#steps span{
+  font-size:16px; padding:4px 12px; border-radius:999px; color:var(--ink2); background:#ECE7DC;
+}
+#steps span.on{ background:var(--accent); color:var(--accent-ink); font-weight:700; }
+#steps span.done{ background:var(--ok-soft); color:var(--ok); }
+#steps span.done::before{ content:"✓ "; }
+
+/* 치료사 패널 버튼: 대상자가 실수로 누르지 않도록 길게 눌러야 열린다 */
+#proBtn{
+  position:relative; min-width:64px; min-height:64px; border:1px solid var(--line);
+  background:var(--paper); border-radius:14px; font-size:15px; color:var(--ink2); cursor:pointer;
+  overflow:hidden; padding:0 10px;
+}
+#proBtn i{
+  position:absolute; left:0; bottom:0; height:5px; width:0; background:var(--accent);
+}
+#proBtn.holding i{ width:100%; transition:width .9s linear; }
+
+/* ---------- 본문 ---------- */
+#app{ max-width:1100px; margin:0 auto; padding:24px 16px 60px; }
+h1{ font-size:36px; margin:0 0 8px; line-height:1.3; }
+h2{ font-size:30px; margin:0 0 8px; line-height:1.35; }
+.sub{ color:var(--ink2); margin:0 0 24px; font-size:22px; }
+.q{ font-size:34px; font-weight:700; margin:8px 0 24px; line-height:1.35; }
+
+.grid{ display:grid; gap:16px; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); }
+.grid.big{ grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); }
+
+.btn{
+  min-height:64px; padding:12px 24px; border-radius:16px; border:2px solid var(--line);
+  background:var(--paper); cursor:pointer; font-size:24px; text-align:center;
+}
+.btn.main{ background:var(--accent); border-color:var(--accent); color:var(--accent-ink); font-weight:700; }
+.btn.soft{ background:var(--accent-soft); border-color:var(--accent-soft); color:var(--accent); }
+.btn:disabled{ opacity:.45; cursor:default; }
+.row{ display:flex; gap:12px; flex-wrap:wrap; align-items:center; margin-top:24px; }
+.row.end{ justify-content:flex-end; }
+.spacer{ flex:1; }
+
+.card{
+  background:var(--paper); border:2px solid var(--line); border-radius:20px; padding:20px;
+  cursor:pointer; text-align:left; min-height:64px; width:100%;
+}
+.card .ic{ font-size:48px; display:block; line-height:1.1; margin-bottom:8px; }
+.card b{ display:block; font-size:28px; }
+.card small{ display:block; color:var(--ink2); font-size:19px; margin-top:4px; }
+.card.sel,.chip.sel{ border-color:var(--accent); background:var(--accent-soft); }
+.card.sel::after,.chip.sel::after{ content:" ✓"; color:var(--accent); font-weight:700; }
+.card.off{ opacity:.45; cursor:default; }
+
+.chip{
+  min-height:64px; padding:10px 22px; border-radius:16px; border:2px solid var(--line);
+  background:var(--paper); cursor:pointer; font-size:26px;
+}
+.chips{ display:flex; flex-wrap:wrap; gap:12px; }
+
+.note{
+  margin-top:20px; padding:14px 18px; border-radius:14px; font-size:22px;
+  background:var(--warm-soft); color:#6B3A0E;
+}
+.note.ok{ background:var(--ok-soft); color:#1D5434; }
+.note:empty{ display:none; }
+
+input[type=text]{
+  font:inherit; font-size:26px; min-height:64px; padding:8px 16px; border-radius:14px;
+  border:2px solid var(--line); background:var(--paper); width:min(420px,100%);
+}
+
+/* ---------- 활동 공통 ---------- */
+.actHead{ display:flex; gap:12px; align-items:flex-start; flex-wrap:wrap; margin-bottom:8px; }
+.actHead .t{ flex:1; min-width:260px; }
+.lv{ font-size:18px; color:var(--ink2); }
+.lvBtns{ display:flex; gap:8px; flex-wrap:wrap; }
+.lvBtns .btn{ font-size:20px; padding:8px 16px; }
+
+/* 숫자패드 */
+.calcQ{ font-size:32px; font-weight:700; margin:12px 0; }
+.answer{
+  font-size:44px; font-weight:700; min-height:76px; padding:6px 20px; border-radius:16px;
+  background:var(--paper); border:2px solid var(--line); display:inline-flex; align-items:center;
+  min-width:220px; letter-spacing:2px;
+}
+.pad{ display:grid; grid-template-columns:repeat(3,96px); gap:10px; margin-top:16px; }
+.pad .btn{ font-size:32px; padding:0; min-height:80px; }
+
+/* 차례 찾기 */
+.field{
+  position:relative; display:grid; gap:14px; margin-top:12px;
+  grid-template-columns:repeat(var(--cols,4),1fr);
+}
+.tcard{
+  min-height:96px; border-radius:18px; border:2px solid var(--line); background:var(--paper);
+  font-size:24px; cursor:pointer; padding:10px; transform:translate(var(--dx,0),var(--dy,0));
+}
+.tcard b{ display:block; font-size:22px; color:var(--accent); }
+.tcard.done{ background:var(--ok-soft); border-color:var(--ok); color:var(--ok); }
+.tcard.done::before{ content:"✓ "; }
+.tcard.cue{ border-color:var(--focus); box-shadow:0 0 0 6px rgba(242,184,75,.45); }
+.tcard.nudge{ animation:nudge .35s ease; }
+@keyframes nudge{ 0%,100%{ transform:translate(var(--dx,0),var(--dy,0)); } 50%{ transform:translate(calc(var(--dx,0px) + 6px),var(--dy,0)); } }
+
+/* 나눠 담기 */
+.tray{ display:flex; flex-wrap:wrap; gap:12px; min-height:80px; margin:12px 0 20px; }
+.boxes{ display:grid; gap:14px; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); }
+.box{
+  border:3px dashed var(--line); border-radius:20px; padding:14px; min-height:160px;
+  background:#FBFAF6; cursor:pointer; text-align:left; width:100%;
+}
+.box h3{ margin:0 0 8px; font-size:26px; }
+.box .in{ display:flex; flex-wrap:wrap; gap:8px; }
+.box .in span{ font-size:20px; padding:4px 12px; border-radius:10px; background:var(--ok-soft); color:var(--ok); }
+.box .in span::before{ content:"✓ "; }
+.box.cue{ border-color:var(--focus); border-style:solid; }
+.box.ready{ border-color:var(--accent); }
+
+/* 순서 세우기 */
+.slots{ display:grid; gap:10px; margin:12px 0 20px; }
+.slot{
+  display:flex; align-items:center; gap:14px; min-height:72px; padding:8px 16px; border-radius:16px;
+  border:2px dashed var(--line); background:#FBFAF6; cursor:pointer; text-align:left; width:100%;
+}
+.slot .n{
+  flex:none; width:44px; height:44px; border-radius:50%; background:var(--accent-soft); color:var(--accent);
+  display:inline-flex; align-items:center; justify-content:center; font-weight:700;
+}
+.slot.filled{ border-style:solid; background:var(--paper); }
+.slot.locked{ border-color:var(--ok); background:var(--ok-soft); cursor:default; }
+.slot.locked .n{ background:var(--ok); color:#fff; }
+
+/* 오늘 만든 것 / 이야기 카드 */
+.made{
+  background:var(--paper); border:2px solid var(--line); border-radius:20px; padding:20px; margin-bottom:16px;
+}
+.made h3{ margin:0 0 8px; font-size:26px; }
+.made ol,.made ul{ margin:0; padding-left:1.3em; }
+.talk{ background:var(--accent-soft); border-color:var(--accent-soft); }
+
+/* 치료사 패널 */
+#pro{
+  position:fixed; inset:0; z-index:50; background:rgba(20,24,28,.45); display:flex;
+  align-items:center; justify-content:center; padding:16px;
+}
+#pro.hidden{ display:none; }
+#pro .panel{
+  background:var(--paper); border-radius:20px; padding:24px; width:min(560px,100%);
+  max-height:92vh; overflow:auto; font-size:20px;
+}
+#pro .panel h2{ font-size:26px; }
+#pro .panel .btn{ font-size:20px; min-height:56px; }
+#pro .grp{ margin:14px 0; }
+#pro .grp > div{ display:flex; gap:8px; flex-wrap:wrap; margin-top:6px; }
+#pro .muted{ color:var(--ink2); font-size:17px; }
+
+/* 요약 */
+table.sum{ border-collapse:collapse; width:100%; font-size:20px; background:var(--paper); }
+table.sum th,table.sum td{ border:1px solid var(--line); padding:8px 12px; text-align:left; vertical-align:top; }
+table.sum th{ background:#F0ECE3; width:32%; }
+
+@media (max-width:640px){
+  body{ font-size:22px; }
+  h1{ font-size:30px; } .q{ font-size:28px; }
+  .pad{ grid-template-columns:repeat(3,1fr); }
+  .field{ grid-template-columns:repeat(2,1fr) !important; }
+  .tcard{ transform:none; }
+}
+@media (prefers-reduced-motion:reduce){
+  *{ animation:none !important; transition:none !important; }
+}
+</style>
+</head>
+<body>
+
+<div id="top">
+  <div id="steps" aria-label="진행 단계"></div>
+  <button id="proBtn" type="button" aria-label="치료사 패널 (길게 누르기)">치료사<i></i></button>
+</div>
+<main id="app" aria-live="polite"></main>
+
+<div id="pro" class="hidden" role="dialog" aria-modal="true" aria-label="치료사 패널">
+  <div class="panel" id="proPanel"></div>
+</div>
+
+<script>
+"use strict";
+/* ==========================================================
+   콘텐츠 — 모든 문구는 이 도구를 위해 새로 쓴 것이다.
+   ========================================================== */
+const PRICE = {
+  "콩나물":1000,"감자":1500,"양파":2000,"두부":2500,"애호박":3000,"대파":3500,
+  "당근":1200,"달걀":4500,"된장":5000,"참기름":5500,"김치":6000,"미역":4000,
+  "돼지고기":7500,"소고기":9000,"카레 가루":3200,"시금치":2200,"고사리":4200,
+  "고추장":4800,"국간장":3800,"마늘":2800,"즉석밥":1800,"소금":800,"식용유":4400,
+  "채소":2600,"고기":8000,"양념":3400,"쌀":6500
+};
+const DISHES = {
+  "된장찌개":{ ing:["된장","두부","애호박","감자","양파","대파"],
+    steps:["냄비에 물을 붓고 끓인다","된장을 풀어 넣는다","감자와 양파를 넣는다","애호박과 두부를 넣는다","대파를 넣고 불을 끈다"] },
+  "미역국":{ ing:["미역","소고기","참기름","국간장","마늘"],
+    steps:["마른 미역을 물에 불린다","냄비에 참기름을 두르고 소고기를 볶는다","불린 미역을 넣고 함께 볶는다","물을 붓고 푹 끓인다","국간장으로 간을 맞춘다"] },
+  "계란말이":{ ing:["달걀","대파","당근","소금","식용유"],
+    steps:["달걀을 그릇에 깨 넣는다","소금을 넣고 잘 푼다","다진 파와 당근을 섞는다","기름 두른 팬에 달걀물을 붓는다","돌돌 말아 익힌 뒤 썬다"] },
+  "김치볶음밥":{ ing:["김치","즉석밥","달걀","참기름","대파"],
+    steps:["김치를 잘게 썬다","팬에 기름을 두르고 김치를 볶는다","밥을 넣고 고루 볶는다","참기름을 한 바퀴 두른다","달걀프라이를 위에 올린다"] },
+  "카레라이스":{ ing:["카레 가루","감자","당근","양파","돼지고기"],
+    steps:["감자·당근·양파를 깍둑 썬다","냄비에 고기를 먼저 볶는다","썬 채소를 넣고 함께 볶는다","물을 붓고 채소가 익을 때까지 끓인다","카레 가루를 풀어 걸쭉하게 끓인다"] },
+  "비빔밥":{ ing:["콩나물","시금치","고사리","달걀","고추장"],
+    steps:["밥을 짓는다","나물을 데쳐 무친다","달걀을 부친다","그릇에 밥과 나물을 담는다","고추장을 넣고 비빈다"] }
+};
+const GENERIC_DISH = { ing:["채소","고기","양념","쌀","달걀"],
+  steps:["필요한 재료를 꺼낸다","재료를 깨끗이 씻는다","재료를 알맞게 썬다","불에 올려 익힌다","그릇에 담아 낸다"] };
+const NOT_IN_DISH = ["초콜릿","바나나","우유","식빵","아이스크림","사과","치즈","커피","딸기잼","과자"];
+const STORAGE = {
+  "냉장고":["우유","두부","김치","달걀","요구르트"],
+  "냉동실":["아이스크림","얼음","냉동만두","냉동 새우"],
+  "찬장(실온)":["라면","쌀","김","식용유","통조림"]
+};
+const WEATHER_KIT = {
+  "비 오는 날":["우산","장화","비옷"],
+  "더운 날":["부채","선크림","챙 모자"],
+  "추운 날":["목도리","장갑","핫팩"],
+  "늘 챙길 것":["열쇠","지갑","휴대폰"]
+};
+const ROUTINE = [
+  [6,"일어나기"],[7,"세수하기"],[8,"아침 먹기"],[9,"약 먹기"],[10,"산책하기"],
+  [12,"점심 먹기"],[14,"낮잠 자기"],[16,"텔레비전 보기"],[18,"저녁 먹기"],[21,"잠자리에 들기"]
+];
+const PLACE_END = {
+  "병원":"접수하고 진료 기다리기","시장":"필요한 물건 사기","복지관":"프로그램에 참여하기",
+  "공원":"천천히 걷고 쉬기","은행":"번호표 뽑기","친구 집":"초인종 누르기"
+};
+
+const THEMES = {
+  today:{
+    name:"오늘", icon:"☀️", desc:"날짜 · 날씨 · 하루 일과",
+    icf:"b114 지남력 · d230 일과 수행 (초안)",
+    story:[
+      { id:"morning", q:"오늘 아침에 가장 먼저 하신 일은 무엇인가요?",
+        opts:["물 한 잔 마시기","세수하기","창문 열기","체조하기","기도하기","휴대폰 보기"] },
+      { id:"place", q:"오늘이나 내일 가실 곳이 있나요?",
+        opts:["병원","시장","복지관","공원","은행","친구 집"] },
+      { id:"meal", q:"오늘 드신 음식 하나를 골라 주세요.",
+        opts:["밥과 국","죽","빵","국수","떡","과일"] }
+    ],
+    talk:[
+      "아침에 가장 먼저 하는 일이 예전에도 같았나요?",
+      "날씨가 좋은 날에는 주로 어디에 가고 싶으세요?",
+      "하루 중 가장 좋아하는 시간은 언제인가요?",
+      "외출할 때 꼭 챙기는 나만의 물건이 있나요?",
+      "오늘 하루에서 가장 기억에 남는 일은 무엇인가요?"
+    ]
+  },
+  kitchen:{
+    name:"부엌", icon:"🍲", desc:"요리 · 장보기",
+    icf:"d630 식사 준비 · d620 물품 구매 (초안)",
+    story:[
+      { id:"dish", q:"요즘 자주 해 드시는 음식은 무엇인가요?", opts:Object.keys(DISHES) },
+      { id:"withwho", q:"그 음식은 주로 누구와 함께 드시나요?",
+        opts:["혼자","배우자","자녀","손주","이웃","친구"], noInput:true },
+      { id:"shop", q:"장은 주로 어디서 보세요?",
+        opts:["동네 시장","마트","편의점","전화·온라인 주문","가족이 대신"] }
+    ],
+    talk:[
+      "이 음식을 만들 때 나만의 비법이 있나요?",
+      "이 음식을 처음 맛있게 먹었던 때를 기억하세요?",
+      "장 볼 때 꼭 확인하는 것이 있나요?",
+      "요즘 물가는 예전과 비교해 어떤가요?",
+      "누구에게 이 음식을 해 주고 싶으세요?"
+    ]
+  },
+  home:{ name:"우리 집", icon:"🏠", desc:"정리 · 분리배출", soon:true },
+  town:{ name:"동네", icon:"🚌", desc:"산책 · 교통 · 가게", soon:true },
+  health:{ name:"건강", icon:"💊", desc:"약 · 병원 · 운동", soon:true },
+  people:{ name:"사람", icon:"🤝", desc:"가족 · 이웃 · 연락", soon:true }
+};
+
+const PATTERNS = {
+  calc:{ name:"숫자 엮기", icon:"🔢", fn:"계산 · 작업기억", icf:"b172" },
+  trail:{ name:"차례 찾기", icon:"👆", fn:"주의 · 전환", icf:"b140" },
+  sort:{ name:"나눠 담기", icon:"🧺", fn:"범주화 · 판단", icf:"b164" },
+  seq:{ name:"순서 세우기", icon:"🪜", fn:"실행기능 · 계획", icf:"b164" },
+  memo:{ name:"기억 꺼내기", icon:"💭", fn:"일화 기억 · 지남력", icf:"b144" }
+};
+const PATTERN_ORDER = ["seq","calc","sort","trail","memo"];
+
+const STEP_NAMES = ["체크인","주제","내 이야기","활동","나누기·약속"];
+const LEVEL_NAMES = ["","쉬움","보통","어려움"];
+
+/* ==========================================================
+   상태 — 페이지 메모리에만 존재한다.
+   ========================================================== */
+let S;
+function freshState(){
+  return {
+    clientCode:"", offered:["today","kitchen"], startedAt:Date.now(),
+    step:0, mood:null, weather:null,
+    checkin:{ firstTry:0, total:0, hints:0 },
+    theme:null, story:{}, storyAnswered:0, storyAsked:0,
+    choices:[],          // { what, self }  — 선택 층 지표
+    levelRequests:{ client:0, therapist:0 },
+    activities:[], cur:null,
+    talkUsed:0, commitment:null, finishedAt:null
+  };
+}
+S = freshState();
+let acts = {};      // 현재 화면의 버튼 동작
+
+/* ==========================================================
+   유틸
+   ========================================================== */
+const $ = s => document.querySelector(s);
+const app = $("#app");
+const esc = v => String(v).replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+const shuffle = a => { a = a.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; };
+const pick = (a,n) => shuffle(a).slice(0,n);
+const won = n => n.toLocaleString("ko-KR")+"원";
+const hourLabel = h => h === 12 ? "낮 12시" : (h<12 ? "오전 " : "오후 ") + (h%12===0 ? 12 : h%12) + "시";
+const dim = (y,m) => new Date(y,m,0).getDate();
+/* 받침 유무로 조사를 고른다: josa("미역국","을를") → "미역국을" */
+function josa(word, pair){
+  const w = String(word), c = w.charCodeAt(w.length-1);
+  if(c < 0xAC00 || c > 0xD7A3) return w + pair[0] + "(" + pair[1] + ")";
+  return w + ((c - 0xAC00) % 28 ? pair[0] : pair[1]);
+}
+
+function render(html, step){
+  if(step!=null) S.step = step;
+  $("#steps").innerHTML = STEP_NAMES.map((n,i) =>
+    `<span class="${i===S.step?"on":i<S.step?"done":""}">${n}</span>`).join("");
+  app.innerHTML = html;
+  window.scrollTo(0,0);
+  const first = app.querySelector("[data-focus]");
+  if(first) first.focus({ preventScroll:true });
+}
+app.addEventListener("click", e => {
+  const b = e.target.closest("[data-act]");
+  if(!b || b.disabled || !app.contains(b)) return;
+  const f = acts[b.dataset.act];
+  if(f) f(b.dataset.v, b);
+});
+function setNote(text, ok){
+  const n = $("#note"); if(!n) return;
+  n.textContent = text || ""; n.classList.toggle("ok", !!ok);
+}
+function choose(what, self=true){ S.choices.push({ what, self }); }
+function story(id){ return S.story[id] || ""; }
+
+/* ==========================================================
+   0. 시작 (치료사)
+   ========================================================== */
+function screenStart(){
+  acts = {
+    toggle(v,b){
+      if(THEMES[v].soon) return;
+      const i = S.offered.indexOf(v);
+      if(i>=0) S.offered.splice(i,1); else S.offered.push(v);
+      b.classList.toggle("sel", i<0);
+    },
+    start(){
+      if(!S.offered.length){ setNote("보여줄 주제를 하나 이상 골라 주세요."); return; }
+      S.clientCode = ($("#code").value || "").trim().slice(0,10);
+      S.startedAt = Date.now();
+      startCheckin();
+    }
+  };
+  render(`
+    <h1>일상 인지활동</h1>
+    <p class="sub">대상자가 자기 이야기를 재료로 참여하는 15–25분 세션입니다. 치료사가 준비한 뒤 화면을 대상자에게 보여 주세요.</p>
+    <h2>대상자 코드 (선택)</h2>
+    <p class="sub">이름·생년월일 대신 임의 코드만 씁니다. 예: A-03</p>
+    <input type="text" id="code" maxlength="10" placeholder="A-03" autocomplete="off" value="${esc(S.clientCode)}">
+    <h2 style="margin-top:28px">보여줄 주제 후보</h2>
+    <p class="sub">대상자가 이 중에서 하나를 직접 고릅니다.</p>
+    <div class="grid">
+      ${Object.entries(THEMES).map(([k,t]) => `
+        <button class="card ${t.soon?"off":S.offered.includes(k)?"sel":""}" data-act="toggle" data-v="${k}" ${t.soon?"aria-disabled=true":""}>
+          <span class="ic">${t.icon}</span><b>${t.name}</b><small>${t.soon?"준비 중":t.desc}</small>
+        </button>`).join("")}
+    </div>
+    <div id="note" class="note"></div>
+    <div class="row end"><button class="btn main" data-act="start" data-focus>세션 시작</button></div>
+    <p class="sub" style="margin-top:28px;font-size:18px">치료사 패널은 오른쪽 위 ‘치료사’ 버튼을 1초 동안 누르면 열립니다. 대상자가 입력한 이야기는 서버에 저장되지 않고 세션이 끝나면 지워집니다.</p>
+  `, -1);
+}
+
+/* ==========================================================
+   1. 체크인 — 한 화면에 질문 하나
+   ========================================================== */
+let CI = [], ciIdx = 0, ciTried = false;
+function startCheckin(){
+  const now = new Date(), y = now.getFullYear(), m = now.getMonth()+1, d = now.getDate(), w = now.getDay();
+  const days = dim(y,m);
+  const dayOpts = new Set([d]);
+  [-2,-1,1,2,3].forEach(k => { const v = d+k; if(v>=1 && v<=days && dayOpts.size<3) dayOpts.add(v); });
+  const WD = ["일","월","화","수","목","금","토"];
+  CI = [
+    { q:"지금은 몇 월인가요?", opts:shuffle([m, m%12+1, (m+10)%12+1]).map(v => [v, v+"월"]), ans:m,
+      hint:`지난달은 ${(m+10)%12+1}월이었어요.` },
+    { q:"오늘은 며칠인가요?", opts:shuffle([...dayOpts]).map(v => [v, v+"일"]), ans:d,
+      hint: d>1 ? `어제는 ${d-1}일이었어요.` : "이번 달이 막 시작되었어요." },
+    { q:"오늘은 무슨 요일인가요?", opts:WD.map((v,i) => [i, v+"요일"]), ans:w,
+      hint:`어제는 ${WD[(w+6)%7]}요일이었어요.` },
+    { q:"오늘 날씨는 어떤가요?", key:"weather",
+      opts:[["맑음","☀️ 맑음"],["흐림","☁️ 흐림"],["비","🌧️ 비"],["눈","❄️ 눈"],["바람","🌬️ 바람"]] },
+    { q:"지금 기분은 어떠세요?", key:"mood",
+      opts:[[5,"😄 아주 좋아요"],[4,"🙂 좋아요"],[3,"😐 그저 그래요"],[2,"🙁 조금 안 좋아요"],[1,"😣 힘들어요"]] }
+  ];
+  ciIdx = 0; showCheckin();
+}
+function showCheckin(){
+  const c = CI[ciIdx]; ciTried = false;
+  acts = {
+    ans(v,b){
+      if(c.key){ S[c.key] = isNaN(+v) ? v : +v; return nextCi(); }
+      if(+v === c.ans){
+        if(!ciTried) S.checkin.firstTry++;
+        S.checkin.total++;
+        b.classList.add("sel"); setNote("맞아요.", true);
+        setTimeout(nextCi, 700);
+      }else{
+        ciTried = true;
+        setNote("다시 한 번 골라 볼까요? 힌트를 눌러도 괜찮아요.");
+      }
+    },
+    hint(){ S.checkin.hints++; ciTried = true; setNote(c.hint); },
+    skip(){ if(!c.key) S.checkin.total++; nextCi(); }
+  };
+  render(`
+    <p class="lv">체크인 ${ciIdx+1} / ${CI.length}</p>
+    <div class="q">${c.q}</div>
+    <div class="chips">${c.opts.map(([v,l],i) => `<button class="chip" data-act="ans" data-v="${esc(v)}" ${i===0?"data-focus":""}>${l}</button>`).join("")}</div>
+    <div id="note" class="note"></div>
+    <div class="row">
+      ${c.hint ? `<button class="btn soft" data-act="hint">힌트</button>` : ""}
+      <span class="spacer"></span>
+      <button class="btn" data-act="skip">건너뛰기</button>
+    </div>
+  `, 0);
+}
+function nextCi(){
+  ciIdx++;
+  if(ciIdx < CI.length) showCheckin(); else screenTheme();
+}
+
+/* ==========================================================
+   2. 주제 고르기
+   ========================================================== */
+function screenTheme(){
+  if(S.offered.length === 1){
+    S.theme = S.offered[0]; choose("주제", false);
+    return startStory();
+  }
+  acts = { pick(v){ S.theme = v; choose("주제"); startStory(); } };
+  render(`
+    <div class="q">오늘은 어떤 이야기로 해 볼까요?</div>
+    <div class="grid big">
+      ${S.offered.map((k,i) => { const t = THEMES[k]; return `
+        <button class="card" data-act="pick" data-v="${k}" ${i===0?"data-focus":""}>
+          <span class="ic">${t.icon}</span><b>${t.name}</b><small>${t.desc}</small>
+        </button>`; }).join("")}
+    </div>
+  `, 1);
+}
+
+/* ==========================================================
+   3. 내 이야기 — 답은 이 세션의 활동 문항이 된다
+   ========================================================== */
+let stIdx = 0;
+function startStory(){ stIdx = 0; S.storyAsked = THEMES[S.theme].story.length; showStory(); }
+function showStory(){
+  const q = THEMES[S.theme].story[stIdx];
+  let chosen = S.story[q.id] || "";
+  acts = {
+    opt(v,b){
+      chosen = v; app.querySelectorAll(".chip").forEach(c => c.classList.toggle("sel", c===b));
+      const inp = $("#own"); if(inp) inp.value = "";
+    },
+    next(){
+      const inp = $("#own");
+      const own = inp ? inp.value.trim().slice(0,20) : "";
+      const val = own || chosen;
+      if(val){ if(!S.story[q.id]) S.storyAnswered++; S.story[q.id] = val; }
+      nextStory();
+    },
+    skip(){ nextStory(); }
+  };
+  render(`
+    <p class="lv">내 이야기 ${stIdx+1} / ${THEMES[S.theme].story.length}</p>
+    <div class="q">${q.q}</div>
+    <div class="chips">${q.opts.map((o,i) => `<button class="chip ${o===chosen?"sel":""}" data-act="opt" data-v="${esc(o)}" ${i===0?"data-focus":""}>${esc(o)}</button>`).join("")}</div>
+    ${q.noInput ? "" : `<p class="sub" style="margin-top:20px">보기에 없으면 짧게 적어 주세요 (20자까지).</p>
+      <input type="text" id="own" maxlength="20" autocomplete="off" placeholder="직접 적기">`}
+    <div class="row end">
+      <button class="btn" data-act="skip">건너뛰기</button>
+      <button class="btn main" data-act="next">다음</button>
+    </div>
+  `, 2);
+  const inp = $("#own");
+  if(inp) inp.addEventListener("input", () => { if(inp.value) { chosen = ""; app.querySelectorAll(".chip").forEach(c => c.classList.remove("sel")); } });
+}
+function nextStory(){
+  stIdx++;
+  if(stIdx < THEMES[S.theme].story.length) showStory(); else screenPick();
+}
+
+/* 테마·이야기에 따른 활동 제목 */
+function dishName(){ return story("dish") || "자주 하는 요리"; }
+function dishData(){ return DISHES[story("dish")] || GENERIC_DISH; }
+function placeName(){ return story("place") || "가까운 곳"; }
+function actTitle(p){
+  const k = S.theme === "kitchen";
+  return {
+    calc: k ? "장보기 계산" : "오늘 날짜로 계산하기",
+    trail: k ? "값이 싼 것부터 차례로" : "하루 일과를 시간 순서대로",
+    sort: k ? `${dishName()} 재료 고르기` : "날씨에 맞는 준비물",
+    seq: k ? `${dishName()} 만드는 순서` : `${placeName()}에 가는 순서`,
+    memo: k ? `${dishName()}에 얽힌 이야기` : "어제와 계절 이야기"
+  }[p];
+}
+
+/* ==========================================================
+   4. 활동 고르기
+   ========================================================== */
+let showAll = false;
+function screenPick(){
+  const done = S.activities.map(a => a.pattern);
+  const left = PATTERN_ORDER.filter(p => !done.includes(p));
+  if(!left.length) return screenShare();
+  const list = showAll ? left : left.slice(0,3);
+  acts = {
+    go(v){ choose("활동"); showAll = false; startActivity(v, 2, "start"); },
+    more(){ showAll = true; screenPick(); },
+    share(){ screenShare(); }
+  };
+  render(`
+    <div class="q">${S.activities.length ? "하나 더 해 볼까요?" : "어떤 활동을 해 볼까요?"}</div>
+    <div class="grid big">
+      ${list.map((p,i) => `
+        <button class="card" data-act="go" data-v="${p}" ${i===0?"data-focus":""}>
+          <span class="ic">${PATTERNS[p].icon}</span><b>${esc(actTitle(p))}</b><small>${PATTERNS[p].name} · ${PATTERNS[p].fn}</small>
+        </button>`).join("")}
+    </div>
+    <div class="row">
+      ${!showAll && left.length > 3 ? `<button class="btn soft" data-act="more">다른 활동 보기</button>` : ""}
+      <span class="spacer"></span>
+      ${S.activities.length ? `<button class="btn main" data-act="share">오늘 만든 것 보기</button>` : ""}
+    </div>
+  `, 3);
+}
+
+/* ==========================================================
+   활동 엔진
+   ========================================================== */
+function startActivity(pattern, level, by){
+  let rec = S.cur && S.cur.pattern === pattern ? S.cur : null;
+  if(!rec){
+    rec = { pattern, theme:S.theme, title:actTitle(pattern), levelPath:[], hints:0, errors:0,
+            correct:0, total:0, t0:Date.now(), durationSec:0, made:null };
+    S.cur = rec;
+  }
+  rec.level = level;
+  rec.levelPath.push({ level, by });
+  rec.correct = 0; rec.total = 0; rec.errors = 0;
+  RUN[pattern](rec);
+}
+function actShell(rec, instr, body){
+  return `
+    <div class="actHead">
+      <div class="t">
+        <p class="lv">${PATTERNS[rec.pattern].icon} ${PATTERNS[rec.pattern].name} · ${LEVEL_NAMES[rec.level]} (${rec.level}/3)</p>
+        <h2>${esc(rec.title)}</h2>
+        <p class="sub" style="margin-bottom:8px">${instr}</p>
+      </div>
+      <div class="lvBtns">
+        <button class="btn" data-act="easier" ${rec.level<=1?"disabled":""}>조금 쉽게</button>
+        <button class="btn" data-act="harder" ${rec.level>=3?"disabled":""}>더 어렵게</button>
+        <button class="btn soft" data-act="hint">힌트</button>
+      </div>
+    </div>
+    ${body}
+    <div id="note" class="note"></div>`;
+}
+function baseActs(rec, hint){
+  return {
+    easier(){ S.levelRequests.client++; startActivity(rec.pattern, rec.level-1, "client"); },
+    harder(){ S.levelRequests.client++; startActivity(rec.pattern, rec.level+1, "client"); },
+    hint(){ rec.hints++; hint(); }
+  };
+}
+/* 치료사가 활동을 중간에 멈출 때 — 기록에는 남기고 '중간에 멈춤'으로 표시한다 */
+function stopCurrent(){
+  const r = S.cur; if(!r) return null;
+  r.made = r.made || { title:r.title, lines:["중간에 멈췄어요"] };
+  r.stopped = true; r.durationSec = Math.round((Date.now()-r.t0)/1000);
+  S.activities.push(r); S.cur = null;
+  return r;
+}
+function finishActivity(rec){
+  rec.durationSec = Math.round((Date.now() - rec.t0)/1000);
+  S.activities.push(rec); S.cur = null;
+  acts = { more(){ screenPick(); }, share(){ screenShare(); } };
+  const left = PATTERN_ORDER.filter(p => !S.activities.some(a => a.pattern === p)).length;
+  render(`
+    <div class="q">다 하셨어요. 오늘 만든 것이에요.</div>
+    ${madeHTML(rec)}
+    <div class="row end">
+      ${left ? `<button class="btn" data-act="more">활동 하나 더</button>` : ""}
+      <button class="btn main" data-act="share" data-focus>나누기로 가기</button>
+    </div>
+  `, 3);
+}
+function madeHTML(rec){
+  const m = rec.made || { title:rec.title, lines:[] };
+  const list = m.ordered ? "ol" : "ul";
+  return `<div class="made"><h3>${PATTERNS[rec.pattern].icon} ${esc(m.title)}</h3>
+    <${list}>${m.lines.map(l => `<li>${esc(l)}</li>`).join("")}</${list}></div>`;
+}
+
+const RUN = {};
+
+/* ---------- 숫자 엮기 ---------- */
+RUN.calc = rec => {
+  const probs = rec.theme === "kitchen" ? calcKitchen(rec.level) : calcToday(rec.level);
+  let i = 0, buf = "", tries = 0;
+  const solved = [];
+  const draw = () => {
+    const p = probs[i];
+    acts = Object.assign(baseActs(rec, () => setNote(p.hint)), {
+      key(v){ if(buf.length < 7){ buf += v; $("#ans").textContent = buf + (p.unit||""); } },
+      del(){ buf = buf.slice(0,-1); $("#ans").textContent = buf ? buf + (p.unit||"") : ""; },
+      ok(){
+        if(!buf) return;
+        if(+buf === p.ans){
+          if(tries === 0) rec.correct++;
+          rec.total++; solved.push(`${p.short} → ${p.ans.toLocaleString("ko-KR")}${p.unit||""}`);
+          setNote("맞아요.", true);
+          setTimeout(next, 700);
+        }else{
+          tries++; rec.errors++;
+          if(tries >= 2){
+            rec.total++; solved.push(`${p.short} → ${p.ans.toLocaleString("ko-KR")}${p.unit||""}`);
+            setNote(`답은 ${p.ans.toLocaleString("ko-KR")}${p.unit||""}이에요. 같이 확인했으니 다음으로 가요.`);
+            setTimeout(next, 2200);
+          }else{
+            buf = ""; $("#ans").textContent = "";
+            setNote("다시 해 볼까요? 힌트를 눌러도 괜찮아요.");
+          }
+        }
+      }
+    });
+    render(actShell(rec, `문제 ${i+1} / ${probs.length}. 숫자를 눌러 답을 넣고 ‘확인’을 누르세요.`, `
+      <div class="calcQ">${p.q}</div>
+      <div class="answer" id="ans" aria-live="polite"></div>
+      <div class="pad">
+        ${[1,2,3,4,5,6,7,8,9].map(n => `<button class="btn" data-act="key" data-v="${n}">${n}</button>`).join("")}
+        <button class="btn" data-act="del" aria-label="지우기">⌫</button>
+        <button class="btn" data-act="key" data-v="0">0</button>
+        <button class="btn main" data-act="ok">확인</button>
+      </div>`), 3);
+  };
+  const next = () => {
+    i++; buf = ""; tries = 0;
+    if(i < probs.length) draw();
+    else { rec.made = { title:rec.title, lines:solved }; finishActivity(rec); }
+  };
+  draw();
+};
+function calcToday(level){
+  const now = new Date(), y = now.getFullYear(), m = now.getMonth()+1, d = now.getDate();
+  const shift = k => new Date(y, m-1, d+k);
+  const sumDigits = s => String(s).split("").reduce((a,c) => a + +c, 0);
+  const mmdd = String(m).padStart(2,"0") + String(d).padStart(2,"0");
+  const sets = {
+    1:[
+      { q:`오늘은 ${m}월 ${d}일이에요. 내일은 며칠일까요?`, ans:shift(1).getDate(), unit:"일", short:"내일은 며칠", hint:`${d}에 1을 더해요. 달이 바뀌면 1일이에요.` },
+      { q:`오늘은 ${m}월 ${d}일이에요. 어제는 며칠이었을까요?`, ans:shift(-1).getDate(), unit:"일", short:"어제는 며칠", hint:`${d}에서 1을 빼요. 1일이면 지난달 마지막 날이에요.` },
+      { q:`월(${m})과 일(${d})을 더하면 얼마일까요?`, ans:m+d, short:`${m} + ${d}`, hint:`${m} + ${d}` }
+    ],
+    2:[
+      { q:`오늘부터 일주일 뒤는 며칠일까요?`, ans:shift(7).getDate(), unit:"일", short:"일주일 뒤는 며칠", hint:`${d}에 7을 더해요. 이번 달은 ${dim(y,m)}일까지 있어요.` },
+      { q:`오늘 날짜를 숫자 넷으로 쓰면 ${mmdd}이에요. 네 숫자를 모두 더하면?`, ans:sumDigits(mmdd), short:`${mmdd.split("").join(" + ")}`, hint:mmdd.split("").join(" + ") },
+      { q:`이번 달은 ${dim(y,m)}일까지 있어요. 이번 달이 끝날 때까지 며칠 남았을까요? (오늘 빼고)`, ans:dim(y,m)-d, unit:"일", short:"이번 달 남은 날", hint:`${dim(y,m)} − ${d}` }
+    ],
+    3:[
+      { q:`올해 ${y}년의 숫자 넷을 모두 더하고, 오늘 일(${d})을 더하면?`, ans:sumDigits(y)+d, short:`${String(y).split("").join(" + ")} + ${d}`, hint:`${String(y).split("").join(" + ")} = ${sumDigits(y)}, 여기에 ${d}를 더해요.` },
+      { q:`월(${m})과 일(${d})을 곱하면 얼마일까요?`, ans:m*d, short:`${m} × ${d}`, hint:`${d}를 ${m}번 더한 것과 같아요.` },
+      { q:`오늘부터 30일 뒤는 몇 월일까요?`, ans:shift(30).getMonth()+1, unit:"월", short:"30일 뒤는 몇 월", hint:`이번 달은 ${dim(y,m)}일까지 있어요. 남은 날을 세어 봐요.` }
+    ]
+  };
+  return sets[level];
+}
+function calcKitchen(level){
+  const ing = shuffle(dishData().ing);
+  const p = n => PRICE[n] || 1000;
+  const fmt = n => `${n} ${won(p(n))}`;
+  const pairs = [[0,1],[2,3],[4,0]].map(([a,b]) => [ing[a%ing.length], ing[b%ing.length]]);
+  if(level === 1) return pairs.map(([a,b]) => ({
+    q:`${fmt(a)}, ${fmt(b)}을 사면 모두 얼마일까요?`, ans:p(a)+p(b), unit:"원",
+    short:`${a} + ${b}`, hint:`${won(p(a))} + ${won(p(b))}` }));
+  if(level === 2) return [[0,1,2],[2,3,4],[1,3,4]].map(t => t.map(k => ing[k%ing.length])).map(([a,b,c]) => ({
+    q:`${fmt(a)}, ${fmt(b)}, ${fmt(c)}을 사면 모두 얼마일까요?`, ans:p(a)+p(b)+p(c), unit:"원",
+    short:`${a} + ${b} + ${c}`, hint:`먼저 두 개를 더하고, 마지막 하나를 더해요.` }));
+  return pairs.map(([a,b]) => {
+    const pay = p(a)+p(b) > 10000 ? 20000 : 10000;
+    return { q:`${won(pay)}을 내고 ${fmt(a)}, ${fmt(b)}을 샀어요. 거스름돈은 얼마일까요?`,
+      ans:pay-p(a)-p(b), unit:"원", short:`${won(pay)} − (${a} + ${b})`,
+      hint:`먼저 두 값을 더해 ${won(p(a)+p(b))}. ${won(pay)}에서 빼요.` };
+  });
+}
+
+/* ---------- 차례 찾기 ---------- */
+RUN.trail = rec => {
+  const n = [0,5,7,9][rec.level];
+  let items;
+  if(rec.theme === "kitchen"){
+    const prefer = dishData().ing.filter(x => PRICE[x]);
+    const rest = shuffle(Object.keys(PRICE).filter(x => !prefer.includes(x)));
+    const seen = new Set(); items = [];
+    for(const name of [...prefer, ...rest]){
+      if(items.length >= n) break;
+      if(seen.has(PRICE[name])) continue;
+      seen.add(PRICE[name]); items.push({ key:PRICE[name], top:won(PRICE[name]), label:name });
+    }
+  }else{
+    const r = ROUTINE.map(([h,l]) => [h,l]);
+    if(story("morning")) r[1][1] = story("morning");
+    if(story("place")) r[4][1] = `${story("place")} 가기`;
+    if(story("meal")) r[5][1] = `점심: ${story("meal")}`;
+    const keep = { 5:[0,2,5,8,9], 7:[0,1,2,4,5,8,9], 9:[0,1,2,3,4,5,6,8,9] }[n];
+    items = keep.map(k => ({ key:r[k][0], top:hourLabel(r[k][0]), label:r[k][1] }));
+  }
+  const order = items.slice().sort((a,b) => a.key - b.key);
+  const cards = shuffle(items);
+  let at = 0, erredHere = false;
+  const cols = n <= 5 ? 3 : n <= 7 ? 4 : 5;
+  const instr = rec.theme === "kitchen"
+    ? "값이 가장 싼 것부터 비싼 것까지 차례로 누르세요."
+    : "이른 시간부터 늦은 시간까지 차례로 누르세요.";
+  acts = Object.assign(baseActs(rec, () => {
+    const el = app.querySelector(`.tcard[data-v="${order[at].key}"]`); if(el) el.classList.add("cue");
+    erredHere = true;
+  }), {
+    tap(v,b){
+      if(b.classList.contains("done")) return;
+      if(+v === order[at].key){
+        b.classList.remove("cue"); b.classList.add("done");
+        if(!erredHere) rec.correct++;
+        rec.total++; at++; erredHere = false; setNote("");
+        if(at >= order.length){
+          rec.made = { title:rec.title, ordered:true, lines:order.map(o => `${o.top} · ${o.label}`) };
+          setTimeout(() => finishActivity(rec), 600);
+        }
+      }else{
+        rec.errors++; erredHere = true;
+        b.classList.remove("nudge"); void b.offsetWidth; b.classList.add("nudge");
+        setNote(at === 0 ? "가장 처음 오는 것을 찾아볼까요?" : `방금 누른 것은 ‘${order[at-1].label}’이에요. 그다음을 찾아볼까요?`);
+      }
+    }
+  });
+  render(actShell(rec, instr, `
+    <div class="field" style="--cols:${cols}">
+      ${cards.map(c => `<button class="tcard" data-act="tap" data-v="${c.key}"
+        style="--dx:${Math.round(Math.random()*16-8)}px;--dy:${Math.round(Math.random()*16-8)}px">
+        <b>${esc(c.top)}</b>${esc(c.label)}</button>`).join("")}
+    </div>`), 3);
+};
+
+/* ---------- 나눠 담기 ---------- */
+RUN.sort = rec => {
+  let boxes, cards;
+  if(rec.theme === "kitchen"){
+    if(rec.level < 3){
+      const inN = rec.level === 1 ? 4 : 5, outN = rec.level === 1 ? 2 : 3;
+      const ins = pick(dishData().ing, Math.min(inN, dishData().ing.length));
+      const outs = pick(NOT_IN_DISH.filter(x => !dishData().ing.includes(x)), outN);
+      boxes = [`${dishName()}에 들어가요`, "안 들어가요"];
+      cards = [...ins.map(x => [x,0]), ...outs.map(x => [x,1])];
+    }else{
+      rec.title = "장 봐 온 물건 정리하기";
+      boxes = Object.keys(STORAGE);
+      cards = boxes.flatMap((b,i) => pick(STORAGE[b],3).map(x => [x,i]));
+    }
+  }else{
+    const all = Object.keys(WEATHER_KIT);
+    boxes = rec.level === 1 ? all.slice(0,2) : rec.level === 2 ? all.slice(0,3) : all;
+    cards = boxes.flatMap((b,i) => WEATHER_KIT[b].map(x => [x,i]));
+  }
+  cards = shuffle(cards).map(([label,box],id) => ({ id, label, box, placed:false, erred:false }));
+  const contents = boxes.map(() => []);
+  let sel = null;
+  const draw = () => {
+    acts = Object.assign(baseActs(rec, () => {
+      const c = sel != null ? cards[sel] : cards.find(x => !x.placed);
+      if(!c) return;
+      sel = c.id; c.erred = true; draw();
+      const el = app.querySelectorAll(".box")[c.box]; if(el) el.classList.add("cue");
+      setNote(`‘${c.label}’은(는) 밝게 표시된 상자예요.`);
+    }), {
+      card(v){ sel = +v; draw(); },
+      box(v){
+        if(sel == null){ setNote("먼저 위에서 카드를 하나 누르세요."); return; }
+        const c = cards[sel];
+        if(c.box === +v){
+          c.placed = true; contents[c.box].push(c.label);
+          if(!c.erred) rec.correct++;
+          rec.total++; sel = null;
+          if(cards.every(x => x.placed)){
+            rec.made = { title:rec.title, lines:boxes.map((b,i) => `${b}: ${contents[i].join(", ")}`) };
+            draw(); setTimeout(() => finishActivity(rec), 600); return;
+          }
+          draw();
+        }else{
+          c.erred = true; rec.errors++;
+          setNote(`‘${c.label}’은(는) 다른 상자에 어울릴 것 같아요. 다시 골라 볼까요?`);
+        }
+      }
+    });
+    const instr = "카드를 하나 누른 다음, 알맞은 상자를 누르세요.";
+    render(actShell(rec, instr, `
+      <div class="tray">
+        ${cards.filter(c => !c.placed).map(c => `<button class="chip ${sel===c.id?"sel":""}" data-act="card" data-v="${c.id}">${esc(c.label)}</button>`).join("") || `<span class="sub">모두 담았어요.</span>`}
+      </div>
+      <div class="boxes">
+        ${boxes.map((b,i) => `<button class="box ${sel!=null?"ready":""}" data-act="box" data-v="${i}">
+          <h3>${esc(b)}</h3><div class="in">${contents[i].map(x => `<span>${esc(x)}</span>`).join("")}</div></button>`).join("")}
+      </div>`), 3);
+  };
+  draw();
+};
+
+/* ---------- 순서 세우기 ---------- */
+RUN.seq = rec => {
+  const n = [0,3,4,5][rec.level];
+  let steps;
+  if(rec.theme === "kitchen"){
+    const all = dishData().steps;
+    steps = { 3:[all[0],all[2],all[4]], 4:[all[0],all[1],all[2],all[4]], 5:all }[n];
+  }else{
+    const place = story("place");
+    const end = PLACE_END[place] || `${placeName()}에서 볼일 보기`;
+    const all = ["외출할 옷으로 갈아입기","신발 신기","현관문 잠그기",`${placeName()}까지 이동하기`,end];
+    steps = { 3:[all[0],all[1],all[2]], 4:[all[0],all[1],all[2],end], 5:all }[n];
+  }
+  const slots = steps.map(() => null);      // 카드 index
+  const locked = steps.map(() => false);
+  let tray = shuffle(steps.map((_,i) => i));
+  let firstCheck = true;
+  const draw = () => {
+    const full = slots.every(s => s != null);
+    acts = Object.assign(baseActs(rec, () => {
+      // 다음 빈 자리에 맞는 카드를 직접 놓아 준다
+      const k = slots.findIndex((s,i) => !locked[i] && s !== i);
+      if(k < 0) return;
+      const cur = slots.indexOf(k);
+      if(cur >= 0) slots[cur] = null;
+      if(slots[k] != null) tray.push(slots[k]);
+      tray = tray.filter(t => t !== k);
+      slots[k] = k; locked[k] = true; draw();
+      setNote(`${k+1}번째는 ‘${steps[k]}’예요.`);
+    }), {
+      card(v){
+        const k = slots.findIndex(s => s == null);
+        if(k < 0) return;
+        slots[k] = +v; tray = tray.filter(t => t !== +v); draw();
+      },
+      slot(v){
+        const k = +v;
+        if(locked[k] || slots[k] == null) return;
+        tray.push(slots[k]); slots[k] = null; draw();
+      },
+      check(){
+        let wrong = 0;
+        slots.forEach((s,i) => {
+          if(locked[i]) return;
+          if(s === i){ locked[i] = true; }
+          else{ wrong++; tray.push(s); slots[i] = null; }
+        });
+        if(firstCheck){ rec.correct = locked.filter(Boolean).length; rec.total = steps.length; firstCheck = false; }
+        if(wrong){ rec.errors += wrong; draw(); setNote(`맞게 놓인 칸은 초록색으로 고정했어요. 남은 ${wrong}장을 다시 놓아 볼까요?`); }
+        else{
+          rec.made = { title:rec.title, ordered:true, lines:steps };
+          draw(); setTimeout(() => finishActivity(rec), 600);
+        }
+      }
+    });
+    render(actShell(rec, "아래 카드를 누르면 빈칸에 차례로 들어갑니다. 놓은 칸을 누르면 다시 빠집니다.", `
+      <div class="slots">
+        ${slots.map((s,i) => `<button class="slot ${s!=null?"filled":""} ${locked[i]?"locked":""}" data-act="slot" data-v="${i}">
+          <span class="n">${i+1}</span><span>${s!=null ? esc(steps[s]) : "&nbsp;"}</span></button>`).join("")}
+      </div>
+      <div class="tray">${tray.map(t => `<button class="chip" data-act="card" data-v="${t}">${esc(steps[t])}</button>`).join("")}</div>
+      <div class="row end"><button class="btn main" data-act="check" ${full?"":"disabled"}>다 놓았어요</button></div>`), 3);
+  };
+  draw();
+};
+
+/* ---------- 기억 꺼내기 (채점 없음) ---------- */
+RUN.memo = rec => {
+  const month = new Date().getMonth()+1;
+  const nowSeason = month>=3&&month<=5 ? "봄" : month>=6&&month<=8 ? "여름" : month>=9&&month<=11 ? "가을" : "겨울";
+  const SEASON_THINGS = {
+    "봄":["벚꽃","나물 캐기","새 학기","꽃구경"],"여름":["수박","냇가","부채","장마"],
+    "가을":["단풍","추석","김장 준비","코스모스"],"겨울":["눈사람","군고구마","설날","연탄"]
+  };
+  let qs;
+  if(rec.theme === "kitchen"){
+    const dish = dishName();
+    qs = [
+      { q:`${josa(dish,"을를")} 처음 드셔 본 건 언제쯤인가요?`, opts:["어릴 때","학교 다닐 때","결혼한 뒤","나이 들어서","기억이 안 나요"] },
+      { q:`${josa(dish,"이가")} 가장 맛있었던 곳은 어디인가요?`, opts:["우리 집","어머니 댁","식당","잔칫집","여행지"] },
+      { q:`그 맛을 한마디로 하면?`, opts:["구수해요","칼칼해요","달콤해요","시원해요","정겨워요"], input:true }
+    ];
+  }else{
+    qs = [
+      { q:"어제 저녁에는 무엇을 하셨어요?", opts:["텔레비전 봤어요","전화했어요","산책했어요","일찍 잤어요","가족과 밥 먹었어요"] },
+      { q:"가장 좋아하는 계절은 언제인가요?", opts:["봄","여름","가을","겨울"], key:"season" },
+      { q:"그 계절이면 무엇이 떠오르세요?", optsFrom:"season", input:true }
+    ];
+  }
+  if(rec.level === 1) qs = qs.slice(0,2);
+  const answers = [];
+  let i = 0;
+  const draw = () => {
+    const q = qs[i];
+    const opts = q.optsFrom ? SEASON_THINGS[answers[1] || nowSeason] : q.opts;
+    let chosen = "";
+    acts = Object.assign(baseActs(rec, () => setNote("보기 중에서 하나만 골라도 괜찮아요. 떠오르지 않으면 ‘다음’을 눌러요.")), {
+      opt(v,b){ chosen = v; app.querySelectorAll(".chip").forEach(c => c.classList.toggle("sel", c===b)); },
+      next(){
+        const own = $("#own") ? $("#own").value.trim().slice(0,20) : "";
+        answers[i] = own || chosen;
+        i++;
+        if(i < qs.length) draw();
+        else{
+          rec.made = { title:"오늘의 이야기 카드",
+            lines:qs.map((q,k) => `${q.q.replace(/\?$/,"")} — ${answers[k] || "(다음에 이야기해요)"}`) };
+          finishActivity(rec);
+        }
+      }
+    });
+    render(actShell(rec, `질문 ${i+1} / ${qs.length}. 정답은 없어요. 떠오르는 대로 골라 주세요.`, `
+      <div class="q" style="font-size:30px">${esc(q.q)}</div>
+      <div class="chips">${opts.map(o => `<button class="chip" data-act="opt" data-v="${esc(o)}">${esc(o)}</button>`).join("")}</div>
+      ${q.input || rec.level === 3 ? `<p class="sub" style="margin-top:20px">한마디 덧붙이기 (선택, 20자까지)</p>
+        <input type="text" id="own" maxlength="20" autocomplete="off">` : ""}
+      <div class="row end"><button class="btn main" data-act="next">다음</button></div>`), 3);
+  };
+  draw();
+};
+
+/* ==========================================================
+   5. 나누기 → 생활 연결
+   ========================================================== */
+function screenShare(){
+  const talk = pick(THEMES[S.theme].talk, 2);
+  const used = talk.map(() => false);
+  acts = {
+    talk(v,b){
+      if(used[+v]) return;
+      used[+v] = true; S.talkUsed++;
+      b.textContent = "✓ 이야기 나눴어요"; b.disabled = true;
+    },
+    next(){ screenCommit(); }
+  };
+  render(`
+    <div class="q">오늘 함께 만든 것</div>
+    ${S.activities.map(madeHTML).join("") || `<p class="sub">아직 만든 것이 없어요.</p>`}
+    <h2 style="margin-top:28px">이야기 나눠요</h2>
+    <p class="sub">치료사·보호자·옆 사람과 함께 이야기해 보세요.</p>
+    ${talk.map((t,i) => `<div class="made talk"><h3>💬 ${esc(t)}</h3>
+      <button class="btn" data-act="talk" data-v="${i}">이야기 나눴어요</button></div>`).join("")}
+    <div class="row end"><button class="btn main" data-act="next" data-focus>오늘의 약속 고르기</button></div>
+  `, 4);
+}
+function commitCards(){
+  if(S.theme === "kitchen"){
+    const d = dishName(), w = story("withwho"), sh = story("shop");
+    return [
+      `오늘 저녁, ${d} 재료가 집에 있는지 확인하기`,
+      sh && sh !== "가족이 대신" ? `${sh}에서 살 것 3가지를 말해 보기` : "장 볼 것 3가지를 말해 보기",
+      w && w !== "혼자" ? `${w}에게 ${d} 이야기 들려주기` : `${d} 만드는 순서를 소리 내어 말해 보기`
+    ];
+  }
+  const kit = { "비":"우산", "눈":"장갑", "바람":"목도리", "맑음":"챙 모자", "흐림":"우산" }[S.weather] || "외출 준비물";
+  return [
+    `오늘 날씨에 맞게 ${kit} 챙기기`,
+    `${placeName()}에 가기 전, 순서대로 준비해 보기`,
+    "잠들기 전 오늘 한 일 하나 떠올리기"
+  ];
+}
+function screenCommit(){
+  const cards = commitCards();
+  acts = {
+    pick(v){
+      S.commitment = cards[+v]; choose("실천 카드");
+      render(`
+        <div class="q">오늘의 약속</div>
+        <div class="made talk"><h3 style="font-size:32px">✅ ${esc(S.commitment)}</h3>
+          <p class="sub" style="margin:8px 0 0">다음에 만나면 해 보셨는지 같이 이야기해요.</p></div>
+        <p class="sub">수고하셨어요. 화면을 치료사에게 건네 주세요.</p>
+        <div class="row end"><button class="btn main" data-act="end">치료사 요약 보기</button></div>
+      `, 4);
+      acts = { end(){ screenSummary(); } };
+    }
+  };
+  render(`
+    <div class="q">오늘 해 볼 일 하나를 골라 주세요.</div>
+    <div class="grid big">${cards.map((c,i) => `<button class="card" data-act="pick" data-v="${i}" ${i===0?"data-focus":""}><span class="ic">📌</span><b style="font-size:24px">${esc(c)}</b></button>`).join("")}</div>
+  `, 4);
+}
+
+/* ==========================================================
+   요약 (치료사) — 내 이야기의 내용은 기록 텍스트에 넣지 않는다
+   ========================================================== */
+function summaryRows(){
+  const mins = Math.round(((S.finishedAt || Date.now()) - S.startedAt)/60000);
+  const self = S.choices.filter(c => c.self).length;
+  const moodTxt = { 5:"아주 좋음", 4:"좋음", 3:"보통", 2:"조금 안 좋음", 1:"힘듦" }[S.mood] || "미응답";
+  const rows = [
+    ["대상자 코드", S.clientCode || "(미입력)"],
+    ["날짜 · 소요", `${new Date(S.startedAt).toLocaleDateString("ko-KR")} · 약 ${mins}분`],
+    ["기분 · 날씨", `${moodTxt} · ${S.weather || "미응답"}`],
+    ["체크인 지남력", `첫 시도 정답 ${S.checkin.firstTry}/${S.checkin.total} · 힌트 ${S.checkin.hints}`],
+    ["주제", S.theme ? `${THEMES[S.theme].name} (${THEMES[S.theme].icf})` : "-"],
+    ["내 이야기", `${S.storyAnswered}/${S.storyAsked} 질문에 답함 (내용은 저장하지 않음)`],
+    ["스스로 고른 횟수", `${self}/${S.choices.length} (주제·활동·실천 카드)`],
+    ["난이도 조절 요청", `대상자 ${S.levelRequests.client} · 치료사 ${S.levelRequests.therapist}`],
+    ["대화 카드", `${S.talkUsed}개 사용`],
+    ["실천 카드", S.commitment || "선택 안 함"]
+  ];
+  S.activities.forEach((a,i) => {
+    const path = a.levelPath.map(l => `${l.level}${l.by==="therapist"?"(치)":l.by==="client"?"(대)":""}`).join("→");
+    const score = a.stopped ? "중간에 멈춤" : a.pattern === "memo" ? "채점 없음 (대화 재료)" : `첫 시도 정답 ${a.correct}/${a.total}`;
+    rows.push([`활동 ${i+1}`, `${PATTERNS[a.pattern].name} · ${PATTERNS[a.pattern].icf} · 단계 ${path} · ${score} · 오류 ${a.errors} · 힌트 ${a.hints} · ${a.durationSec}초`]);
+  });
+  return rows;
+}
+function screenSummary(){
+  S.finishedAt = S.finishedAt || Date.now();
+  const rows = summaryRows();
+  acts = {
+    copy(){
+      const text = "[일상 인지활동 세션 기록]\n" + rows.map(([k,v]) => `${k}: ${v}`).join("\n");
+      const done = () => setNote("기록을 복사했어요. 차트나 일지에 붙여 넣으세요.", true);
+      if(navigator.clipboard && window.isSecureContext){
+        navigator.clipboard.writeText(text).then(done, () => fallbackCopy(text, done));
+      }else fallbackCopy(text, done);
+    },
+    reset(){ S = freshState(); screenStart(); }
+  };
+  render(`
+    <h1>세션 요약</h1>
+    <p class="sub">수행 기록과 참여 기록입니다. 점수가 아니라 치료 과정을 남기는 용도이며 평가·진단에 쓰지 않습니다.</p>
+    <table class="sum">${rows.map(([k,v]) => `<tr><th>${esc(k)}</th><td>${esc(v)}</td></tr>`).join("")}</table>
+    <h2 style="margin-top:28px">오늘 만든 것</h2>
+    ${S.activities.map(madeHTML).join("") || `<p class="sub">없음</p>`}
+    <div id="note" class="note"></div>
+    <div class="row end">
+      <button class="btn" data-act="copy">기록 복사</button>
+      <button class="btn main" data-act="reset">세션 끝내기 (이야기 지우기)</button>
+    </div>
+  `, 5);
+}
+function fallbackCopy(text, done){
+  const ta = document.createElement("textarea");
+  ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
+  document.body.appendChild(ta); ta.select();
+  try{ document.execCommand("copy"); done(); }catch(_){ setNote("복사하지 못했어요. 표를 직접 옮겨 적어 주세요."); }
+  ta.remove();
+}
+
+/* ==========================================================
+   치료사 패널 — 1초 길게 눌러 열기
+   ========================================================== */
+(() => {
+  const btn = $("#proBtn");
+  let timer = null;
+  const start = e => {
+    e.preventDefault();
+    btn.classList.add("holding");
+    timer = setTimeout(() => { btn.classList.remove("holding"); openPro(); }, 900);
+  };
+  const stop = () => { clearTimeout(timer); btn.classList.remove("holding"); };
+  btn.addEventListener("pointerdown", start);
+  ["pointerup","pointerleave","pointercancel"].forEach(t => btn.addEventListener(t, stop));
+  btn.addEventListener("keydown", e => { if(e.key === "Enter" || e.key === " "){ e.preventDefault(); openPro(); } });
+  btn.addEventListener("contextmenu", e => e.preventDefault());
+})();
+function openPro(){
+  const inAct = !!S.cur;
+  const inSession = S.step >= 0 && !S.finishedAt;
+  $("#proPanel").innerHTML = `
+    <h2>치료사 패널</h2>
+    ${inAct ? `<div class="grp"><b>난이도 직접 정하기</b><div>
+      ${[1,2,3].map(l => `<button class="btn ${S.cur.level===l?"main":""}" data-p="level" data-v="${l}">${LEVEL_NAMES[l]}</button>`).join("")}
+      </div></div>
+      <div class="grp"><div>
+        <button class="btn soft" data-p="hint">힌트 보여주기</button>
+        <button class="btn" data-p="skip">이 활동 그만하기</button>
+      </div></div>` : `<p class="muted">활동 중에는 난이도·힌트를 여기서 조절할 수 있습니다.</p>`}
+    ${S.choices.length ? `<div class="grp"><b>방금 선택(${esc(S.choices[S.choices.length-1].what)})</b><div>
+      <button class="btn" data-p="assist">치료사가 도와서 고름으로 표시</button></div></div>` : ""}
+    ${inSession ? `<div class="grp"><div>
+      ${S.theme ? `<button class="btn" data-p="share">나누기로 이동</button>` : ""}
+      <button class="btn" data-p="summary">세션 끝내고 요약 보기</button>
+    </div></div>` : ""}
+    <div class="grp"><div>
+      <button class="btn" data-p="restart">처음 화면으로 (이야기 지우기)</button>
+      <span class="spacer"></span>
+      <button class="btn main" data-p="close">닫기</button>
+    </div></div>`;
+  $("#pro").classList.remove("hidden");
+  $("#proPanel").querySelector('[data-p="close"]').focus();
+}
+$("#pro").addEventListener("click", e => {
+  if(e.target.id === "pro") return closePro();
+  const b = e.target.closest("[data-p]"); if(!b) return;
+  const v = b.dataset.v;
+  ({
+    level(){ S.levelRequests.therapist++; closePro(); startActivity(S.cur.pattern, +v, "therapist"); },
+    hint(){ closePro(); if(acts.hint) acts.hint(); },
+    skip(){ closePro(); stopCurrent(); screenPick(); },
+    assist(){ S.choices[S.choices.length-1].self = false; b.textContent = "✓ 표시했어요"; b.disabled = true; },
+    share(){ closePro(); stopCurrent(); screenShare(); },
+    summary(){ closePro(); stopCurrent(); screenSummary(); },
+    restart(){ closePro(); S = freshState(); screenStart(); },
+    close(){ closePro(); }
+  })[b.dataset.p]();
+});
+function closePro(){ $("#pro").classList.add("hidden"); }
+addEventListener("keydown", e => { if(e.key === "Escape") closePro(); });
+
+screenStart();
+</script>
+</body>
+</html>

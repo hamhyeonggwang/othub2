@@ -1,13 +1,20 @@
 import type { ContentItemWithStats } from "@/lib/supabase/content-types";
 
-export type ToolCategory = "all" | "kiosk" | "hand" | "gaze" | "assistive";
+export type ToolCategory =
+  | "all"
+  | "kiosk"
+  | "hand"
+  | "gaze"
+  | "assistive"
+  | "cognitive";
 export type CameraFilter = "all" | "without" | "with";
 
 export function toolCategory(value: string | null | undefined): ToolCategory {
   return value === "kiosk" ||
     value === "hand" ||
     value === "gaze" ||
-    value === "assistive"
+    value === "assistive" ||
+    value === "cognitive"
     ? value
     : "all";
 }

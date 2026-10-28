@@ -3,6 +3,7 @@ export type WorkspaceIconKind =
   | "hand"
   | "gaze"
   | "assistive"
+  | "cognitive"
   | "content"
   | "assess"
   | "arrow"
@@ -33,6 +34,12 @@ export default function WorkspaceIcon({ kind }: { kind: WorkspaceIconKind }) {
           <circle cx="10" cy="5" r="1.8" />
           <path d="M10 8v6h5l3 5M10 11h5" />
           <path d="M8 21a5 5 0 1 1-3-9" />
+        </>
+      )}
+      {kind === "cognitive" && (
+        <>
+          <path d="M9 4a4 4 0 0 0-4 4v1a3 3 0 0 0 0 6v1a4 4 0 0 0 7 2.6V4.8A3 3 0 0 0 9 4Z" />
+          <path d="M15 4a4 4 0 0 1 4 4v1a3 3 0 0 1 0 6v1a4 4 0 0 1-7 2.6" />
         </>
       )}
       {kind === "content" && (

@@ -1,5 +1,5 @@
 export type ContentType = "app" | "video" | "book" | "tool" | "info" | "project";
-export type AppCategory = "kiosk" | "hand" | "gaze" | "assistive";
+export type AppCategory = "kiosk" | "hand" | "gaze" | "assistive" | "cognitive";
 export type ProjectStatus = "available" | "beta" | "research" | "concept";
 
 export interface ContentItem {
@@ -67,6 +67,7 @@ export const APP_CATEGORIES: { key: AppCategory | "all"; label: string }[] = [
   { key: "hand", label: "손 동작 훈련" },
   { key: "gaze", label: "시선 추적" },
   { key: "assistive", label: "보조기기 훈련" },
+  { key: "cognitive", label: "인지활동" },
 ];
 
 export const PEO_FILTERS = [
