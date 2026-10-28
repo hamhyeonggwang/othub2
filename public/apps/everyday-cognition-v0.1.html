@@ -5,9 +5,10 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>일상 인지활동</title>
 <!--
-  일상 인지활동 (가칭 everyday) v0.1 — OTHub 참여형 인지활동 웹앱 PRD v0.2의 P0 범위.
+  일상 인지활동 (가칭 everyday) v0.1 — OTHub 참여형 인지활동 웹앱 PRD v0.2의 P0 + P1 일부.
   - 세션 흐름 5단계: 체크인 → 주제 고르기 → 내 이야기 → 활동 → 나누기·약속
-  - 활동 패턴 5개(숫자 엮기·차례 찾기·나눠 담기·순서 세우기·기억 꺼내기) × 주제 2개(오늘·부엌)
+  - 활동 패턴 8개(숫자 엮기·차례 찾기·나눠 담기·순서 세우기·계획 짜기·규칙 반응·단어 잇기·기억 꺼내기)
+    × 주제 팩 6개(오늘·부엌·우리 집·동네·건강·사람). 주제별 문항 재료는 PACK에만 있다.
   - '내 이야기' 답은 이 페이지 메모리에만 두며 서버·브라우저 저장소에 쓰지 않는다.
   - 문항·카드 문구는 모두 새로 작성했다. 외부 활동지의 문구·양식은 쓰지 않는다.
 -->
@@ -321,10 +322,70 @@ const THEMES = {
       "누구에게 이 음식을 해 주고 싶으세요?"
     ]
   },
-  home:{ name:"우리 집", icon:"🏠", desc:"정리 · 분리배출", soon:true },
-  town:{ name:"동네", icon:"🚌", desc:"산책 · 교통 · 가게", soon:true },
-  health:{ name:"건강", icon:"💊", desc:"약 · 병원 · 운동", soon:true },
-  people:{ name:"사람", icon:"🤝", desc:"가족 · 이웃 · 연락", soon:true }
+  home:{
+    name:"우리 집", icon:"🏠", desc:"정리 · 분리배출 · 살림",
+    icf:"d640 가사 · d650 가정용품 관리 (초안)",
+    story:[
+      { id:"room", q:"집에서 가장 오래 머무는 곳은 어디인가요?", opts:["거실","안방","부엌","베란다","마당"] },
+      { id:"chore", q:"요즘 자주 하시는 집안일은 무엇인가요?", opts:["빨래","설거지","청소기 돌리기","걸레질","화분 물 주기","분리배출"], noInput:true },
+      { id:"recycleDay", q:"분리배출은 무슨 요일에 하세요?", opts:["월요일","화요일","수요일","목요일","금요일","토요일","일요일","정해진 날 없음"], noInput:true }
+    ],
+    talk:[
+      "집안일 중에서 가장 좋아하는 일과 귀찮은 일은 무엇인가요?",
+      "예전에는 빨래를 어떻게 하셨어요?",
+      "우리 집에서 가장 아끼는 물건은 무엇인가요?",
+      "집안일을 쉽게 하는 나만의 요령이 있나요?",
+      "분리배출 규칙이 예전과 어떻게 달라졌나요?"
+    ]
+  },
+  town:{
+    name:"동네", icon:"🚌", desc:"산책 · 교통 · 가게",
+    icf:"d460 여러 장소 이동 · d470 교통수단 이용 (초안)",
+    story:[
+      { id:"tplace", q:"동네에서 자주 가는 곳은 어디인가요?", opts:["시장","공원","경로당","복지관","병원","은행","마트"] },
+      { id:"move", q:"그곳까지 어떻게 가세요?", opts:["걸어서","버스","지하철","택시","가족 차"], noInput:true },
+      { id:"walk", q:"동네에서 좋아하는 길이나 장소가 있나요?", opts:["공원 산책길","시장 골목","개천 길","뒷산","정류장 앞 벤치"] }
+    ],
+    talk:[
+      "동네에서 가장 오래된 가게는 어디인가요?",
+      "예전에는 장에 어떻게 다니셨어요?",
+      "버스나 지하철을 탈 때 어려운 점이 있나요?",
+      "동네에서 자주 인사하는 사람이 있나요?",
+      "우리 동네에 생겼으면 하는 곳은 어디인가요?"
+    ]
+  },
+  health:{
+    name:"건강", icon:"💊", desc:"약 · 병원 · 운동",
+    icf:"d570 건강 관리 (초안)",
+    story:[
+      { id:"med", q:"하루에 약을 몇 번 드세요?", opts:["안 먹어요","하루 한 번","하루 두 번","하루 세 번"], noInput:true },
+      { id:"exercise", q:"요즘 하시는 운동이 있나요?", opts:["걷기","체조","스트레칭","자전거","수영","안 해요"] },
+      { id:"clinic", q:"자주 가는 병원은 어떤 곳인가요?", opts:["동네 의원","한의원","치과","보건소","종합병원"] }
+    ],
+    talk:[
+      "약 먹는 것을 잊지 않는 나만의 방법이 있나요?",
+      "몸이 개운한 날에는 무엇을 하고 싶으세요?",
+      "젊을 때 하던 운동 중에 다시 해 보고 싶은 것이 있나요?",
+      "병원에 갈 때 꼭 물어보고 싶은 것이 있나요?",
+      "잠이 잘 오는 날은 어떤 날인가요?"
+    ]
+  },
+  people:{
+    name:"사람", icon:"🤝", desc:"가족 · 이웃 · 연락",
+    icf:"d750 비공식적 사회관계 · d760 가족관계 (초안)",
+    story:[
+      { id:"who", q:"요즘 자주 만나거나 연락하는 분은 누구예요? (이름은 적지 않아요)", opts:["자녀","손주","배우자","형제자매","친구","이웃"], noInput:true },
+      { id:"how", q:"그분과는 주로 어떻게 연락하세요?", opts:["전화","영상통화","문자","직접 만나기","편지"], noInput:true },
+      { id:"together", q:"그분과 함께하면 좋은 일은 무엇인가요?", opts:["밥 먹기","산책하기","차 마시기","옛날 이야기하기","텔레비전 보기"] }
+    ],
+    talk:[
+      "요즘 가장 반가웠던 연락은 누구에게서 왔나요?",
+      "어릴 때 가장 친했던 친구는 어떤 사람이었나요?",
+      "가족에게 꼭 해 주고 싶은 말이 있나요?",
+      "이웃과 나눠 먹던 음식이 있나요?",
+      "누군가에게 도움을 받아 고마웠던 일이 있나요?"
+    ]
+  }
 };
 
 const PATTERNS = {
@@ -564,22 +625,12 @@ function nextStory(){
 }
 
 /* 테마·이야기에 따른 활동 제목 */
+/* "동네 시장에서" / "전화·온라인으로" */
+function shopAt(shop){ return shop === "전화·온라인 주문" ? "전화·온라인으로" : `${shop}에서`; }
 function dishName(){ return story("dish") || "자주 하는 요리"; }
 function dishData(){ return DISHES[story("dish")] || GENERIC_DISH; }
 function placeName(){ return story("place") || "가까운 곳"; }
-function actTitle(p){
-  const k = S.theme === "kitchen";
-  return {
-    calc: k ? "장보기 계산" : "오늘 날짜로 계산하기",
-    trail: k ? "값이 싼 것부터 차례로" : "하루 일과를 시간 순서대로",
-    sort: k ? `${dishName()} 재료 고르기` : "날씨에 맞는 준비물",
-    seq: k ? `${dishName()} 만드는 순서` : `${placeName()}에 가는 순서`,
-    memo: k ? `${dishName()}에 얽힌 이야기` : "어제와 계절 이야기",
-    rule: k ? `${dishName()} 재료만 누르기` : "아침에 하는 일만 누르기",
-    word: k ? "부엌 낱말 잇기" : "오늘 낱말 잇기",
-    plan: k ? `오늘 저녁 ${dishName()} 준비 계획` : "내일 하루 계획 짜기"
-  }[p];
-}
+function actTitle(p){ return PACK[S.theme].titles()[p]; }
 
 /* ==========================================================
    4. 활동 고르기
@@ -683,9 +734,10 @@ const RUN = {};
 
 /* ---------- 숫자 엮기 ---------- */
 RUN.calc = rec => {
-  const probs = rec.theme === "kitchen" ? calcKitchen(rec.level) : calcToday(rec.level);
+  const probs = PACK[rec.theme].calc(rec.level);
   let i = 0, buf = "", tries = 0;
   const solved = [];
+  const num = (v, unit) => unit === "년" ? String(v) : v.toLocaleString("ko-KR");
   const draw = () => {
     const p = probs[i];
     acts = Object.assign(baseActs(rec, () => setNote(p.hint)), {
@@ -695,14 +747,14 @@ RUN.calc = rec => {
         if(!buf) return;
         if(+buf === p.ans){
           if(tries === 0) rec.correct++;
-          rec.total++; solved.push(`${p.short} → ${p.ans.toLocaleString("ko-KR")}${p.unit||""}`);
+          rec.total++; solved.push(`${p.short} → ${num(p.ans,p.unit)}${p.unit||""}`);
           setNote("맞아요.", true);
           setTimeout(next, 700);
         }else{
           tries++; rec.errors++;
           if(tries >= 2){
-            rec.total++; solved.push(`${p.short} → ${p.ans.toLocaleString("ko-KR")}${p.unit||""}`);
-            setNote(`답은 ${p.ans.toLocaleString("ko-KR")}${p.unit||""}이에요. 같이 확인했으니 다음으로 가요.`);
+            rec.total++; solved.push(`${p.short} → ${num(p.ans,p.unit)}${p.unit||""}`);
+            setNote(`답은 ${num(p.ans,p.unit)}${p.unit||""}이에요. 같이 확인했으니 다음으로 가요.`);
             setTimeout(next, 2200);
           }else{
             buf = ""; $("#ans").textContent = "";
@@ -774,31 +826,11 @@ function calcKitchen(level){
 /* ---------- 차례 찾기 ---------- */
 RUN.trail = rec => {
   const n = [0,5,7,9][rec.level];
-  let items;
-  if(rec.theme === "kitchen"){
-    const prefer = dishData().ing.filter(x => PRICE[x]);
-    const rest = shuffle(Object.keys(PRICE).filter(x => !prefer.includes(x)));
-    const seen = new Set(); items = [];
-    for(const name of [...prefer, ...rest]){
-      if(items.length >= n) break;
-      if(seen.has(PRICE[name])) continue;
-      seen.add(PRICE[name]); items.push({ key:PRICE[name], top:won(PRICE[name]), label:name });
-    }
-  }else{
-    const r = ROUTINE.map(([h,l]) => [h,l]);
-    if(story("morning")) r[1][1] = story("morning");
-    if(story("place")) r[4][1] = `${story("place")} 가기`;
-    if(story("meal")) r[5][1] = `점심: ${story("meal")}`;
-    const keep = { 5:[0,2,5,8,9], 7:[0,1,2,4,5,8,9], 9:[0,1,2,3,4,5,6,8,9] }[n];
-    items = keep.map(k => ({ key:r[k][0], top:hourLabel(r[k][0]), label:r[k][1] }));
-  }
+  const { items, instr } = PACK[rec.theme].trail(n);
   const order = items.slice().sort((a,b) => a.key - b.key);
   const cards = shuffle(items);
   let at = 0, erredHere = false;
   const cols = n <= 5 ? 3 : n <= 7 ? 4 : 5;
-  const instr = rec.theme === "kitchen"
-    ? "값이 가장 싼 것부터 비싼 것까지 차례로 누르세요."
-    : "이른 시간부터 늦은 시간까지 차례로 누르세요.";
   acts = Object.assign(baseActs(rec, () => {
     const el = app.querySelector(`.tcard[data-v="${order[at].key}"]`); if(el) el.classList.add("cue");
     erredHere = true;
@@ -830,25 +862,10 @@ RUN.trail = rec => {
 
 /* ---------- 나눠 담기 ---------- */
 RUN.sort = rec => {
-  let boxes, cards;
-  if(rec.theme === "kitchen"){
-    if(rec.level < 3){
-      const inN = rec.level === 1 ? 4 : 5, outN = rec.level === 1 ? 2 : 3;
-      const ins = pick(dishData().ing, Math.min(inN, dishData().ing.length));
-      const outs = pick(NOT_IN_DISH.filter(x => !dishData().ing.includes(x)), outN);
-      boxes = [`${dishName()}에 들어가요`, "안 들어가요"];
-      cards = [...ins.map(x => [x,0]), ...outs.map(x => [x,1])];
-    }else{
-      rec.title = "장 봐 온 물건 정리하기";
-      boxes = Object.keys(STORAGE);
-      cards = boxes.flatMap((b,i) => pick(STORAGE[b],3).map(x => [x,i]));
-    }
-  }else{
-    const all = Object.keys(WEATHER_KIT);
-    boxes = rec.level === 1 ? all.slice(0,2) : rec.level === 2 ? all.slice(0,3) : all;
-    cards = boxes.flatMap((b,i) => WEATHER_KIT[b].map(x => [x,i]));
-  }
-  cards = shuffle(cards).map(([label,box],id) => ({ id, label, box, placed:false, erred:false }));
+  const spec = PACK[rec.theme].sort(rec.level);
+  const boxes = spec.boxes;
+  rec.title = spec.title || actTitle("sort");
+  const cards = shuffle(spec.cards).map(([label,box],id) => ({ id, label, box, placed:false, erred:false }));
   const contents = boxes.map(() => []);
   let sel = null;
   const draw = () => {
@@ -894,16 +911,7 @@ RUN.sort = rec => {
 /* ---------- 순서 세우기 ---------- */
 RUN.seq = rec => {
   const n = [0,3,4,5][rec.level];
-  let steps;
-  if(rec.theme === "kitchen"){
-    const all = dishData().steps;
-    steps = { 3:[all[0],all[2],all[4]], 4:[all[0],all[1],all[2],all[4]], 5:all }[n];
-  }else{
-    const place = story("place");
-    const end = PLACE_END[place] || `${placeName()}에서 볼일 보기`;
-    const all = ["외출할 옷으로 갈아입기","신발 신기","현관문 잠그기",`${placeName()}까지 이동하기`,end];
-    steps = { 3:[all[0],all[1],all[2]], 4:[all[0],all[1],all[2],end], 5:all }[n];
-  }
+  const steps = PACK[rec.theme].seq(n);
   const slots = steps.map(() => null);      // 카드 index
   const locked = steps.map(() => false);
   let tray = shuffle(steps.map((_,i) => i));
@@ -965,21 +973,7 @@ RUN.memo = rec => {
     "봄":["벚꽃","나물 캐기","새 학기","꽃구경"],"여름":["수박","냇가","부채","장마"],
     "가을":["단풍","추석","김장 준비","코스모스"],"겨울":["눈사람","군고구마","설날","연탄"]
   };
-  let qs;
-  if(rec.theme === "kitchen"){
-    const dish = dishName();
-    qs = [
-      { q:`${josa(dish,"을를")} 처음 드셔 본 건 언제쯤인가요?`, opts:["어릴 때","학교 다닐 때","결혼한 뒤","나이 들어서","기억이 안 나요"] },
-      { q:`${josa(dish,"이가")} 가장 맛있었던 곳은 어디인가요?`, opts:["우리 집","어머니 댁","식당","잔칫집","여행지"] },
-      { q:`그 맛을 한마디로 하면?`, opts:["구수해요","칼칼해요","달콤해요","시원해요","정겨워요"], input:true }
-    ];
-  }else{
-    qs = [
-      { q:"어제 저녁에는 무엇을 하셨어요?", opts:["텔레비전 봤어요","전화했어요","산책했어요","일찍 잤어요","가족과 밥 먹었어요"] },
-      { q:"가장 좋아하는 계절은 언제인가요?", opts:["봄","여름","가을","겨울"], key:"season" },
-      { q:"그 계절이면 무엇이 떠오르세요?", optsFrom:"season", input:true }
-    ];
-  }
+  let qs = PACK[rec.theme].memo();
   if(rec.level === 1) qs = qs.slice(0,2);
   const answers = [];
   let i = 0;
@@ -1039,12 +1033,7 @@ function setCleanup(f){ cleanup = f; }
 
 /* ---------- 규칙 반응 ---------- */
 RUN.rule = rec => {
-  const kitchen = rec.theme === "kitchen";
-  const A = kitchen ? dishData().ing.slice() : MORNING_DO.slice();
-  const B = kitchen ? NOT_IN_DISH.filter(x => !dishData().ing.includes(x)) : EVENING_DO.slice();
-  if(!kitchen && story("morning") && !A.includes(story("morning"))) A.push(story("morning"));
-  const ruleA = kitchen ? `${dishName()}에 들어가는 재료가 나오면 누르세요.` : "아침에 하는 일이 나오면 누르세요.";
-  const ruleB = kitchen ? "이번에는 반대로, 안 들어가는 것이 나오면 누르세요." : "이번에는 반대로, 저녁에 하는 일이 나오면 누르세요.";
+  const { A, B, ruleA, ruleB } = PACK[rec.theme].rule();
   const n = [0,10,14,16][rec.level], ms = [0,4000,3000,3000][rec.level];
   const switchAt = rec.level === 3 ? 8 : -1;
   // 같은 종류가 세 번 넘게 이어지지 않게 섞는다
@@ -1093,7 +1082,7 @@ RUN.rule = rec => {
     finishActivity(rec);
   };
   acts = Object.assign(baseActs(rec, () => {
-    const ex = switched ? (kitchen ? B : EVENING_DO) : A;
+    const ex = switched ? B : A;
     setNote(`${switched ? ruleB : ruleA} 예: ${ex.slice(0,3).join(", ")}`);
   }), {
     start(){ $("#rstart").hidden = true; $("#rgo").hidden = false; $("#rpause").hidden = false; setNote(""); showTrial(); },
@@ -1123,11 +1112,6 @@ RUN.rule = rec => {
 };
 
 /* ---------- 단어 잇기 ---------- */
-function themeWords(rec){
-  return rec.theme === "kitchen"
-    ? [dishName(), ...dishData().ing, "부엌", "시장"]
-    : [placeName(), story("meal") || "국수", "아침", "날씨", "오늘", "산책"];
-}
 function chainFrom(start, steps){
   // 깊이 우선으로 끝말이 이어지는 낱말 줄을 찾는다
   const go = (word, used) => {
@@ -1141,7 +1125,7 @@ function chainFrom(start, steps){
   return go(start, [start]);
 }
 RUN.word = rec => {
-  const pool = themeWords(rec).filter(w => isHangul(w));
+  const pool = PACK[rec.theme].words().filter(w => isHangul(w));
   if(rec.level === 1) return wordCho(rec, pool);
   if(rec.level === 2) return wordChain(rec, pool);
   return wordFree(rec, pool);
@@ -1245,45 +1229,7 @@ function wordFree(rec, pool){
 }
 
 /* ---------- 계획 짜기 ---------- */
-function planSpec(rec){
-  const L = rec.level;
-  if(rec.theme === "kitchen"){
-    const d = dishName(), shop = story("shop") && story("shop") !== "가족이 대신" ? story("shop") : "가게";
-    if(L === 1) return { slots:["오후 3시","오후 4시","오후 5시","오후 6시"], fixed:[], rules:[],
-      cards:[ { id:"buy", label:"장보기", before:["prep"] }, { id:"prep", label:"재료 손질", before:["cook"] },
-              { id:"cook", label:`${d} 만들기`, before:["eat"] }, { id:"eat", label:"함께 먹기" } ] };
-    const base = [
-      { id:"look", label:"냉장고에 뭐가 있는지 보기", before:["buy"] },
-      { id:"buy", label:`${shop}에서 장보기`, before:["prep"] },
-      { id:"prep", label:"재료 손질", before:["cook"] },
-      { id:"cook", label:`${d} 만들기`, before:["eat"] },
-      { id:"eat", label:"함께 먹기", before:["wash"] },
-      { id:"wash", label:"설거지" }
-    ];
-    if(L === 2) return { slots:["오후 2시","오후 3시","오후 4시","오후 5시","오후 6시","오후 7시"], fixed:[], rules:[], cards:base };
-    base[1].allow = [0,1];
-    return { slots:["오후 1시","오후 2시","오후 3시","오후 4시","오후 5시","오후 6시","오후 7시"],
-      fixed:[{ slot:2, label:"이웃과 약속" }],
-      rules:["오후 3시에는 이웃과 약속이 있어요.", `${josa(shop,"은는")} 오후 3시 전에 다녀와야 해요.`],
-      cards:base };
-  }
-  const place = placeName();
-  if(L === 1) return { slots:["아침","낮","저녁"], fixed:[], rules:[], multi:true,
-    cards:[ { id:"b", label:"아침 먹기", allow:[0] }, { id:"l", label:"점심 먹기", allow:[1] },
-            { id:"d", label:"저녁 먹기", allow:[2] }, { id:"p", label:`${place} 가기`, allow:[0,1] } ] };
-  if(L === 2) return { slots:["오전 8시","오전 10시","낮 12시","오후 3시","오후 6시","오후 9시"], fixed:[], rules:[],
-    cards:[ { id:"b", label:"아침 먹기", allow:[0] }, { id:"m", label:"아침 약 먹기", with:"b", stack:true },
-            { id:"p", label:`${place} 가기`, allow:[1,3] }, { id:"l", label:"점심 먹기", allow:[2] },
-            { id:"w", label:"산책하기", allow:[1,3] }, { id:"d", label:"저녁 먹기", allow:[4] },
-            { id:"s", label:"잠자리에 들기", allow:[5] } ] };
-  return { slots:["오전 8시","오전 10시","낮 12시","오후 2시","오후 4시","오후 6시","오후 9시"],
-    fixed:[{ slot:3, label:"가족과 영상통화" }],
-    rules:["오후 2시에는 가족과 영상통화가 있어요.", `${josa(place,"은는")} 오전에만 갈 수 있어요.`, "산책은 점심을 먹고 나서 해요."],
-    cards:[ { id:"b", label:"아침 먹기", allow:[0] }, { id:"m", label:"아침 약 먹기", with:"b", stack:true },
-            { id:"p", label:`${place} 가기`, allow:[1] }, { id:"l", label:"점심 먹기", allow:[2] },
-            { id:"w", label:"산책하기", after:["l"] }, { id:"d", label:"저녁 먹기", allow:[5] },
-            { id:"s", label:"잠자리에 들기", allow:[6] } ] };
-}
+function planSpec(rec){ return PACK[rec.theme].plan(rec.level); }
 /* 각 카드가 어긴 규칙을 문장으로 돌려준다 */
 function planProblems(spec, at){
   const byId = Object.fromEntries(spec.cards.map(c => [c.id, c]));
@@ -1390,6 +1336,498 @@ RUN.plan = rec => {
 };
 
 /* ==========================================================
+   주제 팩 — 패턴 엔진(RUN)은 주제를 모른다. 문항 재료는 모두 여기서 온다.
+   각 함수는 대상자의 '내 이야기' 답(story)을 읽어 문항을 만든다.
+   calc(L) → 문제 목록 · trail(n) → { items:[{key,top,label}], instr } · sort(L) → { boxes, cards, title? }
+   seq(n) → 단계 목록 · memo() → 질문 목록 · rule() → { A, B, ruleA, ruleB }
+   words() → 낱말 재료 · plan(L) → 계획 명세 · commit() → 실천 카드 3장 · titles() → 활동 제목
+   ========================================================== */
+/* 5단계 중 n개만 쓸 때 고를 자리. 빠지면 안 되는 단계가 있는 주제는 keep으로 바꾼다 */
+const levelPick = (all, n, keep = { 3:[0,2,4], 4:[0,1,2,4] }) => n === 5 ? all : keep[n].map(k => all[k]);
+const timeItems = (rows, n) => {
+  const keep = { 5:[0,2,4,6,8], 7:[0,1,2,4,5,6,8], 9:[0,1,2,3,4,5,6,7,8] }[n];
+  return keep.map(k => ({ key:rows[k][0], top:hourLabel(rows[k][0]), label:rows[k][1] }));
+};
+const dayItems = (rows, n) => pick(rows, n).map(([d,l]) => ({ key:d, top:`${d}일 뒤`, label:l }));
+const todayParts = () => { const n = new Date(); return { y:n.getFullYear(), m:n.getMonth()+1, d:n.getDate(),
+  shift:k => new Date(n.getFullYear(), n.getMonth(), n.getDate()+k) }; };
+const sumProb = (items, unit="원") => ({
+  q:`${items.map(([n,v]) => `${n} ${v.toLocaleString("ko-KR")}${unit}`).join(", ")}을 모두 더하면 얼마일까요?`,
+  ans:items.reduce((a,[,v]) => a+v, 0), unit,
+  short:items.map(([n]) => n).join(" + "),
+  hint:items.length > 2 ? "먼저 두 개를 더하고, 남은 것을 더해요." : items.map(([,v]) => v.toLocaleString("ko-KR")+unit).join(" + ")
+});
+
+const PACK = {};
+
+/* ---------- 오늘 ---------- */
+PACK.today = {
+  titles:() => ({
+    calc:"오늘 날짜로 계산하기", trail:"하루 일과를 시간 순서대로", sort:"날씨에 맞는 준비물",
+    seq:`${placeName()}에 가는 순서`, memo:"어제와 계절 이야기", rule:"아침에 하는 일만 누르기",
+    word:"오늘 낱말 잇기", plan:"내일 하루 계획 짜기" }),
+  calc:L => calcToday(L),
+  trail:n => {
+    const r = ROUTINE.map(([h,l]) => [h,l]);
+    if(story("morning")) r[1][1] = story("morning");
+    if(story("place")) r[4][1] = `${story("place")} 가기`;
+    if(story("meal")) r[5][1] = `점심: ${story("meal")}`;
+    const keep = { 5:[0,2,5,8,9], 7:[0,1,2,4,5,8,9], 9:[0,1,2,3,4,5,6,8,9] }[n];
+    return { items:keep.map(k => ({ key:r[k][0], top:hourLabel(r[k][0]), label:r[k][1] })),
+      instr:"이른 시간부터 늦은 시간까지 차례로 누르세요." };
+  },
+  sort:L => {
+    const all = Object.keys(WEATHER_KIT);
+    const boxes = L === 1 ? all.slice(0,2) : L === 2 ? all.slice(0,3) : all;
+    return { boxes, cards:boxes.flatMap((b,i) => WEATHER_KIT[b].map(x => [x,i])) };
+  },
+  seq:n => {
+    const end = PLACE_END[story("place")] || `${placeName()}에서 볼일 보기`;
+    const all = ["외출할 옷으로 갈아입기","신발 신기","현관문 잠그기",`${placeName()}까지 이동하기`,end];
+    return { 3:[all[0],all[1],all[2]], 4:[all[0],all[1],all[2],end], 5:all }[n];
+  },
+  memo:() => [
+    { q:"어제 저녁에는 무엇을 하셨어요?", opts:["텔레비전 봤어요","전화했어요","산책했어요","일찍 잤어요","가족과 밥 먹었어요"] },
+    { q:"가장 좋아하는 계절은 언제인가요?", opts:["봄","여름","가을","겨울"], key:"season" },
+    { q:"그 계절이면 무엇이 떠오르세요?", optsFrom:"season", input:true }
+  ],
+  rule:() => {
+    const A = MORNING_DO.slice();
+    if(story("morning") && !A.includes(story("morning"))) A.push(story("morning"));
+    return { A, B:EVENING_DO.slice(), ruleA:"아침에 하는 일이 나오면 누르세요.", ruleB:"이번에는 반대로, 저녁에 하는 일이 나오면 누르세요." };
+  },
+  words:() => [placeName(), story("meal") || "국수", "아침", "날씨", "오늘", "산책"],
+  plan:L => {
+    const place = placeName();
+    if(L === 1) return { slots:["아침","낮","저녁"], fixed:[], rules:[], multi:true,
+      cards:[ { id:"b", label:"아침 먹기", allow:[0] }, { id:"l", label:"점심 먹기", allow:[1] },
+              { id:"d", label:"저녁 먹기", allow:[2] }, { id:"p", label:`${place} 가기`, allow:[0,1] } ] };
+    if(L === 2) return { slots:["오전 8시","오전 10시","낮 12시","오후 3시","오후 6시","오후 9시"], fixed:[], rules:[],
+      cards:[ { id:"b", label:"아침 먹기", allow:[0] }, { id:"m", label:"아침 약 먹기", with:"b", stack:true },
+              { id:"p", label:`${place} 가기`, allow:[1,3] }, { id:"l", label:"점심 먹기", allow:[2] },
+              { id:"w", label:"산책하기", allow:[1,3] }, { id:"d", label:"저녁 먹기", allow:[4] },
+              { id:"s", label:"잠자리에 들기", allow:[5] } ] };
+    return { slots:["오전 8시","오전 10시","낮 12시","오후 2시","오후 4시","오후 6시","오후 9시"],
+      fixed:[{ slot:3, label:"가족과 영상통화" }],
+      rules:["오후 2시에는 가족과 영상통화가 있어요.", `${josa(place,"은는")} 오전에만 갈 수 있어요.`, "산책은 점심을 먹고 나서 해요."],
+      cards:[ { id:"b", label:"아침 먹기", allow:[0] }, { id:"m", label:"아침 약 먹기", with:"b", stack:true },
+              { id:"p", label:`${place} 가기`, allow:[1] }, { id:"l", label:"점심 먹기", allow:[2] },
+              { id:"w", label:"산책하기", after:["l"] }, { id:"d", label:"저녁 먹기", allow:[5] },
+              { id:"s", label:"잠자리에 들기", allow:[6] } ] };
+  },
+  commit:() => {
+    const kit = { "비":"우산", "눈":"장갑", "바람":"목도리", "맑음":"챙 모자", "흐림":"우산" }[S.weather] || "외출 준비물";
+    return [`오늘 날씨에 맞게 ${kit} 챙기기`, `${placeName()}에 가기 전, 순서대로 준비해 보기`, "잠들기 전 오늘 한 일 하나 떠올리기"];
+  }
+};
+
+/* ---------- 부엌 ---------- */
+PACK.kitchen = {
+  titles:() => ({
+    calc:"장보기 계산", trail:"값이 싼 것부터 차례로", sort:`${dishName()} 재료 고르기`,
+    seq:`${dishName()} 만드는 순서`, memo:`${dishName()}에 얽힌 이야기`, rule:`${dishName()} 재료만 누르기`,
+    word:"부엌 낱말 잇기", plan:`오늘 저녁 ${dishName()} 준비 계획` }),
+  calc:L => calcKitchen(L),
+  trail:n => {
+    const prefer = dishData().ing.filter(x => PRICE[x]);
+    const rest = shuffle(Object.keys(PRICE).filter(x => !prefer.includes(x)));
+    const seen = new Set(), items = [];
+    for(const name of [...prefer, ...rest]){
+      if(items.length >= n) break;
+      if(seen.has(PRICE[name])) continue;
+      seen.add(PRICE[name]); items.push({ key:PRICE[name], top:won(PRICE[name]), label:name });
+    }
+    return { items, instr:"값이 가장 싼 것부터 비싼 것까지 차례로 누르세요." };
+  },
+  sort:L => {
+    if(L < 3){
+      const inN = L === 1 ? 4 : 5, outN = L === 1 ? 2 : 3;
+      const ins = pick(dishData().ing, Math.min(inN, dishData().ing.length));
+      const outs = pick(NOT_IN_DISH.filter(x => !dishData().ing.includes(x)), outN);
+      return { boxes:[`${dishName()}에 들어가요`, "안 들어가요"], cards:[...ins.map(x => [x,0]), ...outs.map(x => [x,1])] };
+    }
+    const boxes = Object.keys(STORAGE);
+    return { title:"장 봐 온 물건 정리하기", boxes, cards:boxes.flatMap((b,i) => pick(STORAGE[b],3).map(x => [x,i])) };
+  },
+  seq:n => levelPick(dishData().steps, n),
+  memo:() => {
+    const dish = dishName();
+    return [
+      { q:`${josa(dish,"을를")} 처음 드셔 본 건 언제쯤인가요?`, opts:["어릴 때","학교 다닐 때","결혼한 뒤","나이 들어서","기억이 안 나요"] },
+      { q:`${josa(dish,"이가")} 가장 맛있었던 곳은 어디인가요?`, opts:["우리 집","어머니 댁","식당","잔칫집","여행지"] },
+      { q:"그 맛을 한마디로 하면?", opts:["구수해요","칼칼해요","달콤해요","시원해요","정겨워요"], input:true }
+    ];
+  },
+  rule:() => ({ A:dishData().ing.slice(), B:NOT_IN_DISH.filter(x => !dishData().ing.includes(x)),
+    ruleA:`${dishName()}에 들어가는 재료가 나오면 누르세요.`, ruleB:"이번에는 반대로, 안 들어가는 것이 나오면 누르세요." }),
+  words:() => [dishName(), ...dishData().ing, "부엌", "시장"],
+  plan:L => {
+    const d = dishName(), shop = story("shop") && story("shop") !== "가족이 대신" ? story("shop") : "가게";
+    if(L === 1) return { slots:["오후 3시","오후 4시","오후 5시","오후 6시"], fixed:[], rules:[],
+      cards:[ { id:"buy", label:"장보기", before:["prep"] }, { id:"prep", label:"재료 손질", before:["cook"] },
+              { id:"cook", label:`${d} 만들기`, before:["eat"] }, { id:"eat", label:"함께 먹기" } ] };
+    const base = [
+      { id:"look", label:"냉장고에 뭐가 있는지 보기", before:["buy"] },
+      { id:"buy", label:`${shopAt(shop)} 장보기`, before:["prep"] },
+      { id:"prep", label:"재료 손질", before:["cook"] },
+      { id:"cook", label:`${d} 만들기`, before:["eat"] },
+      { id:"eat", label:"함께 먹기", before:["wash"] },
+      { id:"wash", label:"설거지" }
+    ];
+    if(L === 2) return { slots:["오후 2시","오후 3시","오후 4시","오후 5시","오후 6시","오후 7시"], fixed:[], rules:[], cards:base };
+    base[1].allow = [0,1];
+    return { slots:["오후 1시","오후 2시","오후 3시","오후 4시","오후 5시","오후 6시","오후 7시"],
+      fixed:[{ slot:2, label:"이웃과 약속" }],
+      rules:["오후 3시에는 이웃과 약속이 있어요.", "장보기는 오후 3시 전에 마쳐야 해요."],
+      cards:base };
+  },
+  commit:() => {
+    const d = dishName(), w = story("withwho"), sh = story("shop");
+    return [
+      `오늘 저녁, ${d} 재료가 집에 있는지 확인하기`,
+      sh && sh !== "가족이 대신" ? `${shopAt(sh)} 살 것 3가지를 말해 보기` : "장 볼 것 3가지를 말해 보기",
+      w && w !== "혼자" ? `${w}에게 ${d} 이야기 들려주기` : `${d} 만드는 순서를 소리 내어 말해 보기`
+    ];
+  }
+};
+
+/* ---------- 우리 집 ---------- */
+const CHORE_STEPS = {
+  "빨래":["빨래를 색깔별로 나눈다","세탁기에 빨래와 세제를 넣는다","세탁 버튼을 누른다","다 된 빨래를 넌다","마른 빨래를 개어 넣는다"],
+  "설거지":["남은 음식을 덜어 낸다","그릇을 물에 잠시 불린다","수세미에 세제를 묻혀 닦는다","깨끗한 물로 헹군다","건조대에 엎어 둔다"],
+  "청소기 돌리기":["바닥의 물건을 치운다","청소기 전원을 꽂는다","방 안쪽부터 문 쪽으로 민다","먼지통을 비운다","청소기를 제자리에 둔다"],
+  "걸레질":["걸레를 물에 적신다","걸레를 꼭 짠다","방 안쪽부터 닦는다","걸레를 깨끗이 빤다","걸레를 널어 말린다"],
+  "화분 물 주기":["흙이 말랐는지 만져 본다","물뿌리개에 물을 받는다","흙에 천천히 물을 준다","받침에 고인 물을 버린다","햇볕 드는 곳에 둔다"],
+  "분리배출":["용기를 물로 헹군다","붙은 라벨을 뗀다","종류별로 나눈다","봉투에 나눠 담는다","정해진 날에 내놓는다"]
+};
+const RECYCLE = {
+  "플라스틱":["생수병","샴푸 통","요구르트 병","세제 통"],
+  "종이":["신문","택배 상자","지난 달력","공책"],
+  "캔":["음료수 캔","참치 캔","통조림 캔","맥주 캔"],
+  "일반 쓰레기":["쓴 휴지","헌 칫솔","깨진 그릇","헌 고무장갑"]
+};
+const WEEK = ["월요일","화요일","수요일","목요일","금요일","토요일","일요일"];
+const choreName = () => story("chore") || "집안일";
+const CHORE_DO = { "빨래":["빨래하기","빨래하는 순서"], "설거지":["설거지하기","설거지하는 순서"],
+  "청소기 돌리기":["청소기 돌리기","청소기 돌리는 순서"], "걸레질":["걸레질하기","걸레질하는 순서"],
+  "화분 물 주기":["화분에 물 주기","화분에 물 주는 순서"], "분리배출":["분리배출하기","분리배출하는 순서"] };
+const choreDo = k => (CHORE_DO[story("chore")] || ["집안일 하나 하기","집안일 하는 순서"])[k];
+const roomName = () => story("room") || "거실";
+PACK.home = {
+  titles:() => ({
+    calc:"살림 비용 계산", trail:"한 주 집안일을 요일 순서대로", sort:"분리배출 나누기",
+    seq:choreDo(1), memo:"예전에 살던 집 이야기", rule:"플라스틱만 누르기",
+    word:"우리 집 낱말 잇기", plan:"오늘 집안일 계획" }),
+  calc:L => {
+    if(L === 1) return [
+      sumProb([["전기 요금",23000],["수도 요금",15000]]),
+      sumProb([["세제",6000],["휴지",8000]]),
+      { q:"고무장갑 한 켤레가 2,000원이에요. 세 켤레를 사면 얼마일까요?", ans:6000, unit:"원", short:"2,000원 × 3", hint:"2,000원을 세 번 더해요." } ];
+    if(L === 2) return [
+      sumProb([["전기 요금",23000],["수도 요금",15000],["가스 요금",31000]]),
+      sumProb([["세제",6000],["휴지",8000],["수세미",2500]]),
+      { q:"5만 원을 내고 관리비 38,000원을 냈어요. 거스름돈은 얼마일까요?", ans:12000, unit:"원", short:"50,000원 − 38,000원", hint:"50,000에서 38,000을 빼요." } ];
+    return [
+      { q:"휴지 한 묶음은 8,000원이에요. 두 묶음 사고 만 원짜리 두 장을 내면 거스름돈은?", ans:4000, unit:"원", short:"20,000원 − 8,000원 × 2", hint:"8,000원 두 묶음은 16,000원이에요." },
+      { q:"관리비가 한 달에 42,000원이에요. 석 달이면 얼마일까요?", ans:126000, unit:"원", short:"42,000원 × 3", hint:"42,000을 세 번 더해요." },
+      { q:"세제 한 통으로 빨래를 20번 해요. 일주일에 4번 빨래하면 몇 주를 쓸 수 있을까요?", ans:5, unit:"주", short:"20 ÷ 4", hint:"4번씩 몇 번 묶으면 20번이 되는지 세어 봐요." } ];
+  },
+  trail:n => {
+    const rows = [["월요일","플라스틱 내놓기"],["화요일","이불 빨래"],["수요일","화분 물 주기"],["목요일","냉장고 정리"],
+                  ["금요일","욕실 청소"],["토요일","대청소"],["일요일","푹 쉬기"]];
+    if(story("chore")) rows[2][1] = choreName();
+    const day = WEEK.indexOf(story("recycleDay"));
+    if(day >= 0) rows[day][1] = "분리배출";
+    let items = rows.map(([d,l]) => ({ key:WEEK.indexOf(d)*2, top:d, label:l }));
+    if(n === 5) items = items.filter((_,k) => [0,1,3,4,6].includes(k));
+    if(n === 9) items = [...items, { key:1, top:"월요일 저녁", label:"설거지" }, { key:9, top:"금요일 저녁", label:"쓰레기 내놓기" }];
+    return { items, instr:"월요일부터 일요일까지 요일 순서대로 누르세요. 같은 요일이면 낮이 저녁보다 먼저예요." };
+  },
+  sort:L => {
+    const all = Object.keys(RECYCLE);
+    const boxes = L === 1 ? all.slice(0,2) : L === 2 ? all.slice(0,3) : all;
+    const per = L === 1 ? 3 : L === 2 ? 3 : 3;
+    return { boxes, cards:boxes.flatMap((b,i) => pick(RECYCLE[b], per).map(x => [x,i])) };
+  },
+  seq:n => levelPick(CHORE_STEPS[story("chore")] || ["할 일을 정한다","필요한 도구를 꺼낸다","천천히 일을 한다","도구를 제자리에 둔다","손을 씻고 쉰다"], n),
+  memo:() => [
+    { q:"처음 사셨던 집은 어떤 집이었나요?", opts:["초가집","기와집","한옥","단독주택","셋방","아파트"] },
+    { q:"그 집에서 가장 좋아한 곳은 어디였나요?", opts:["마당","마루","부엌","다락","장독대","툇마루"] },
+    { q:"그 집 하면 떠오르는 소리나 냄새는?", opts:["밥 짓는 냄새","빨래 비누 냄새","장작 타는 냄새","라디오 소리","빗소리"], input:true }
+  ],
+  rule:() => ({ A:RECYCLE["플라스틱"].slice(), B:[...RECYCLE["종이"], ...RECYCLE["캔"]],
+    ruleA:"플라스틱이 나오면 누르세요.", ruleB:"이번에는 반대로, 플라스틱이 아닌 것이 나오면 누르세요." }),
+  words:() => [roomName(), choreName(), "청소", "빨래", "거실", "이불", "창문", "서랍"],
+  plan:L => {
+    if(L === 1) return { slots:["오전","오후","저녁"], fixed:[], rules:[], multi:true,
+      cards:[ { id:"wash", label:"세탁기 돌리기", allow:[0] }, { id:"fold", label:"마른 빨래 개기", after:["wash"] },
+              { id:"dish", label:"저녁 설거지", allow:[2] }, { id:"pot", label:"화분 물 주기", allow:[0,1] } ] };
+    if(L === 2) return { slots:["오전 9시","오전 11시","오후 2시","오후 4시","오후 7시"], fixed:[], rules:[],
+      cards:[ { id:"wash", label:"세탁기 돌리기", allow:[0] }, { id:"hang", label:"빨래 널기", after:["wash"] },
+              { id:"vac", label:"청소기 돌리기" }, { id:"fold", label:"마른 빨래 개기", after:["hang"], allow:[3] },
+              { id:"dish", label:"저녁 설거지", allow:[4] } ] };
+    const day = story("recycleDay") && story("recycleDay") !== "정해진 날 없음" ? story("recycleDay") : "오늘";
+    return { slots:["오전 9시","오전 11시","오후 1시","오후 3시","오후 5시","오후 7시"],
+      fixed:[{ slot:2, label:"점심 먹고 낮잠" }],
+      rules:["오후 1시에는 점심을 먹고 낮잠을 자요.", "청소기는 이웃을 생각해 오후 5시 전에 돌려요.",
+             `${day}은 분리배출 날이라 저녁 7시에 내놓아요.`],
+      cards:[ { id:"wash", label:"세탁기 돌리기", allow:[0] }, { id:"hang", label:"빨래 널기", after:["wash"] },
+              { id:"fold", label:"마른 빨래 개기", after:["hang"] }, { id:"vac", label:"청소기 돌리기", allow:[0,1,2,3] },
+              { id:"out", label:"분리배출 내놓기", allow:[5] } ] };
+  },
+  commit:() => [
+    `오늘 ${choreDo(0)}`,
+    story("recycleDay") && story("recycleDay") !== "정해진 날 없음" ? `${story("recycleDay")} 분리배출 날을 달력에 표시하기` : "우리 집 분리배출 요일 알아보기",
+    `${roomName()}에서 안 쓰는 물건 하나 정리하기`
+  ]
+};
+
+/* ---------- 동네 ---------- */
+const MOVE_STEPS = {
+  "버스":["정류장까지 걸어가기","버스에 타며 교통카드 찍기","하차 벨 누르고 내리기"],
+  "지하철":["역까지 걸어가기","개찰구에서 교통카드 찍기","내릴 역에서 내려 출구 찾기"],
+  "걸어서":["신발 신고 집을 나서기","횡단보도에서 초록불 기다리기","길을 건너 계속 걷기"],
+  "택시":["택시 부르기","타서 갈 곳 말하기","요금 내고 내리기"],
+  "가족 차":["가족에게 태워 달라고 부탁하기","안전벨트 매기","도착해서 내리기"]
+};
+const SHOPS = {
+  "약국":["감기약","파스","반창고"],
+  "빵집":["식빵","단팥빵","생일 케이크"],
+  "과일 가게":["사과","귤","배"],
+  "우체국":["우표","편지 봉투","소포 상자"]
+};
+const RIDES = ["버스","지하철","택시","자전거","기차","마을버스"];
+const SPOTS = ["약국","빵집","우체국","은행","꽃집","미용실"];
+const townPlace = () => story("tplace") || "자주 가는 곳";
+PACK.town = {
+  titles:() => ({
+    calc:"버스비·장보기 계산", trail:"버스 도착 순서대로", sort:"가게별로 살 것 나누기",
+    seq:`${townPlace()}에 다녀오는 순서`, memo:"예전 동네 이야기", rule:"탈것만 누르기",
+    word:"동네 낱말 잇기", plan:`${townPlace()} 다녀오는 날 계획` }),
+  calc:L => {
+    if(L === 1) return [
+      { q:"버스비가 1,500원이에요. 갈 때와 올 때 두 번 타면 얼마일까요?", ans:3000, unit:"원", short:"1,500원 × 2", hint:"1,500원을 두 번 더해요." },
+      sumProb([["빵",2000],["우유",1500]]),
+      sumProb([["파스",4000],["반창고",2500]]) ];
+    if(L === 2) return [
+      { q:"버스가 10분마다 와요. 9시에 한 대가 왔다면 9시 30분까지 몇 대가 더 올까요?", ans:3, unit:"대", short:"9시 10분·20분·30분", hint:"9시 10분, 20분, 30분을 세어 봐요." },
+      sumProb([["약국",4500],["빵집",3000],["과일 가게",6000]]),
+      { q:"만 원을 내고 6,500원어치 물건을 샀어요. 거스름돈은 얼마일까요?", ans:3500, unit:"원", short:"10,000원 − 6,500원", hint:"10,000에서 6,500을 빼요." } ];
+    return [
+      { q:"버스로 15분, 내려서 걸어서 8분이 걸려요. 모두 몇 분 걸릴까요?", ans:23, unit:"분", short:"15분 + 8분", hint:"15에 8을 더해요." },
+      { q:"가는 데 25분, 볼일 40분, 오는 데 25분이 걸려요. 모두 몇 분일까요?", ans:90, unit:"분", short:"25 + 40 + 25", hint:"25와 25를 먼저 더하면 50이에요." },
+      { q:"만 원으로 버스를 두 번(3,000원) 타고, 남은 돈으로 2,500원짜리 빵을 몇 개 살 수 있을까요?", ans:2, unit:"개", short:"(10,000 − 3,000) ÷ 2,500", hint:"남은 돈은 7,000원이에요. 2,500원씩 몇 번 뺄 수 있는지 세어 봐요." } ];
+  },
+  trail:n => {
+    const buses = ["마을버스 2번","마을버스 5번","12번 버스","27번 버스","103번 버스","간선 341번","지선 6611번","순환 01번","급행 9번"];
+    const mins = shuffle([1,2,3,4,5,6,7,8,9,10,11,12,14,15,17,18,20,22,25]).slice(0,n);
+    return { items:mins.map((m,k) => ({ key:m, top:`${m}분 뒤`, label:buses[k % buses.length] })),
+      instr:"먼저 오는 버스부터 차례로 누르세요." };
+  },
+  sort:L => {
+    const all = Object.keys(SHOPS);
+    const boxes = L === 1 ? all.slice(0,2) : L === 2 ? all.slice(0,3) : all;
+    return { boxes, cards:boxes.flatMap((b,i) => SHOPS[b].map(x => [x,i])) };
+  },
+  seq:n => {
+    const m = MOVE_STEPS[story("move")] || MOVE_STEPS["걸어서"];
+    return levelPick(["지갑과 휴대폰 챙기기", ...m, `${townPlace()}에서 볼일 보기`], n);
+  },
+  memo:() => [
+    { q:"어릴 적 살던 동네에는 무엇이 있었나요?", opts:["우물","구멍가게","개울","장터","큰 나무"] },
+    { q:"동네 사람들이 모이던 곳은 어디였나요?", opts:["정자나무 아래","장터","우물가","마을 회관","골목 평상"] },
+    { q:"그 동네에 다시 간다면 무엇을 하고 싶으세요?", opts:["옛날 길 걸어 보기","장터 구경하기","친구 소식 묻기","사진 찍기"], input:true }
+  ],
+  rule:() => ({ A:RIDES.slice(), B:SPOTS.slice(),
+    ruleA:"탈것이 나오면 누르세요.", ruleB:"이번에는 반대로, 가게나 기관이 나오면 누르세요." }),
+  words:() => [townPlace(), story("walk") || "골목", "동네", "버스", "가게", "시장", "정류장"],
+  plan:L => {
+    const p = townPlace();
+    if(L === 1) return { slots:["오전","오후","저녁"], fixed:[], rules:[], multi:true,
+      cards:[ { id:"chk", label:"버스 시간 확인하기", before:["go"] }, { id:"go", label:`${p} 가기`, allow:[0,1] },
+              { id:"rest", label:"집에 와서 쉬기", after:["go"] }, { id:"walk", label:"저녁 산책", allow:[2] } ] };
+    if(L === 2) return { slots:["오전 9시","오전 10시","오전 11시","낮 12시","오후 2시"], fixed:[], rules:[],
+      cards:[ { id:"chk", label:"버스 시간 확인하기", before:["go"] }, { id:"go", label:`${p} 가기`, before:["do"] },
+              { id:"do", label:`${p}에서 볼일 보기`, before:["back"] }, { id:"lunch", label:"점심 먹기", allow:[3] },
+              { id:"back", label:"집에 돌아오기" } ] };
+    return { slots:["오전 9시","오전 10시","오전 11시","낮 12시","오후 2시","오후 4시"],
+      fixed:[{ slot:3, label:"이웃과 점심 약속" }],
+      rules:["낮 12시에는 이웃과 점심 약속이 있어요.", `${josa(p,"은는")} 오후 3시에 문을 닫아요.`, "은행은 볼일을 본 다음에 들러요."],
+      cards:[ { id:"chk", label:"버스 시간 확인하기", before:["go"] }, { id:"go", label:`${p} 가기`, before:["do"] },
+              { id:"do", label:`${p}에서 볼일 보기`, allow:[0,1,2,4], before:["back"] },
+              { id:"bank", label:"은행 들르기", after:["do"], before:["back"] }, { id:"back", label:"집에 돌아오기" } ] };
+  },
+  commit:() => [
+    `${townPlace()}에 갈 때 ${story("move") === "걸어서" || !story("move") ? "걷는 길" : "교통편"}을 미리 확인하기`,
+    `${story("walk") || "동네 길"}을 10분 걸어 보기`,
+    "동네에서 처음 보는 가게 하나 찾아보기"
+  ]
+};
+
+/* ---------- 건강 ---------- */
+const GOOD_HABIT = ["물 마시기","걷기","채소 먹기","일찍 자기","손 씻기","스트레칭"];
+const CARE_HABIT = ["짜게 먹기","오래 앉아 있기","끼니 거르기","약 건너뛰기","밤새 잠 안 자기","찬 음식 많이 먹기"];
+const HEALTH_KIT = {
+  "병원 갈 때":["신분증","약 봉투","복용 수첩"],
+  "운동할 때":["운동화","물병","수건"],
+  "잠들기 전":["잠옷 갈아입기","불 끄기","알람 맞추기"],
+  "갑자기 아플 때":["119 전화","보호자 연락","비상약 꺼내기"]
+};
+const medTimes = () => ({ "하루 한 번":1, "하루 두 번":2, "하루 세 번":3 }[story("med")] || 0);
+const exName = () => (!story("exercise") || story("exercise") === "안 해요") ? "가벼운 걷기" : story("exercise");
+const clinicName = () => story("clinic") || "병원";
+const exAct = () => ({ "걷기":"걷기", "체조":"체조하기", "스트레칭":"스트레칭하기", "자전거":"자전거 타기", "수영":"수영하기" }[story("exercise")] || "가벼운 걷기");
+PACK.health = {
+  titles:() => ({
+    calc:"약 개수 계산", trail:"하루 건강 습관을 시간 순서대로", sort:"상황별로 챙길 것",
+    seq:`${clinicName()} 진료 받는 순서`, memo:"건강했던 날의 기억", rule:"몸에 좋은 일만 누르기",
+    word:"건강 낱말 잇기", plan:"하루 약·운동 시간표" }),
+  calc:L => {
+    const t = medTimes() || 2, P = todayParts(), eg = medTimes() ? "" : "예를 들어 ";
+    const ask = list => list.map(x => ({ ...x, q:eg + x.q }));
+    if(L === 1) return ask([
+      { q:`약을 하루 ${t}번, 한 번에 1알씩 먹어요. 사흘이면 몇 알일까요?`, ans:t*3, unit:"알", short:`${t} × 3`, hint:`${t}알을 세 번 더해요.` },
+      { q:"아침 약 2알, 저녁 약 1알을 먹어요. 하루에 몇 알일까요?", ans:3, unit:"알", short:"2 + 1", hint:"2에 1을 더해요." },
+      { q:`약이 10알 있어요. 오늘 ${t}알을 먹으면 몇 알이 남을까요?`, ans:10-t, unit:"알", short:`10 − ${t}`, hint:`10에서 ${t}을(를) 빼요.` } ]);
+    if(L === 2) return ask([
+      { q:`하루 ${t}번 약을 먹으면 일주일(7일) 동안 모두 몇 번 먹을까요?`, ans:t*7, unit:"번", short:`${t} × 7`, hint:`${t}을(를) 일곱 번 더해요.` },
+      { q:`약 봉지가 30개 있어요. 하루 ${t}개씩 먹으면 며칠 먹을 수 있을까요?`, ans:Math.floor(30/t), unit:"일", short:`30 ÷ ${t}`, hint:`${t}개씩 묶어 세어 봐요.` },
+      { q:`${josa(exName(),"을를")} 하루 20분씩 5일 하면 모두 몇 분일까요?`, ans:100, unit:"분", short:"20 × 5", hint:"20을 다섯 번 더해요." } ]);
+    return ask([
+      { q:`다음 진료는 오늘(${P.d}일)부터 14일 뒤예요. 며칠일까요?`, ans:P.shift(14).getDate(), unit:"일", short:"14일 뒤는 며칠", hint:`이번 달은 ${dim(P.y,P.m)}일까지 있어요.` },
+      { q:`하루 ${t}번, 한 번에 2알씩 28일 동안 먹으면 모두 몇 알일까요?`, ans:t*2*28, unit:"알", short:`${t} × 2 × 28`, hint:`하루에 ${t*2}알이에요. 여기에 28을 곱해요.` },
+      { q:"하루 1알 먹는 약 28알 중에서 9알을 먹었어요. 며칠분이 남았을까요?", ans:19, unit:"일", short:"28 − 9", hint:"28에서 9를 빼요." } ]);
+  },
+  trail:n => {
+    const t = medTimes();
+    const rows = [[7,"일어나서 물 한 컵"],[8, t ? "아침 먹고 약 먹기" : "아침 먹기"],[10,exName()],[12,"점심 먹기"],
+                  [13, t >= 3 ? "점심 약 먹기" : "손 씻고 쉬기"],[15, exName() === "스트레칭" ? "가벼운 체조" : "스트레칭"],[18, t >= 2 ? "저녁 먹고 약 먹기" : "저녁 먹기"],
+                  [20,"혈압 재기"],[22,"잠자리에 들기"]];
+    return { items:timeItems(rows, n), instr:"이른 시간부터 늦은 시간까지 차례로 누르세요." };
+  },
+  sort:L => {
+    const all = Object.keys(HEALTH_KIT);
+    const boxes = L === 1 ? all.slice(0,2) : L === 2 ? all.slice(0,3) : all;
+    return { boxes, cards:boxes.flatMap((b,i) => HEALTH_KIT[b].map(x => [x,i])) };
+  },
+  seq:n => levelPick(["접수대에서 접수하기","대기실에서 차례 기다리기","진료실에서 아픈 곳 말하기","수납하고 처방전 받기","약국에서 약 받기"], n),
+  memo:() => [
+    { q:"가장 건강하다고 느꼈던 때는 언제인가요?", opts:["젊을 때","한창 일할 때","결혼한 뒤","요즘","잘 모르겠어요"] },
+    { q:"그때 즐겨 하던 일은 무엇이었나요?", opts:["등산","농사일","춤","운동회","먼 길 걷기"] },
+    { q:"요즘 몸이 가장 좋아하는 일은?", opts:["따뜻한 차","낮잠","산책","목욕","맛있는 밥"], input:true }
+  ],
+  rule:() => ({ A:GOOD_HABIT.slice(), B:CARE_HABIT.slice(),
+    ruleA:"몸에 좋은 일이 나오면 누르세요.", ruleB:"이번에는 반대로, 조심해야 할 일이 나오면 누르세요." }),
+  words:() => [exName(), clinicName(), "건강", "약국", "운동", "병원", "보건소"],
+  plan:L => {
+    const t = medTimes(), ex = exName();
+    const meds = (b,l,d) => [
+      ...(t >= 1 ? [{ id:"mb", label:"아침 약 먹기", with:b, stack:true }] : []),
+      ...(t >= 3 ? [{ id:"ml", label:"점심 약 먹기", with:l, stack:true }] : []),
+      ...(t >= 2 ? [{ id:"md", label:"저녁 약 먹기", with:d, stack:true }] : [])
+    ];
+    if(L === 1) return { slots:["아침","점심","저녁"], fixed:[], rules:[], multi:true,
+      cards:[ { id:"b", label:"아침 먹기", allow:[0] }, { id:"l", label:"점심 먹기", allow:[1] }, { id:"d", label:"저녁 먹기", allow:[2] },
+              ...meds("b","l","d"), { id:"ex", label:exAct(), allow:[0,1] } ] };
+    if(L === 2) return { slots:["오전 7시","오전 8시","오전 10시","낮 12시","오후 6시","오후 9시"], fixed:[], rules:[],
+      cards:[ { id:"bp", label:"혈압 재기", allow:[0] }, { id:"b", label:"아침 먹기", allow:[1] }, { id:"ex", label:exAct(), allow:[0,2] },
+              { id:"l", label:"점심 먹기", allow:[3] }, { id:"d", label:"저녁 먹기", allow:[4] }, { id:"s", label:"잠자리에 들기", allow:[5] },
+              ...meds("b","l","d") ] };
+    return { slots:["오전 7시","오전 8시","오전 10시","낮 12시","오후 3시","오후 6시","오후 9시"],
+      fixed:[{ slot:2, label:`${clinicName()} 진료` }],
+      rules:[`오전 10시에는 ${clinicName()} 진료가 있어요.`, "혈압은 일어나자마자 재요.", `${josa(ex,"은는")} 점심을 먹고 나서 해요.`],
+      cards:[ { id:"bp", label:"혈압 재기", allow:[0] }, { id:"b", label:"아침 먹기", allow:[1] }, { id:"l", label:"점심 먹기", allow:[3] },
+              { id:"ex", label:exAct(), after:["l"] }, { id:"d", label:"저녁 먹기", allow:[5] }, { id:"s", label:"잠자리에 들기", allow:[6] },
+              ...meds("b","l","d") ] };
+  },
+  commit:() => [
+    medTimes() ? "약 먹는 시간에 알람 맞춰 두기" : "오늘 물 여섯 잔 마셔 보기",
+    `${exAct()} 10분 해 보기`,
+    "다음 병원 날짜를 달력에 적기"
+  ]
+};
+
+/* ---------- 사람 — 이름은 받지 않고 관계만 쓴다 ---------- */
+const CALL_STEPS = {
+  "전화":["휴대폰 화면 켜기","연락처 열기","연락할 사람 찾기","통화 버튼 누르기","인사하고 안부 묻기"],
+  "영상통화":["휴대폰 화면 켜기","연락처 열기","연락할 사람 찾기","영상통화 버튼 누르기","얼굴이 보이게 휴대폰 들기"],
+  "문자":["휴대폰 화면 켜기","문자 앱 열기","받는 사람 고르기","하고 싶은 말 쓰기","보내기 누르기"],
+  "직접 만나기":["만날 날과 장소 정하기","전날 연락해 확인하기","옷 챙겨 입고 나서기","약속 장소에 도착하기","반갑게 인사하기"],
+  "편지":["편지지와 펜 준비하기","받는 사람 이름 쓰기","하고 싶은 말 쓰기","봉투에 넣어 붙이기","우체통에 넣기"]
+};
+const RELATION = {
+  "가족":["아들","딸","며느리","사위","손주","형제"],
+  "이웃·친구":["옆집 사람","동창","경로당 친구","동네 친구","교회·절 친구","산책 친구"],
+  "도와주는 사람":["의사","사회복지사","요양보호사","약사"]
+};
+const whoName = () => story("who") || "가까운 분";
+const togetherName = () => story("together") || "차 마시기";
+PACK.people = {
+  titles:() => ({
+    calc:"선물·나이 계산", trail:"가까운 약속부터 차례로", sort:"관계 나누기",
+    seq:({ "직접 만나기":"직접 만나러 가는 순서", "편지":"편지 보내는 순서" }[story("how")] || `${story("how") || "전화"}로 연락하는 순서`), memo:"기억에 남는 모임 이야기", rule:"가족만 누르기",
+    word:"사람 낱말 잇기", plan:`${josa(whoName(),"과와")} 만나는 날 계획` }),
+  calc:L => {
+    const P = todayParts();
+    if(L === 1) return [
+      sumProb([["선물",12000],["카드",2000]]),
+      sumProb([["과일 바구니",25000],["꽃",10000]]),
+      { q:`올해는 ${P.y}년이에요. 내년은 몇 년일까요?`, ans:P.y+1, unit:"년", short:`${P.y} + 1`, hint:`${P.y}에 1을 더해요.` } ];
+    if(L === 2) return [
+      { q:"이번 달에 생일인 손주가 3명이에요. 한 명에 2만 원씩 용돈을 주면 모두 얼마일까요?", ans:60000, unit:"원", short:"20,000원 × 3", hint:"2만 원을 세 번 더해요." },
+      { q:"2015년에 태어난 손주는 올해 몇 살이 될까요? (올해 연도 − 태어난 해)", ans:P.y-2015, unit:"살", short:`${P.y} − 2015`, hint:`${P.y}에서 2015를 빼요.` },
+      sumProb([["떡",15000],["과일",20000],["음료수",6000]]) ];
+    return [
+      { q:"1975년에 결혼했다면 올해로 몇 년이 될까요?", ans:P.y-1975, unit:"년", short:`${P.y} − 1975`, hint:`${P.y}에서 1975를 빼요.` },
+      { q:`다음 모임은 오늘(${P.d}일)부터 10일 뒤예요. 며칠일까요?`, ans:P.shift(10).getDate(), unit:"일", short:"10일 뒤는 며칠", hint:`이번 달은 ${dim(P.y,P.m)}일까지 있어요.` },
+      { q:"선물값 48,000원을 형제 넷이 똑같이 나누면 한 사람이 얼마씩일까요?", ans:12000, unit:"원", short:"48,000원 ÷ 4", hint:"48,000을 넷으로 나눠요. 4 × 12 = 48이에요." } ];
+  },
+  trail:n => {
+    const w = whoName();
+    const rows = [[1,"영상통화"],[2,"이웃과 차 마시기"],[5,`${w} 생일`],[7,"친구 모임"],[10,"형제에게 전화"],
+                  [12,"병문안"],[14,"가족 모임"],[20,"동창 모임"],[25,"경로당 잔치"]];
+    return { items:dayItems(rows, n), instr:"날짜가 가까운 약속부터 차례로 누르세요." };
+  },
+  sort:L => {
+    const all = Object.keys(RELATION);
+    const boxes = L === 3 ? all : all.slice(0,2);
+    const per = L === 1 ? 3 : L === 2 ? 4 : 3;
+    return { boxes, cards:boxes.flatMap((b,i) => pick(RELATION[b], per).map(x => [x,i])) };
+  },
+  // 연락은 '버튼 누르기(보내기)'가 빠지면 순서가 성립하지 않는다
+  seq:n => levelPick(CALL_STEPS[story("how")] || CALL_STEPS["전화"], n, { 3:[0,3,4], 4:[0,2,3,4] }),
+  memo:() => [
+    { q:"가장 기억에 남는 잔치나 모임은 무엇인가요?", opts:["결혼식","환갑잔치","돌잔치","명절","동창회"] },
+    { q:"그날 무엇을 먹었나요?", opts:["잔치국수","떡","고기","전","과일"] },
+    { q:"그날을 한마디로 하면?", opts:["시끌벅적했다","따뜻했다","즐거웠다","정신없었다","고마웠다"], input:true }
+  ],
+  rule:() => ({ A:RELATION["가족"].slice(), B:RELATION["이웃·친구"].slice(),
+    ruleA:"가족이 나오면 누르세요.", ruleB:"이번에는 반대로, 이웃이나 친구가 나오면 누르세요." }),
+  words:() => [whoName(), togetherName(), "가족", "친구", "이웃", "편지", "전화"],
+  plan:L => {
+    const w = whoName(), tg = togetherName();
+    if(L === 1) return { slots:["오전","오후","저녁"], fixed:[], rules:[], multi:true,
+      cards:[ { id:"call", label:`${w}에게 연락하기`, before:["meet"] }, { id:"meet", label:`${w} 만나기`, allow:[1] },
+              { id:"tg", label:`함께 ${tg}`, with:"meet" }, { id:"bye", label:"잘 들어갔는지 전화하기", after:["meet"] } ] };
+    if(L === 2) return { slots:["오전 9시","오전 11시","낮 12시","오후 2시","오후 5시"], fixed:[], rules:[],
+      cards:[ { id:"call", label:`${w}에게 연락하기`, before:["prep"] }, { id:"prep", label:"옷과 선물 챙기기", before:["meet"] },
+              { id:"meet", label:`${w} 만나기`, allow:[2] }, { id:"tg", label:`함께 ${tg}`, after:["meet"] },
+              { id:"bye", label:"잘 들어갔는지 전화하기", after:["tg"] } ] };
+    return { slots:["오전 9시","오전 10시","오전 11시","낮 12시","오후 2시","오후 5시"],
+      fixed:[{ slot:1, label:"복지관 체조 수업" }],
+      rules:["오전 10시에는 복지관 체조 수업이 있어요.", `${josa(w,"은는")} 낮 12시에만 시간이 돼요.`, "선물은 만나기 전에 사 둬요."],
+      cards:[ { id:"call", label:`${w}에게 연락하기`, before:["gift"] }, { id:"gift", label:"선물 사기", before:["meet"] },
+              { id:"meet", label:`${w} 만나기`, allow:[3] }, { id:"tg", label:`함께 ${tg}`, after:["meet"] },
+              { id:"bye", label:"잘 들어갔는지 전화하기", after:["tg"] } ] };
+  },
+  commit:() => [
+    `${whoName()}에게 먼저 안부 연락하기`,
+    `${josa(whoName(),"과와")} ${togetherName()} 약속 잡기`,
+    "고마운 사람 한 명 떠올리고 인사 전하기"
+  ]
+};
+
+/* ==========================================================
    5. 나누기 → 생활 연결
    ========================================================== */
 function screenShare(){
@@ -1413,22 +1851,7 @@ function screenShare(){
     <div class="row end"><button class="btn main" data-act="next" data-focus>오늘의 약속 고르기</button></div>
   `, 4);
 }
-function commitCards(){
-  if(S.theme === "kitchen"){
-    const d = dishName(), w = story("withwho"), sh = story("shop");
-    return [
-      `오늘 저녁, ${d} 재료가 집에 있는지 확인하기`,
-      sh && sh !== "가족이 대신" ? `${sh}에서 살 것 3가지를 말해 보기` : "장 볼 것 3가지를 말해 보기",
-      w && w !== "혼자" ? `${w}에게 ${d} 이야기 들려주기` : `${d} 만드는 순서를 소리 내어 말해 보기`
-    ];
-  }
-  const kit = { "비":"우산", "눈":"장갑", "바람":"목도리", "맑음":"챙 모자", "흐림":"우산" }[S.weather] || "외출 준비물";
-  return [
-    `오늘 날씨에 맞게 ${kit} 챙기기`,
-    `${placeName()}에 가기 전, 순서대로 준비해 보기`,
-    "잠들기 전 오늘 한 일 하나 떠올리기"
-  ];
-}
+function commitCards(){ return PACK[S.theme].commit(); }
 function screenCommit(){
   const cards = commitCards();
   acts = {
