@@ -162,6 +162,24 @@ input[type=text]{
 .slot.filled{ border-style:solid; background:var(--paper); }
 .slot.locked{ border-color:var(--ok); background:var(--ok-soft); cursor:default; }
 .slot.locked .n{ background:var(--ok); color:#fff; }
+.slot.ready{ border-color:var(--accent); }
+.slotin{ display:flex; flex-wrap:wrap; gap:8px; }
+.slotin .chip{ min-height:52px; font-size:22px; padding:6px 14px; }
+.chip.cue{ border-color:var(--focus); box-shadow:0 0 0 6px rgba(242,184,75,.45); }
+.chainline{ font-size:24px; color:var(--ink2); margin:8px 0; }
+.chainline b{ color:var(--accent); }
+
+/* 규칙 반응 */
+.rwrap{ text-align:center; margin-top:12px; }
+.rcard{
+  margin:12px auto; width:min(560px,100%); min-height:180px; border-radius:24px; border:3px solid var(--line);
+  background:var(--paper); display:flex; align-items:center; justify-content:center; font-size:40px; font-weight:700; padding:16px;
+}
+.rcard.notice{ font-size:28px; color:var(--ink2); }
+.rcard.gap{ background:#F0ECE3; }
+.rcard.ok{ border-color:var(--ok); background:var(--ok-soft); color:var(--ok); }
+.rcard.hold{ border-color:var(--warm); background:var(--warm-soft); }
+.rgo{ min-width:min(420px,100%); min-height:96px; font-size:32px; }
 
 /* 오늘 만든 것 / 이야기 카드 */
 .made{
@@ -314,9 +332,12 @@ const PATTERNS = {
   trail:{ name:"차례 찾기", icon:"👆", fn:"주의 · 전환", icf:"b140" },
   sort:{ name:"나눠 담기", icon:"🧺", fn:"범주화 · 판단", icf:"b164" },
   seq:{ name:"순서 세우기", icon:"🪜", fn:"실행기능 · 계획", icf:"b164" },
-  memo:{ name:"기억 꺼내기", icon:"💭", fn:"일화 기억 · 지남력", icf:"b144" }
+  memo:{ name:"기억 꺼내기", icon:"💭", fn:"일화 기억 · 지남력", icf:"b144" },
+  rule:{ name:"규칙 반응", icon:"🚦", fn:"억제 · 주의 유지", icf:"b140" },
+  word:{ name:"단어 잇기", icon:"🔤", fn:"언어 생성 · 인출", icf:"b167" },
+  plan:{ name:"계획 짜기", icon:"🗓️", fn:"시간 관리 · 계획", icf:"b164" }
 };
-const PATTERN_ORDER = ["seq","calc","sort","trail","memo"];
+const PATTERN_ORDER = ["seq","calc","sort","plan","trail","rule","word","memo"];
 
 const STEP_NAMES = ["체크인","주제","내 이야기","활동","나누기·약속"];
 const LEVEL_NAMES = ["","쉬움","보통","어려움"];
@@ -359,6 +380,7 @@ function josa(word, pair){
 }
 
 function render(html, step){
+  if(cleanup){ const c = cleanup; cleanup = null; c(); }
   if(step!=null) S.step = step;
   $("#steps").innerHTML = STEP_NAMES.map((n,i) =>
     `<span class="${i===S.step?"on":i<S.step?"done":""}">${n}</span>`).join("");
@@ -372,6 +394,9 @@ app.addEventListener("click", e => {
   if(!b || b.disabled || !app.contains(b)) return;
   const f = acts[b.dataset.act];
   if(f) f(b.dataset.v, b);
+});
+app.addEventListener("keydown", e => {
+  if((e.key === "Enter" || e.key === " ") && e.target.matches('[role="button"][data-act]')){ e.preventDefault(); e.target.click(); }
 });
 function setNote(text, ok){
   const n = $("#note"); if(!n) return;
@@ -549,7 +574,10 @@ function actTitle(p){
     trail: k ? "값이 싼 것부터 차례로" : "하루 일과를 시간 순서대로",
     sort: k ? `${dishName()} 재료 고르기` : "날씨에 맞는 준비물",
     seq: k ? `${dishName()} 만드는 순서` : `${placeName()}에 가는 순서`,
-    memo: k ? `${dishName()}에 얽힌 이야기` : "어제와 계절 이야기"
+    memo: k ? `${dishName()}에 얽힌 이야기` : "어제와 계절 이야기",
+    rule: k ? `${dishName()} 재료만 누르기` : "아침에 하는 일만 누르기",
+    word: k ? "부엌 낱말 잇기" : "오늘 낱말 잇기",
+    plan: k ? `오늘 저녁 ${dishName()} 준비 계획` : "내일 하루 계획 짜기"
   }[p];
 }
 
@@ -984,6 +1012,384 @@ RUN.memo = rec => {
 };
 
 /* ==========================================================
+   P1 패턴 — 규칙 반응 · 단어 잇기 · 계획 짜기
+   ========================================================== */
+const MORNING_DO = ["일어나기","세수하기","아침 먹기","이불 개기","아침 약 먹기","창문 열기","아침 체조"];
+const EVENING_DO = ["저녁 먹기","잠옷 입기","이 닦고 자기","불 끄기","문단속하기","내일 입을 옷 챙기기","저녁 뉴스 보기"];
+
+/* 끝말잇기·첫소리용 낱말 — 일상에서 자주 쓰는 명사 */
+const WORDS = [
+  "사과","과자","자두","두부","부채","채소","소금","금붕어","어머니","기차","차표","표지판","판소리",
+  "가방","방석","우산","산책","책상","상추","추석","석양","양말","말벌","나무","무지개","개나리","리본",
+  "카레","카메라","라면","면도기","기러기","기와","감자","자석","수박","박수","수건","건강","강아지",
+  "지갑","시계","계란","계단","단풍","풍선","선물","물병","병원","원숭이","이불","불고기","기도",
+  "도시락","도장","장갑","장화","화분","분수","수저","호박","박물관","관광","주전자","자동차","차례",
+  "사진","진달래","고구마","마당","당근","바지","지하철","노래","다리미","미역","버스","시장","장미",
+  "미나리","리모컨","공원","원두막","오이","이웃","대파","파도","도토리","김치","치약","약국","국수",
+  "수영","영화","화장실","실내화","냉장고","고등어","어부","부엌","만두","두꺼비","비누","누룽지",
+  "모자","자전거","거울","울타리","된장","장독","독서","서랍","랍스터","계절","절편","편지","지도"
+];
+const CHO = ["ㄱ","ㄲ","ㄴ","ㄷ","ㄸ","ㄹ","ㅁ","ㅂ","ㅃ","ㅅ","ㅆ","ㅇ","ㅈ","ㅉ","ㅊ","ㅋ","ㅌ","ㅍ","ㅎ"];
+const isHangul = w => /^[가-힣]+$/.test(w);
+const choOf = ch => { const c = ch.charCodeAt(0) - 0xAC00; return c >= 0 && c < 11172 ? CHO[Math.floor(c/588)] : ""; };
+
+/* 화면을 떠날 때 정리할 타이머 */
+let cleanup = null;
+function setCleanup(f){ cleanup = f; }
+
+/* ---------- 규칙 반응 ---------- */
+RUN.rule = rec => {
+  const kitchen = rec.theme === "kitchen";
+  const A = kitchen ? dishData().ing.slice() : MORNING_DO.slice();
+  const B = kitchen ? NOT_IN_DISH.filter(x => !dishData().ing.includes(x)) : EVENING_DO.slice();
+  if(!kitchen && story("morning") && !A.includes(story("morning"))) A.push(story("morning"));
+  const ruleA = kitchen ? `${dishName()}에 들어가는 재료가 나오면 누르세요.` : "아침에 하는 일이 나오면 누르세요.";
+  const ruleB = kitchen ? "이번에는 반대로, 안 들어가는 것이 나오면 누르세요." : "이번에는 반대로, 저녁에 하는 일이 나오면 누르세요.";
+  const n = [0,10,14,16][rec.level], ms = [0,4000,3000,3000][rec.level];
+  const switchAt = rec.level === 3 ? 8 : -1;
+  // 같은 종류가 세 번 넘게 이어지지 않게 섞는다
+  let items = [];
+  for(let k=0;k<n;k++) items.push(k % 2 ? { label:B[k % B.length], a:false } : { label:A[k % A.length], a:true });
+  for(let t=0;t<30;t++){
+    items = shuffle(items);
+    if(!items.some((_,k) => k >= 3 && items.slice(k-3,k+1).every(x => x.a === items[k].a))) break;
+  }
+  let i = 0, tapped = false, timer = null, switched = false, live = false;
+  let hits = 0, cr = 0, miss = 0, fa = 0;
+  const isGo = it => (switched ? !it.a : it.a);
+  const stop = () => { clearTimeout(timer); timer = null; live = false; };
+  const card = () => $("#rcard");
+  const showTrial = () => {
+    if(i === switchAt && !switched){
+      switched = true; stop();
+      card().className = "rcard notice"; card().textContent = "규칙이 바뀌어요!";
+      setNote(ruleB);
+      $("#rgo").hidden = true; $("#rstart").hidden = false; $("#rstart").textContent = "알겠어요, 계속";
+      $("#rule").textContent = ruleB;
+      return;
+    }
+    if(i >= n) return done();
+    tapped = false; live = true;
+    card().className = "rcard"; card().textContent = items[i].label;
+    $("#rprog").textContent = `${i+1} / ${n}`;
+    timer = setTimeout(endTrial, ms);
+  };
+  const endTrial = () => {
+    live = false;
+    const it = items[i];
+    if(!tapped){ if(isGo(it)){ miss++; rec.errors++; } else cr++; }
+    card().className = "rcard gap"; card().textContent = "";
+    i++;
+    timer = setTimeout(showTrial, 700);
+  };
+  const done = () => {
+    stop();
+    rec.total = n; rec.correct = hits + cr;
+    rec.made = { title:rec.title, lines:[
+      `규칙: ${ruleA}${switchAt > 0 ? " → " + ruleB : ""}`,
+      `맞게 누른 것 ${hits}개 · 잘 참은 것 ${cr}개`,
+      `놓친 것 ${miss}개 · 참지 못한 것 ${fa}개`
+    ] };
+    finishActivity(rec);
+  };
+  acts = Object.assign(baseActs(rec, () => {
+    const ex = switched ? (kitchen ? B : EVENING_DO) : A;
+    setNote(`${switched ? ruleB : ruleA} 예: ${ex.slice(0,3).join(", ")}`);
+  }), {
+    start(){ $("#rstart").hidden = true; $("#rgo").hidden = false; $("#rpause").hidden = false; setNote(""); showTrial(); },
+    go(){
+      if(!live || tapped) return;
+      tapped = true;
+      if(isGo(items[i])){ hits++; card().className = "rcard ok"; card().textContent = "✓ " + items[i].label; }
+      else{ fa++; rec.errors++; card().className = "rcard hold"; setNote("이건 참는 카드예요. 괜찮아요, 다음 카드를 봐요."); }
+    },
+    pause(){
+      if(timer){ stop(); $("#rpause").textContent = "다시 시작"; card().className = "rcard notice"; card().textContent = "잠깐 쉬어요"; }
+      else{ $("#rpause").textContent = "잠깐 멈춤"; showTrial(); }
+    }
+  });
+  render(actShell(rec, `카드가 ${ms/1000}초마다 바뀝니다. 규칙에 맞을 때만 큰 버튼을 누르고, 아니면 그냥 기다리세요.`, `
+    <div class="note ok" id="rule" style="font-size:26px;font-weight:700">${esc(ruleA)}</div>
+    <div class="rwrap">
+      <p class="lv" id="rprog">0 / ${n}</p>
+      <div class="rcard notice" id="rcard">준비되면 시작을 누르세요</div>
+      <div class="row" style="justify-content:center">
+        <button class="btn main" id="rstart" data-act="start" data-focus>시작</button>
+        <button class="btn main rgo" id="rgo" data-act="go" hidden>눌러요!</button>
+        <button class="btn" id="rpause" data-act="pause" hidden>잠깐 멈춤</button>
+      </div>
+    </div>`), 3);
+  setCleanup(stop);
+};
+
+/* ---------- 단어 잇기 ---------- */
+function themeWords(rec){
+  return rec.theme === "kitchen"
+    ? [dishName(), ...dishData().ing, "부엌", "시장"]
+    : [placeName(), story("meal") || "국수", "아침", "날씨", "오늘", "산책"];
+}
+function chainFrom(start, steps){
+  // 깊이 우선으로 끝말이 이어지는 낱말 줄을 찾는다
+  const go = (word, used) => {
+    if(used.length === steps + 1) return used;
+    const last = word[word.length-1];
+    for(const w of shuffle(WORDS.filter(x => x[0] === last && !used.includes(x)))){
+      const r = go(w, [...used, w]); if(r) return r;
+    }
+    return null;
+  };
+  return go(start, [start]);
+}
+RUN.word = rec => {
+  const pool = themeWords(rec).filter(w => isHangul(w));
+  if(rec.level === 1) return wordCho(rec, pool);
+  if(rec.level === 2) return wordChain(rec, pool);
+  return wordFree(rec, pool);
+};
+function wordCho(rec, pool){
+  const rounds = [];
+  for(const src of pool){
+    const c = choOf(src[0]);
+    if(rounds.some(r => r.c === c)) continue;
+    const right = shuffle(WORDS.filter(w => choOf(w[0]) === c && w !== src))[0];
+    if(!right) continue;
+    const wrong = pick(WORDS.filter(w => choOf(w[0]) !== c), 3);
+    rounds.push({ src, c, right, opts:shuffle([right, ...wrong]) });
+    if(rounds.length === 5) break;
+  }
+  if(!rounds.length) return wordChain(rec, pool);
+  let i = 0, tries = 0;
+  const found = [];
+  const draw = () => {
+    const r = rounds[i];
+    acts = Object.assign(baseActs(rec, () => setNote(`‘${r.src}’을(를) 천천히 소리 내 읽어 보세요. 첫소리는 ‘${r.c}’예요.`)), {
+      opt(v,b){
+        if(v === r.right){
+          if(tries === 0) rec.correct++;
+          rec.total++; found.push(`${r.c} — ${r.right}`); b.classList.add("sel");
+          setNote("맞아요.", true);
+          setTimeout(() => { i++; tries = 0; if(i < rounds.length) draw(); else { rec.made = { title:rec.title, lines:found }; finishActivity(rec); } }, 700);
+        }else{ tries++; rec.errors++; setNote(`‘${v}’은(는) ‘${choOf(v[0])}’(으)로 시작해요. 다시 골라 볼까요?`); }
+      }
+    });
+    render(actShell(rec, `문제 ${i+1} / ${rounds.length}`, `
+      <div class="q" style="font-size:30px">‘${esc(r.src)}’의 첫소리 <b style="color:var(--accent)">${r.c}</b>(으)로 시작하는 낱말은?</div>
+      <div class="chips">${r.opts.map(o => `<button class="chip" data-act="opt" data-v="${esc(o)}">${esc(o)}</button>`).join("")}</div>`), 3);
+  };
+  draw();
+}
+function wordChain(rec, pool){
+  const steps = 4;
+  let chain = null;
+  for(const s of [...pool, ...shuffle(WORDS)]){ chain = chainFrom(s, steps); if(chain) break; }
+  if(!chain) return wordFree(rec, pool);
+  let i = 1, tries = 0;
+  const draw = () => {
+    const prev = chain[i-1], right = chain[i], last = prev[prev.length-1];
+    const wrong = pick(WORDS.filter(w => w[0] !== last && !chain.includes(w)), 2);
+    const opts = shuffle([right, ...wrong]);
+    acts = Object.assign(baseActs(rec, () => {
+      const el = [...app.querySelectorAll(".chip")].find(c => c.dataset.v === right);
+      if(el) el.classList.add("cue");
+      setNote(`‘${last}’ 자로 시작하는 낱말을 찾아요.`);
+    }), {
+      opt(v,b){
+        if(v === right){
+          if(tries === 0) rec.correct++;
+          rec.total++; setNote("맞아요.", true);
+          setTimeout(() => { i++; tries = 0; if(i < chain.length) draw(); else { rec.made = { title:rec.title, lines:[chain.join(" → ")] }; finishActivity(rec); } }, 700);
+        }else{ tries++; rec.errors++; setNote(`‘${v}’은(는) ‘${v[0]}’ 자로 시작해요. ‘${last}’ 자로 시작하는 걸 찾아볼까요?`); }
+      }
+    });
+    render(actShell(rec, `끝말잇기 ${i} / ${steps}. 앞 낱말의 마지막 글자로 시작하는 낱말을 고르세요.`, `
+      <div class="chainline">${chain.slice(0,i).map(esc).join(" → ")} → <b>?</b></div>
+      <div class="q" style="font-size:30px">‘${esc(prev)}’ 다음에 올 낱말은?</div>
+      <div class="chips">${opts.map(o => `<button class="chip" data-act="opt" data-v="${esc(o)}">${esc(o)}</button>`).join("")}</div>`), 3);
+  };
+  draw();
+}
+function wordFree(rec, pool){
+  const src = pool[0], c = choOf(src[0]), goal = 3;
+  const words = [];
+  rec.needsReview = true;
+  const add = () => {
+    const inp = $("#own"); if(!inp) return;
+    const w = inp.value.trim();
+    if(!w) return;
+    if(!isHangul(w) || w.length < 2 || w.length > 6) return setNote("한글 낱말 하나를 두 글자 이상으로 적어 주세요.");
+    if(choOf(w[0]) !== c){ rec.errors++; return setNote(`‘${w}’은(는) ‘${choOf(w[0])}’(으)로 시작해요. ‘${c}’(으)로 시작하는 낱말을 적어 볼까요?`); }
+    if(words.includes(w)) return setNote("이미 적은 낱말이에요.");
+    words.push(w); draw(); setNote(words.length >= goal ? "목표를 채웠어요. 더 적어도 좋아요." : "좋아요.", true);
+  };
+  const draw = () => {
+    acts = Object.assign(baseActs(rec, () => setNote(`예를 들면 ${pick(WORDS.filter(w => choOf(w[0]) === c && !words.includes(w)), 2).join(", ") || "주변을 둘러보세요"} 같은 낱말이 있어요.`)), {
+      add, done(){
+        rec.total = goal; rec.correct = Math.min(words.length, goal);
+        rec.made = { title:rec.title, lines:[`‘${c}’(으)로 시작하는 낱말: ${words.join(", ") || "(없음)"}`, "※ 사전 확인 없이 첫소리만 확인했어요. 치료사가 함께 확인해 주세요."] };
+        finishActivity(rec);
+      }
+    });
+    render(actShell(rec, `‘${src}’의 첫소리 ‘${c}’(으)로 시작하는 낱말을 ${goal}개 이상 적어 보세요.`, `
+      <div class="q" style="font-size:48px;color:var(--accent)">${c}</div>
+      <div class="row" style="margin-top:0">
+        <input type="text" id="own" maxlength="6" autocomplete="off" placeholder="낱말 적기">
+        <button class="btn soft" data-act="add">넣기</button>
+      </div>
+      <div class="chips" style="margin-top:16px">${words.map(w => `<span class="chip sel">${esc(w)}</span>`).join("")}</div>
+      <div class="row end"><button class="btn main" data-act="done" ${words.length?"":"disabled"}>다 적었어요 (${words.length}/${goal})</button></div>`), 3);
+    const inp = $("#own");
+    inp.addEventListener("keydown", e => { if(e.key === "Enter"){ e.preventDefault(); add(); } });
+    inp.focus({ preventScroll:true });
+  };
+  draw();
+}
+
+/* ---------- 계획 짜기 ---------- */
+function planSpec(rec){
+  const L = rec.level;
+  if(rec.theme === "kitchen"){
+    const d = dishName(), shop = story("shop") && story("shop") !== "가족이 대신" ? story("shop") : "가게";
+    if(L === 1) return { slots:["오후 3시","오후 4시","오후 5시","오후 6시"], fixed:[], rules:[],
+      cards:[ { id:"buy", label:"장보기", before:["prep"] }, { id:"prep", label:"재료 손질", before:["cook"] },
+              { id:"cook", label:`${d} 만들기`, before:["eat"] }, { id:"eat", label:"함께 먹기" } ] };
+    const base = [
+      { id:"look", label:"냉장고에 뭐가 있는지 보기", before:["buy"] },
+      { id:"buy", label:`${shop}에서 장보기`, before:["prep"] },
+      { id:"prep", label:"재료 손질", before:["cook"] },
+      { id:"cook", label:`${d} 만들기`, before:["eat"] },
+      { id:"eat", label:"함께 먹기", before:["wash"] },
+      { id:"wash", label:"설거지" }
+    ];
+    if(L === 2) return { slots:["오후 2시","오후 3시","오후 4시","오후 5시","오후 6시","오후 7시"], fixed:[], rules:[], cards:base };
+    base[1].allow = [0,1];
+    return { slots:["오후 1시","오후 2시","오후 3시","오후 4시","오후 5시","오후 6시","오후 7시"],
+      fixed:[{ slot:2, label:"이웃과 약속" }],
+      rules:["오후 3시에는 이웃과 약속이 있어요.", `${josa(shop,"은는")} 오후 3시 전에 다녀와야 해요.`],
+      cards:base };
+  }
+  const place = placeName();
+  if(L === 1) return { slots:["아침","낮","저녁"], fixed:[], rules:[], multi:true,
+    cards:[ { id:"b", label:"아침 먹기", allow:[0] }, { id:"l", label:"점심 먹기", allow:[1] },
+            { id:"d", label:"저녁 먹기", allow:[2] }, { id:"p", label:`${place} 가기`, allow:[0,1] } ] };
+  if(L === 2) return { slots:["오전 8시","오전 10시","낮 12시","오후 3시","오후 6시","오후 9시"], fixed:[], rules:[],
+    cards:[ { id:"b", label:"아침 먹기", allow:[0] }, { id:"m", label:"아침 약 먹기", with:"b", stack:true },
+            { id:"p", label:`${place} 가기`, allow:[1,3] }, { id:"l", label:"점심 먹기", allow:[2] },
+            { id:"w", label:"산책하기", allow:[1,3] }, { id:"d", label:"저녁 먹기", allow:[4] },
+            { id:"s", label:"잠자리에 들기", allow:[5] } ] };
+  return { slots:["오전 8시","오전 10시","낮 12시","오후 2시","오후 4시","오후 6시","오후 9시"],
+    fixed:[{ slot:3, label:"가족과 영상통화" }],
+    rules:["오후 2시에는 가족과 영상통화가 있어요.", `${josa(place,"은는")} 오전에만 갈 수 있어요.`, "산책은 점심을 먹고 나서 해요."],
+    cards:[ { id:"b", label:"아침 먹기", allow:[0] }, { id:"m", label:"아침 약 먹기", with:"b", stack:true },
+            { id:"p", label:`${place} 가기`, allow:[1] }, { id:"l", label:"점심 먹기", allow:[2] },
+            { id:"w", label:"산책하기", after:["l"] }, { id:"d", label:"저녁 먹기", allow:[5] },
+            { id:"s", label:"잠자리에 들기", allow:[6] } ] };
+}
+/* 각 카드가 어긴 규칙을 문장으로 돌려준다 */
+function planProblems(spec, at){
+  const byId = Object.fromEntries(spec.cards.map(c => [c.id, c]));
+  const out = {};
+  const say = (id, msg) => { (out[id] = out[id] || []).push(msg); };
+  for(const c of spec.cards){
+    const s = at[c.id];
+    if(c.allow && !c.allow.includes(s)) say(c.id, `‘${c.label}’은(는) ${c.allow.map(k => spec.slots[k]).join(" 또는 ")}에 해요.`);
+    for(const b of c.before || []) if(!(s < at[b])) say(c.id, `‘${c.label}’은(는) ‘${byId[b].label}’보다 먼저 해요.`);
+    for(const a of c.after || []) if(!(s > at[a])) say(c.id, `‘${c.label}’은(는) ‘${byId[a].label}’ 다음에 해요.`);
+    if(c.with && s !== at[c.with]) say(c.id, `‘${c.label}’은(는) ‘${byId[c.with].label}’ 칸에 함께 넣어요.`);
+    if(spec.fixed.some(f => f.slot === s)) say(c.id, `${spec.slots[s]}에는 이미 약속이 있어요.`);
+  }
+  if(!spec.multi){
+    spec.slots.forEach((_,k) => {
+      const here = spec.cards.filter(c => at[c.id] === k && !c.stack);
+      if(here.length > 1) here.slice(1).forEach(c => say(c.id, `${spec.slots[k]}에는 한 가지만 할 수 있어요.`));
+    });
+  }
+  return out;
+}
+/* 규칙을 모두 지키는 배치 하나를 찾는다 — 힌트가 이 배치를 보여 준다 */
+function planSolve(spec){
+  const free = spec.slots.map((_,k) => k).filter(k => !spec.fixed.some(f => f.slot === k));
+  const order = [...spec.cards.filter(c => !c.stack), ...spec.cards.filter(c => c.stack)];
+  const at = {};
+  const dfs = i => {
+    if(i === order.length) return !Object.keys(planProblems(spec, at)).length;
+    const c = order[i];
+    const opts = c.with ? [at[c.with]] : free.filter(k => !c.allow || c.allow.includes(k));
+    for(const k of opts){
+      if(!spec.multi && !c.stack && order.some(o => o !== c && !o.stack && at[o.id] === k)) continue;
+      at[c.id] = k;
+      if(dfs(i+1)) return true;
+      delete at[c.id];
+    }
+    return false;
+  };
+  return dfs(0) ? { ...at } : {};
+}
+RUN.plan = rec => {
+  const spec = planSpec(rec);
+  const sol = planSolve(spec);
+  let fails = 0;
+  const at = {};              // 카드 id → 칸 index
+  const ok = {};              // 확인을 통과해 고정된 카드
+  let sel = null, firstCheck = true;
+  const tray = () => spec.cards.filter(c => at[c.id] == null);
+  const draw = () => {
+    acts = Object.assign(baseActs(rec, () => {
+      // 힌트: 카드 하나를 규칙에 맞는 칸에 직접 놓아 준다 (막힌 배치에서 빠져나오는 길)
+      const c = (sel && spec.cards.find(x => x.id === sel)) || tray()[0] ||
+        spec.cards.find(x => at[x.id] !== sol[x.id]);
+      if(!c || sol[c.id] == null) return;
+      const k = sol[c.id];
+      if(!spec.multi && !c.stack) spec.cards.forEach(o => { if(o !== c && !o.stack && at[o.id] === k){ delete at[o.id]; delete ok[o.id]; } });
+      at[c.id] = k; sel = null; draw();
+      setNote(`‘${c.label}’은(는) ${spec.slots[k]} 칸에 놓았어요.`);
+    }), {
+      card(v){ sel = v; draw(); },
+      slot(v){
+        const k = +v;
+        if(spec.fixed.some(f => f.slot === k)) return setNote(`${spec.slots[k]}에는 이미 약속이 있어요.`);
+        if(sel == null) return setNote("먼저 아래에서 카드를 하나 누르세요.");
+        at[sel] = k; sel = null; draw();
+      },
+      back(v){ delete at[v]; delete ok[v]; draw(); },
+      check(){
+        const probs = planProblems(spec, at);
+        spec.cards.forEach(c => { if(probs[c.id]) delete ok[c.id]; else ok[c.id] = true; });
+        if(firstCheck){ rec.total = spec.cards.length; rec.correct = spec.cards.filter(c => !probs[c.id]).length; firstCheck = false; }
+        const bad = Object.keys(probs);
+        if(!bad.length){
+          rec.made = { title:rec.title, lines:spec.slots.map((s,k) => {
+            const f = spec.fixed.find(x => x.slot === k);
+            const here = spec.cards.filter(c => at[c.id] === k).map(c => c.label);
+            return `${s} · ${f ? f.label + " (약속)" : here.join(", ") || "쉬는 시간"}`;
+          }) };
+          draw(); setTimeout(() => finishActivity(rec), 600); return;
+        }
+        rec.errors += bad.length; fails++;
+        bad.forEach(id => delete at[id]);
+        draw();
+        setNote((fails >= 2 ? "막히면 칸에 놓인 카드를 눌러 빼거나 ‘힌트’를 눌러 보세요. " : "") +
+          "맞게 놓인 카드는 초록색으로 표시했어요. 아래로 돌아온 카드를 다시 놓아 볼까요? " + bad.map(id => probs[id][0]).join(" "));
+      }
+    });
+    const left = tray();
+    render(actShell(rec, "카드를 하나 누른 다음 시간 칸을 누르세요. 칸에 놓은 카드를 누르면 다시 빠집니다.", `
+      ${spec.rules.length ? `<div class="made talk"><h3>📌 알아둘 것</h3><ul>${spec.rules.map(r => `<li>${esc(r)}</li>`).join("")}</ul></div>` : ""}
+      <div class="tray">${left.map(c => `<button class="chip ${sel===c.id?"sel":""}" data-act="card" data-v="${c.id}">${esc(c.label)}</button>`).join("") || `<span class="sub">카드를 모두 놓았어요.</span>`}</div>
+      <div class="slots">
+        ${spec.slots.map((s,k) => {
+          const f = spec.fixed.find(x => x.slot === k);
+          const here = spec.cards.filter(c => at[c.id] === k);
+          return `<div class="slot ${f?"locked":""} ${here.length?"filled":""} ${sel&&!f?"ready":""}" data-act="slot" data-v="${k}" role="button" tabindex="0" aria-label="${esc(s)} 칸">
+            <span class="n" style="width:auto;padding:0 12px;border-radius:12px">${esc(s)}</span>
+            <span class="slotin">${f ? `🔒 ${esc(f.label)}` : here.map(c => `<button class="chip ${ok[c.id]?"sel":""}" data-act="back" data-v="${c.id}">${esc(c.label)}</button>`).join("")}</span>
+          </div>`; }).join("")}
+      </div>
+      <div class="row end"><button class="btn main" data-act="check" ${left.length?"disabled":""}>다 짰어요</button></div>`), 3);
+  };
+  draw();
+};
+
+/* ==========================================================
    5. 나누기 → 생활 연결
    ========================================================== */
 function screenShare(){
@@ -1065,7 +1471,8 @@ function summaryRows(){
   ];
   S.activities.forEach((a,i) => {
     const path = a.levelPath.map(l => `${l.level}${l.by==="therapist"?"(치)":l.by==="client"?"(대)":""}`).join("→");
-    const score = a.stopped ? "중간에 멈춤" : a.pattern === "memo" ? "채점 없음 (대화 재료)" : `첫 시도 정답 ${a.correct}/${a.total}`;
+    const score = a.stopped ? "중간에 멈춤" : a.pattern === "memo" ? "채점 없음 (대화 재료)" :
+      `첫 시도 정답 ${a.correct}/${a.total}${a.needsReview ? " (치료사 확인 필요)" : ""}`;
     rows.push([`활동 ${i+1}`, `${PATTERNS[a.pattern].name} · ${PATTERNS[a.pattern].icf} · 단계 ${path} · ${score} · 오류 ${a.errors} · 힌트 ${a.hints} · ${a.durationSec}초`]);
   });
   return rows;
