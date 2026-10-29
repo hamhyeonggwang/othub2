@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 export interface AssessmentSession {
   id: string;
   client_code: string;
-  client_meta: { gender?: string; birth?: string; diagnosis?: string; therapist?: string; date?: string };
+  client_meta: { gender?: string; therapist?: string; date?: string };
   tools: string[];
   status: "in_progress" | "done";
   created_at: string;

@@ -79,7 +79,7 @@ section.tool-sec h2{font-size:15px;font-weight:800;color:var(--accent);margin-bo
   }
 
   meta.innerHTML =
-    '<strong>' + escapeHtml(info.name || '(이름 없음)') + '</strong>' +
+    '<strong>' + escapeHtml(info.name || '(코드 없음)') + '</strong>' +
     (info.date ? ' · 평가일: ' + escapeHtml(info.date) : '') +
     (info.diagnosis ? ' · 진단: ' + escapeHtml(info.diagnosis) : '') +
     (info.birth ? ' · 생년월일: ' + escapeHtml(info.birth) : '') +
@@ -127,17 +127,33 @@ section.tool-sec h2{font-size:15px;font-weight:800;color:var(--accent);margin-bo
   cloudBanner.style.cssText =
     'max-width:900px;margin:0 auto 16px;padding:10px 16px;border-radius:12px;font-size:12px;' +
     'background:#F7F8FD;border:1px solid #E4E7F4;color:#4A4770;';
-  cloudBanner.textContent = '☁️ OTHub 계정에 저장하는 중...';
+  cloudBanner.textContent = '☁️ OTHub 계정에 저장하는 중... (진단명·생년월일은 저장하지 않습니다)';
   meta.insertAdjacentElement('afterend', cloudBanner);
+
+  /* 진단명·생년월일은 이 화면(인쇄·PDF)에만 쓰고 서버로 보내지 않는다.
+     도구 보고서 HTML에 들어간 값도 지운 뒤 보낸다. (서버도 같은 처리를 한 번 더 한다) */
+  var secret = [info.diagnosis, info.birth]
+    .map(function (v) { return (v || '').trim(); })
+    .filter(function (v) { return v.length >= 2; });
+  function scrub(html) {
+    var out = html || '';
+    secret.forEach(function (v) { [v, escapeHtml(v)].forEach(function (t) { out = out.split(t).join('—'); }); });
+    return out;
+  }
+  var cloudReports = {};
+  Object.keys(reportByTool).forEach(function (k) {
+    cloudReports[k] = { title: reportByTool[k].title, html: scrub(reportByTool[k].html) };
+  });
+  var cloudInfo = { name: info.name, date: info.date, gender: info.gender, therapist: info.therapist };
 
   fetch('/api/assess/save-session', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       cloudSessionId: sess.cloudSessionId || null,
-      info: info,
+      info: cloudInfo,
       ready: ready,
-      reportByTool: reportByTool,
+      reportByTool: cloudReports,
     }),
   })
     .then(function (res) {
@@ -147,7 +163,7 @@ section.tool-sec h2{font-size:15px;font-weight:800;color:var(--accent);margin-bo
       if (result.ok && result.data.sessionId) {
         sess.cloudSessionId = result.data.sessionId;
         try { sessionStorage.setItem('ot_session', JSON.stringify(sess)); } catch (e) {}
-        cloudBanner.textContent = '☁️ OTHub 계정에 저장되었습니다. (' + new Date().toLocaleTimeString('ko-KR') + ')';
+        cloudBanner.textContent = '☁️ OTHub 계정에 저장되었습니다. 진단명·생년월일은 저장하지 않았습니다. (' + new Date().toLocaleTimeString('ko-KR') + ')';
       } else {
         cloudBanner.textContent = '⚠️ ' + (result.data.error || '클라우드 저장에 실패했습니다.') + ' (인쇄·PDF 저장은 계속 가능합니다)';
       }
