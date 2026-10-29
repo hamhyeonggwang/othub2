@@ -1,0 +1,68 @@
+.privacy {
+  max-width: 880px;
+}
+/* 부모 그리드 안에서 넓은 표가 페이지 폭을 밀어내지 않게 한다 */
+.privacy > * {
+  min-width: 0;
+}
+.privacy-head h1 {
+  margin: 8px 0 12px;
+  /* 띄어쓰기 없는 한 단어라 좁은 화면에서는 글자 크기를 줄인다 */
+  font-size: clamp(28px, 8vw, 48px);
+  overflow-wrap: anywhere;
+}
+.privacy-meta {
+  font-size: 14px;
+  color: #52677c;
+}
+.privacy-toc {
+  margin: 24px 0 8px;
+  padding: 16px 20px;
+  border: 1px solid #e4ebe7;
+  border-radius: 12px;
+  background: #fbfcfb;
+}
+.privacy-toc ol {
+  margin: 0;
+  padding-left: 1.4em;
+  columns: 2 240px;
+  line-height: 1.9;
+}
+.privacy-section {
+  margin-top: 36px;
+  line-height: 1.75;
+}
+.privacy-section h2 {
+  font-size: 20px;
+  margin-bottom: 12px;
+}
+.privacy-section ul {
+  padding-left: 1.2em;
+}
+.privacy-table-wrap {
+  max-width: 100%;
+  overflow-x: auto;
+  margin: 12px 0;
+}
+.privacy-section table {
+  width: 100%;
+  min-width: 520px;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+.privacy-section th,
+.privacy-section td {
+  border: 1px solid #dfe6e2;
+  padding: 10px 12px;
+  text-align: left;
+  vertical-align: top;
+}
+.privacy-section th {
+  background: #f1f5f2;
+}
+.privacy-todo {
+  background: #fff1c2;
+  color: #6b4b00;
+  padding: 0 4px;
+  border-radius: 4px;
+}

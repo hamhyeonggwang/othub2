@@ -403,6 +403,11 @@
   gap: 18px;
   font-size: 11px;
 }
+/* 개인정보처리방침은 다른 하단 링크와 구별되게 굵게 표시한다 */
+.home-footer .home-footer-privacy {
+  font-weight: 700;
+  color: #2f4c3b;
+}
 .product-home a:focus-visible {
   outline: 2px solid #27776a;
   outline-offset: 4px;

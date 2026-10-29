@@ -3,7 +3,7 @@ export const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f
 
 const publicPages = new Set([
   "/", "/hub", "/hub/apps", "/assess", "/links", "/lab", "/groups",
-  "/about", "/portfolio", "/me",
+  "/about", "/portfolio", "/me", "/privacy",
 ]);
 
 /** Fixed route shapes only: never queries, search terms or assessment IDs. */
