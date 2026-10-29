@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { isReadOnlyPreview, PREVIEW_READ_ONLY_MESSAGE } from "@/lib/deployment";
+import { scrubber } from "@/lib/assess-privacy";
 
 interface ToolReport {
   title?: string;
@@ -55,15 +56,16 @@ export async function POST(request: Request) {
   }
 
   // client_code는 치료사 본인 계정에만 RLS로 노출되는 값이지만,
-  // 환경(공용 PC 등)을 고려해 실명 대신 이니셜·코드 사용을 권장한다.
+  // 환경(공용 PC 등)을 고려해 실명 대신 코드를 받는다.
   const clientCode = (info.name || "무기명").trim().slice(0, 100);
+  // 진단명·생년월일은 서버에 저장하지 않는다 (민감정보 최소화).
+  // 결과 페이지가 이미 빼고 보내지만, 이전 버전 페이지가 보내도 여기서 버린다.
   const clientMeta = {
     gender: info.gender ?? null,
-    birth: info.birth ?? null,
-    diagnosis: info.diagnosis ?? null,
     therapist: info.therapist ?? null,
     date: info.date ?? null,
   };
+  const scrub = scrubber([info.diagnosis, info.birth]);
 
   let sessionId = body.cloudSessionId ?? null;
 
@@ -114,7 +116,7 @@ export async function POST(request: Request) {
     .map((toolId) => ({
       session_id: sessionId,
       tool_id: toolId,
-      raw: { title: reportByTool[toolId].title ?? toolId, html: reportByTool[toolId].html },
+      raw: { title: reportByTool[toolId].title ?? toolId, html: scrub(reportByTool[toolId].html ?? "") },
       summary: { title: reportByTool[toolId].title ?? toolId },
     }));
 

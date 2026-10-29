@@ -39,8 +39,6 @@ export default async function AssessSessionPage({
         <div className="assess-report-meta">
           <strong>{session.client_code}</strong>
           {meta.date && ` · 평가일: ${meta.date}`}
-          {meta.diagnosis && ` · 진단: ${meta.diagnosis}`}
-          {meta.birth && ` · 생년월일: ${meta.birth}`}
           {meta.gender && ` · 성별: ${meta.gender}`}
           <br />
           담당 치료사: {meta.therapist || "-"} · 저장:{" "}

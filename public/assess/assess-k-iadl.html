@@ -170,8 +170,8 @@ select.form-input{appearance:none;background-image:url("data:image/svg+xml,%3Csv
     </div>
     <div class="form-grid">
       <div class="form-field col2">
-        <label class="form-label">이름 / 등록번호</label>
-        <input class="form-input" id="f-name" type="text" placeholder="예: 홍OO / 24-001">
+        <label class="form-label">대상자 코드</label>
+        <input class="form-input" id="f-name" type="text" placeholder="예: A-03 · 실명은 적지 마세요">
       </div>
       <div class="form-field">
         <label class="form-label">평가일</label>
@@ -186,7 +186,7 @@ select.form-input{appearance:none;background-image:url("data:image/svg+xml,%3Csv
         </select>
       </div>
       <div class="form-field">
-        <label class="form-label">진단명</label>
+        <label class="form-label">진단명 <span style="font-weight:400;opacity:.7">· 보고서에만 표시, 저장 안 함</span></label>
         <input class="form-input" id="f-diagnosis" type="text" placeholder="예: 뇌졸중">
       </div>
       <div class="form-field">
@@ -608,7 +608,7 @@ function buildToolReportHtml() {
         <div style="font-size:14px;font-weight:800;color:${grade?.color || '#333'};margin-bottom:4px;">${grade?.label || '—'}</div>
         <div style="font-size:12px;color:#666;">${grade?.desc || '점수 해석 없음'}</div>
         <div style="font-size:11px;color:#999;margin-top:4px;">
-          이름: ${name} &nbsp;·&nbsp; 평가일: ${date} &nbsp;·&nbsp; 진단: ${diagnosis}
+          대상자: ${name} &nbsp;·&nbsp; 평가일: ${date} &nbsp;·&nbsp; 진단: ${diagnosis}
         </div>
       </div>
     </div>

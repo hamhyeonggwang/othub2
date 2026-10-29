@@ -605,11 +605,11 @@ textarea.form-input {
     </div>
     <div class="form-grid">
       <div class="form-field">
-        <label class="form-label">이름 / 등록번호</label>
-        <input class="form-input" id="f-name" type="text" placeholder="예: 홍OO / 24-001">
+        <label class="form-label">대상자 코드</label>
+        <input class="form-input" id="f-name" type="text" placeholder="예: A-03 · 실명은 적지 마세요">
       </div>
       <div class="form-field">
-        <label class="form-label">생년월일</label>
+        <label class="form-label">생년월일 <span style="font-weight:400;opacity:.7">· 보고서에만 표시, 저장 안 함</span></label>
         <input class="form-input" id="f-birth" type="date">
       </div>
       <div class="form-field">
@@ -621,7 +621,7 @@ textarea.form-input {
         </select>
       </div>
       <div class="form-field">
-        <label class="form-label">진단명</label>
+        <label class="form-label">진단명 <span style="font-weight:400;opacity:.7">· 보고서에만 표시, 저장 안 함</span></label>
         <input class="form-input" id="f-diagnosis" type="text" placeholder="예: 뇌성마비, ASD">
       </div>
       <div class="form-field">
@@ -1161,7 +1161,7 @@ function goStep(n) {
   if (currentStep === 0 && n > 0) {
     const name = document.getElementById('f-name').value.trim();
     const task = document.getElementById('f-task').value.trim();
-    if (!name) { showToast('이름/등록번호를 입력해 주세요'); document.getElementById('f-name').focus(); return; }
+    if (!name) { showToast('대상자 코드를 입력해 주세요'); document.getElementById('f-name').focus(); return; }
     if (!task) { showToast('과제명을 입력해 주세요'); document.getElementById('f-task').focus(); return; }
   }
 
