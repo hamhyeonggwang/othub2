@@ -2,7 +2,8 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>html{touch-action:manipulation}/* 두 번 탭 확대만 막고 두 손가락 확대는 허용 */</style>
 <title>빽다방 키오스크 훈련</title>
 <script src="kiosk-image-save.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
@@ -426,6 +427,17 @@ body{font-family:'Noto Sans KR',sans-serif;background:#2a2a2a;min-height:100vh;d
 
 .toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(60px);background:rgba(26,26,26,.95);color:white;padding:12px 22px;border-radius:50px;font-size:14px;font-weight:700;z-index:700;pointer-events:none;transition:transform .35s cubic-bezier(.4,0,.2,1);white-space:nowrap;border:2px solid rgba(255,232,0,.15);}
 .toast.show{transform:translateX(-50%) translateY(0);}
+</style>
+<style id="a11y-contrast">/* 접근성: 글자·배경 대비 4.5 이상으로 보정 (자동 계산) */
+/* 로고 글자(상호 모사)는 WCAG 대비 예외라 보정하지 않는다 */
+.tplb{color:#7d7d86 !important;opacity:1 !important}
+.tpst{color:#858592 !important;opacity:1 !important}
+.tgs{color:#848490 !important;opacity:1 !important}
+.stl{color:#9797a1 !important;opacity:1 !important}
+.pkstep:nth-child(1) > span{color:#79849e !important;opacity:1 !important}
+.pkstep:nth-child(3) > span{color:#79849e !important;opacity:1 !important}
+.pkstep:nth-child(5) > span{color:#79849e !important;opacity:1 !important}
+
 </style>
 </head>
 <body>
@@ -1185,5 +1197,6 @@ function updateStats(){
 setMission();
 render();
 </script>
+<script src="a11y-helper.js"></script>
 </body>
 </html>

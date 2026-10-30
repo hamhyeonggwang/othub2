@@ -86,6 +86,12 @@ export default async function AppDetailPage({
           <p className="workspace-caption">
             화면이 작게 느껴지면 도구 오른쪽 위의 전체화면 버튼을 이용하세요.
           </p>
+          {category === "kiosk" && (
+            <p className="workspace-caption">
+              화면 속 상호와 메뉴는 실제 매장 이용을 연습하기 위해 비슷하게 만든 훈련용 모형입니다.
+              해당 기업과 제휴·후원 관계가 없으며, 실제 가격·메뉴와 다를 수 있습니다.
+            </p>
+          )}
         </section>
         <aside className="detail-guide" aria-label="도구 이용 안내">
           <section className="workspace-panel">

@@ -2,7 +2,8 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>html{touch-action:manipulation}/* 두 번 탭 확대만 막고 두 손가락 확대는 허용 */</style>
 <title>CU 셀프계산대 훈련</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
@@ -1073,6 +1074,13 @@ body {
 /* Fade in animation for screens */
 .fade-enter { animation: fade-in .3s ease; }
 @keyframes fade-in { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+</style>
+<style id="a11y-contrast">/* 접근성: 글자·배경 대비 4.5 이상으로 보정 (자동 계산) */
+.tp-title{color:#7d7d84 !important;opacity:1 !important}
+.tp-sec-label{color:#858592 !important;opacity:1 !important}
+.tp-tog-sub{color:#848490 !important;opacity:1 !important}
+#diff-desc{color:#848490 !important;opacity:1 !important}
+.stat-lbl{color:#9797a1 !important;opacity:1 !important}
 </style>
 </head>
 <body>
@@ -2202,5 +2210,6 @@ function buildBarcodePage() {
 setMission();
 render();
 </script>
+<script src="a11y-helper.js"></script>
 </body>
 </html>

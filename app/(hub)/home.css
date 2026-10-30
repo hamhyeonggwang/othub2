@@ -114,7 +114,7 @@
   display: block;
   font-size: 11px;
   margin-top: 6px;
-  color: #677d73;
+  color: #57695f;
 }
 .home-launch-row {
   display: flex;
@@ -157,7 +157,7 @@
   display: block;
   margin-top: 7px;
   font-size: 10px;
-  color: #6a7d74;
+  color: #667970;
 }
 .home-launchpad-foot {
   display: flex;
@@ -165,7 +165,7 @@
   gap: 7px;
   padding: 16px 24px;
   font-size: 10px;
-  color: #657d71;
+  color: #60776c;
   background: #f9fbf9;
 }
 .home-section {
@@ -230,7 +230,7 @@
 }
 .home-starter[data-category="hand"] .home-starter-visual {
   background: #f6f0e7;
-  color: #906940;
+  color: #8b653e;
 }
 .home-starter-copy {
   display: flex;
@@ -317,7 +317,7 @@
 .home-collection-route i {
   font-style: normal;
   font-size: 10px;
-  color: #608574;
+  color: #57796a;
   font-variant-numeric: tabular-nums;
 }
 .home-access-grid {
@@ -345,7 +345,7 @@
 }
 .home-access-grid p {
   font-size: 13px;
-  color: #64786f;
+  color: #62756c;
   line-height: 1.9;
   margin: 0 0 10px;
   word-break: keep-all;
@@ -364,7 +364,7 @@
 }
 .home-support p {
   font-size: 12px;
-  color: #6a7e73;
+  color: #63766b;
   margin: 8px 0 0;
   line-height: 1.7;
 }
@@ -382,7 +382,7 @@
   margin: 0 auto;
   gap: 20px;
   border-top: 1px solid #e4ebe7;
-  color: #6e8176;
+  color: #63756b;
 }
 .home-footer > div {
   display: flex;

@@ -2,7 +2,8 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>html{touch-action:manipulation}/* 두 번 탭 확대만 막고 두 손가락 확대는 허용 */</style>
 <title>코레일 승차권 키오스크 훈련</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
 <style>
@@ -531,6 +532,19 @@ body{font-family:'Noto Sans KR',sans-serif;background:#1a2a3a;min-height:100vh;d
 
 .toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(60px);background:rgba(0,30,60,.95);color:white;padding:12px 22px;border-radius:50px;font-size:14px;font-weight:700;z-index:700;pointer-events:none;transition:transform .35s cubic-bezier(.4,0,.2,1);white-space:nowrap;border:2px solid rgba(100,176,255,.3);}
 .toast.show{transform:translateX(-50%) translateY(0);}
+</style>
+<style id="a11y-contrast">/* 접근성: 글자·배경 대비 4.5 이상으로 보정 (자동 계산) */
+.tplb{color:#767d85 !important;opacity:1 !important}
+.tpst{color:#788189 !important;opacity:1 !important}
+.tgs{color:#798188 !important;opacity:1 !important}
+.stl{color:#8b9095 !important;opacity:1 !important}
+.krh-step:nth-child(1) > span{color:#849ab3 !important;opacity:1 !important}
+.krh-step:nth-child(3) > span{color:#849ab3 !important;opacity:1 !important}
+.krh-step:nth-child(5) > span{color:#849ab3 !important;opacity:1 !important}
+.krh-step:nth-child(7) > span{color:#849ab3 !important;opacity:1 !important}
+.krh-step:nth-child(9) > span{color:#849ab3 !important;opacity:1 !important}
+.krh-step:nth-child(11) > span{color:#849ab3 !important;opacity:1 !important}
+.idle-card-hd > span:nth-child(2){color:#d6e4f2 !important;opacity:1 !important}
 </style>
 </head>
 <body>
@@ -1623,5 +1637,6 @@ function updateStats(){document.getElementById('st-t').textContent=S.stats.trial
 
 setMission();render();
 </script>
+<script src="a11y-helper.js"></script>
 </body>
 </html>

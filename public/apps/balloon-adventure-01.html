@@ -19,7 +19,7 @@
   --sb-surface: #1e293b;
   --sb-border: rgba(255,255,255,0.07);
   --sb-text: #e2e8f0;
-  --sb-muted: #64748b;
+  --sb-muted: #8392a6;
   --sb-accent: #38bdf8;
   --sb-green: #4ade80;
   --sb-red: #f87171;
@@ -585,6 +585,9 @@ body {
 .resume-btn { background:#4ade80; border:none; border-radius:50px; padding:12px 40px; font-family:'Black Han Sans',sans-serif; font-size:1.2rem; color:#000; cursor:pointer; transition:transform .15s; }
 .resume-btn:hover { transform:scale(1.05); }
 </style>
+<style id="a11y-contrast">/* 접근성: 글자·배경 대비 4.5 이상으로 보정 (자동 계산) */
+.btn-red{color:#323232 !important;opacity:1 !important}
+</style>
 </head>
 <body>
 
@@ -667,7 +670,7 @@ body {
       <div>
         <div style="font-size:.68rem;color:var(--sb-muted);font-family:'Nanum Gothic',sans-serif;font-weight:800;margin-bottom:5px">Lv.5 제한시간</div>
         <div class="timer-ctrl">
-          <input type="number" class="timer-input" id="storm-timer-input" value="60" min="10" max="180"/>
+          <input type="number" class="timer-input" id="storm-timer-input" value="60" min="10" max="180" aria-label="Lv.5 제한시간(초)"/>
           <span style="font-size:.72rem;color:var(--sb-muted);font-family:'Nanum Gothic',sans-serif;font-weight:800">초</span>
           <button class="ctrl-btn btn-dark" style="flex:none;padding:5px 10px;font-size:.68rem" onclick="applyTimerSetting()">적용</button>
         </div>
@@ -1589,5 +1592,6 @@ buildBGClouds();
 buildLevelGrid();
 startCamera();
 </script>
+<script src="a11y-helper.js"></script>
 </body>
 </html>

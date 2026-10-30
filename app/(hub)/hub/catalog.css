@@ -65,7 +65,7 @@
 .catalog-search svg {
   width: 19px;
   height: 19px;
-  color: #688096;
+  color: #5f7488;
   flex-shrink: 0;
 }
 .catalog-search input {
@@ -85,7 +85,7 @@
 .search-shortcut {
   flex-shrink: 0;
   font-size: 11px;
-  color: #688096;
+  color: #5f7488;
   border: 1px solid #dce5ee;
   padding: 3px 7px;
   border-radius: 4px;
@@ -131,7 +131,7 @@
 }
 .catalog-options > span {
   margin-right: 4px;
-  color: #68798b;
+  color: #667688;
   font-size: 12px;
 }
 .catalog-options button {

@@ -2,7 +2,8 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>html{touch-action:manipulation}/* 두 번 탭 확대만 막고 두 손가락 확대는 허용 */</style>
 <title>누구나 쓰기게임</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Jua&display=swap');
@@ -14,13 +15,13 @@
   --sky2: #B8E4F7;
   --white: #FFFFFF;
   --red: #E84040;
-  --blue: #2E86DE;
+  --blue: #1e6fc0;
   --green: #26de81;
   --yellow: #FFD32A;
   --orange: #FF9F43;
   --sidebar: 280px;
   --consonant-color: #E84040;
-  --vowel-color: #2E86DE;
+  --vowel-color: #1e6fc0;
   --number-color: #26de81;
   --english-color: #FF9F43;
 }
@@ -647,20 +648,20 @@ const MODES = {
 // Stroke direction hints per character (normalized 0-1 coords)
 // start ★ and direction arrow markers
 const HINTS = {
-  '가':[ {x:.18,y:.18,dir:'→',color:'#E84040'}, {x:.72,y:.18,dir:'↓',color:'#2E86DE'} ],
-  '나':[ {x:.22,y:.22,dir:'↓',color:'#E84040'}, {x:.7,y:.22,dir:'↓',color:'#2E86DE'} ],
-  '다':[ {x:.5,y:.18,dir:'←',color:'#E84040'}, {x:.72,y:.22,dir:'↓',color:'#2E86DE'} ],
-  '라':[ {x:.18,y:.18,dir:'→',color:'#E84040'}, {x:.72,y:.22,dir:'↓',color:'#2E86DE'} ],
-  '마':[ {x:.2,y:.2,dir:'→',color:'#E84040'},   {x:.72,y:.22,dir:'↓',color:'#2E86DE'} ],
-  '바':[ {x:.35,y:.15,dir:'↓',color:'#E84040'}, {x:.72,y:.22,dir:'↓',color:'#2E86DE'} ],
-  '사':[ {x:.38,y:.2,dir:'↙',color:'#E84040'},  {x:.72,y:.22,dir:'↓',color:'#2E86DE'} ],
-  '아':[ {x:.18,y:.28,dir:'↻',color:'#E84040'}, {x:.72,y:.22,dir:'↓',color:'#2E86DE'} ],
-  '자':[ {x:.25,y:.28,dir:'→',color:'#E84040'}, {x:.72,y:.22,dir:'↓',color:'#2E86DE'} ],
-  '차':[ {x:.38,y:.15,dir:'→',color:'#E84040'}, {x:.72,y:.22,dir:'↓',color:'#2E86DE'} ],
-  '카':[ {x:.22,y:.22,dir:'↓',color:'#E84040'}, {x:.72,y:.22,dir:'↓',color:'#2E86DE'} ],
-  '타':[ {x:.22,y:.18,dir:'→',color:'#E84040'}, {x:.72,y:.22,dir:'↓',color:'#2E86DE'} ],
-  '파':[ {x:.22,y:.28,dir:'→',color:'#E84040'}, {x:.72,y:.22,dir:'↓',color:'#2E86DE'} ],
-  '하':[ {x:.38,y:.15,dir:'→',color:'#E84040'}, {x:.72,y:.22,dir:'↓',color:'#2E86DE'} ],
+  '가':[ {x:.18,y:.18,dir:'→',color:'#E84040'}, {x:.72,y:.18,dir:'↓',color:'#1e6fc0'} ],
+  '나':[ {x:.22,y:.22,dir:'↓',color:'#E84040'}, {x:.7,y:.22,dir:'↓',color:'#1e6fc0'} ],
+  '다':[ {x:.5,y:.18,dir:'←',color:'#E84040'}, {x:.72,y:.22,dir:'↓',color:'#1e6fc0'} ],
+  '라':[ {x:.18,y:.18,dir:'→',color:'#E84040'}, {x:.72,y:.22,dir:'↓',color:'#1e6fc0'} ],
+  '마':[ {x:.2,y:.2,dir:'→',color:'#E84040'},   {x:.72,y:.22,dir:'↓',color:'#1e6fc0'} ],
+  '바':[ {x:.35,y:.15,dir:'↓',color:'#E84040'}, {x:.72,y:.22,dir:'↓',color:'#1e6fc0'} ],
+  '사':[ {x:.38,y:.2,dir:'↙',color:'#E84040'},  {x:.72,y:.22,dir:'↓',color:'#1e6fc0'} ],
+  '아':[ {x:.18,y:.28,dir:'↻',color:'#E84040'}, {x:.72,y:.22,dir:'↓',color:'#1e6fc0'} ],
+  '자':[ {x:.25,y:.28,dir:'→',color:'#E84040'}, {x:.72,y:.22,dir:'↓',color:'#1e6fc0'} ],
+  '차':[ {x:.38,y:.15,dir:'→',color:'#E84040'}, {x:.72,y:.22,dir:'↓',color:'#1e6fc0'} ],
+  '카':[ {x:.22,y:.22,dir:'↓',color:'#E84040'}, {x:.72,y:.22,dir:'↓',color:'#1e6fc0'} ],
+  '타':[ {x:.22,y:.18,dir:'→',color:'#E84040'}, {x:.72,y:.22,dir:'↓',color:'#1e6fc0'} ],
+  '파':[ {x:.22,y:.28,dir:'→',color:'#E84040'}, {x:.72,y:.22,dir:'↓',color:'#1e6fc0'} ],
+  '하':[ {x:.38,y:.15,dir:'→',color:'#E84040'}, {x:.72,y:.22,dir:'↓',color:'#1e6fc0'} ],
 };
 // Numbers & English get simple single hint
 ['1','2','3','4','5','6','7','8','9','10'].forEach(n=> HINTS[n]=[{x:.5,y:.12,dir:'↓',color:'#26de81'}]);
@@ -930,7 +931,7 @@ function getColorForPos(nx, ny) {
   // Korean: left portion = consonant (red), right = vowel (blue)
   if(mode==='korean') {
     // roughly left 60% = consonant, right 40% = vowel
-    return nx < .62 ? '#E84040CC' : '#2E86DECC';
+    return nx < .62 ? '#E84040CC' : '#1e6fc0CC';
   }
   if(mode==='number') return '#26de81CC';
   return '#FF9F43CC';
@@ -972,8 +973,8 @@ function updateFillMeter(pct) {
   document.getElementById('fill-bar').style.width = Math.min(pct,100)+'%';
   document.getElementById('fill-pct').textContent = pct+'%';
   const color = pct>=cfg.fillGoal ? 'linear-gradient(90deg,#26de81,#00b894)' :
-                pct>50 ? 'linear-gradient(90deg,#2E86DE,#26de81)' :
-                'linear-gradient(90deg,#87CEEB,#2E86DE)';
+                pct>50 ? 'linear-gradient(90deg,#1e6fc0,#26de81)' :
+                'linear-gradient(90deg,#87CEEB,#1e6fc0)';
   document.getElementById('fill-bar').style.background = color;
 }
 
@@ -1030,7 +1031,7 @@ function spawnCelebration() {
 
   const rect = paintCanvas.getBoundingClientRect();
   const cx=rect.left+cSize/2, cy=rect.top+cSize/2;
-  const colors=['#E84040','#2E86DE','#26de81','#FFD32A','#FF9F43','#FF6B9D','#A29BFE'];
+  const colors=['#E84040','#1e6fc0','#26de81','#FFD32A','#FF9F43','#FF6B9D','#A29BFE'];
   for(let i=0;i<28;i++){
     setTimeout(()=>{
       const el=document.createElement('div');
@@ -1640,5 +1641,6 @@ window.addEventListener('DOMContentLoaded',()=>{
 });
 window.addEventListener('resize', initCanvases);
 </script>
+<script src="a11y-helper.js"></script>
 </body>
 </html>

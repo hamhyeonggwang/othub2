@@ -1,6 +1,6 @@
 :root {
   --navy: #071b3f;
-  --blue: #1d6fdc;
+  --blue: #1a63c6;
   --cyan: #21bff3;
   --ice: #eef6ff;
   --line: rgba(21, 90, 165, 0.15);
@@ -85,7 +85,7 @@ svg { fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: 
 }
 .brand-mark svg, .brand-mark img { width: 100%; height: 100%; display: block; object-fit: contain; }
 .brand strong { display: block; font-size: 13px; letter-spacing: .08em; }
-.brand small { display: block; margin-top: 3px; color: #728198; font-size: 10px; letter-spacing: .08em; }
+.brand small { display: block; margin-top: 3px; color: #5a687e; font-size: 10px; letter-spacing: .08em; }
 
 .desktop-nav { display: flex; flex-direction: column; gap: 4px; margin: 36px 0 0; }
 .desktop-nav a {
@@ -355,7 +355,7 @@ h2 { font-size: clamp(40px, 5vw, 65px); font-weight: 700; }
 
 .lab-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 18px; }
 .lab-status { display: block; font-size: 10px; font-weight: 800; letter-spacing: .06em; margin-bottom: 12px; }
-.lab-status[data-status="concept"] { color: #a6772e; }
+.lab-status[data-status="concept"] { color: #986d2a; }
 .lab-status[data-status="research"] { color: #7a3fc9; }
 
 .work { width: 100%; max-width: none; padding-left: max(32px, calc((100vw - var(--max)) / 2)); padding-right: max(32px, calc((100vw - var(--max)) / 2)); background: #edf5fd; }
@@ -425,9 +425,9 @@ h2 { font-size: clamp(40px, 5vw, 65px); font-weight: 700; }
 .process-list { margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--line); }
 .process-list li { display: grid; grid-template-columns: 72px 1fr; align-items: center; min-height: 110px; border-bottom: 1px solid var(--line); transition: padding-left .25s, background .25s; }
 .process-list li:hover { padding-left: 14px; background: linear-gradient(90deg, rgba(222,241,255,.46), transparent); }
-.process-list li > span { color: #2b82c9; font: 700 10px monospace; }
+.process-list li > span { color: #2776b6; font: 700 10px monospace; }
 .process-list strong { display: block; font-size: 23px; letter-spacing: -.025em; }
-.process-list p { margin: 7px 0 0; color: #77889c; font-size: 13px; }
+.process-list p { margin: 7px 0 0; color: #637488; font-size: 13px; }
 
 .contact { width: calc(100% - 64px); max-width: 1320px; min-height: 560px; position: relative; overflow: hidden; display: grid; place-items: center; margin-bottom: 30px; border-radius: 34px; color: white; background: linear-gradient(135deg, #061a3b, #0a3f78 60%, #0b78a5); }
 .contact::before { content: ""; position: absolute; inset: 0; opacity: .12; background: repeating-linear-gradient(90deg, transparent 0 89px, white 90px), repeating-linear-gradient(0deg, transparent 0 89px, white 90px); mask-image: linear-gradient(to right, transparent, black, transparent); }
