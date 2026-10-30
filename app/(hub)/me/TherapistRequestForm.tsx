@@ -23,6 +23,9 @@ export default function TherapistRequestForm() {
         <label htmlFor="org">소속 (선택)</label>
         <input id="org" name="org" type="text" placeholder="○○병원 재활의학과" />
       </div>
+      <p className="auth-note">
+        면허번호와 소속은 치료사 인증을 확인하는 데에만 쓰며, 본인과 관리자만 볼 수 있습니다.
+      </p>
       <button className="auth-submit" type="submit" disabled={pending}>
         {pending ? "요청 중..." : "치료사 인증 요청"}
       </button>

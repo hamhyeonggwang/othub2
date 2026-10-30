@@ -41,7 +41,11 @@ export default function CommentSection({
             placeholder="댓글을 남겨보세요"
             required
             maxLength={1000}
+            aria-describedby="comment-privacy-note"
           />
+          <p className="hint" id="comment-privacy-note">
+            환자·대상자의 실명, 사진, 연락처처럼 개인을 알아볼 수 있는 정보는 쓰지 마세요.
+          </p>
           <button type="submit" className="auth-submit" disabled={pending}>
             {pending ? "등록 중..." : "댓글 등록"}
           </button>
