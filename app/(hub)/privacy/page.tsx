@@ -58,7 +58,7 @@ export default function PrivacyPage() {
 
       <section id="items" className="privacy-section">
         <h2>1. 처리하는 개인정보와 목적</h2>
-        <div className="privacy-table-wrap">
+        <div className="privacy-table-wrap" role="region" aria-label="처리하는 개인정보 표" tabIndex={0}>
           <table>
             <thead>
               <tr><th scope="col">구분</th><th scope="col">항목</th><th scope="col">목적</th></tr>
@@ -143,7 +143,7 @@ export default function PrivacyPage() {
       <section id="outsourcing" className="privacy-section">
         <h2>5. 처리 위탁과 국외 이전</h2>
         <p>서비스 운영을 위해 다음 업체의 서비스를 이용합니다.</p>
-        <div className="privacy-table-wrap">
+        <div className="privacy-table-wrap" role="region" aria-label="처리 위탁 업체 표" tabIndex={0}>
           <table>
             <thead>
               <tr><th scope="col">업체</th><th scope="col">위탁 업무</th><th scope="col">저장·처리 국가</th></tr>

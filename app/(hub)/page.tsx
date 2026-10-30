@@ -271,6 +271,7 @@ export default function LandingPage() {
         <nav aria-label="하단 메뉴">
           <Link href="/about">소개</Link>
           <Link href="/portfolio">만든 사람</Link>
+          <Link href="/terms">이용약관</Link>
           <Link href="/privacy" className="home-footer-privacy">개인정보처리방침</Link>
           <a href="mailto:h2g0614@gmail.com">문의</a>
         </nav>
