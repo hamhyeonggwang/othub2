@@ -2,7 +2,8 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>html{touch-action:manipulation}/* 두 번 탭 확대만 막고 두 손가락 확대는 허용 */</style>
 <title>마라탕 키오스크 훈련</title>
 <script src="kiosk-image-save.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
@@ -405,6 +406,12 @@ body{font-family:'Noto Sans KR',sans-serif;background:#2a1a1a;min-height:100vh;d
 
 .toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(60px);background:rgba(100,0,0,.95);color:white;padding:12px 22px;border-radius:50px;font-size:14px;font-weight:700;z-index:700;pointer-events:none;transition:transform .35s cubic-bezier(.4,0,.2,1);white-space:nowrap;border:2px solid rgba(192,57,43,.5);}
 .toast.show{transform:translateX(-50%) translateY(0);}
+</style>
+<style id="a11y-contrast">/* 접근성: 글자·배경 대비 4.5 이상으로 보정 (자동 계산) */
+.tplb{color:#7f7777 !important;opacity:1 !important}
+.tpst{color:#867979 !important;opacity:1 !important}
+.tgs{color:#867b7b !important;opacity:1 !important}
+.stl{color:#8f8888 !important;opacity:1 !important}
 </style>
 </head>
 <body>
@@ -1069,5 +1076,6 @@ function updateStats(){
 setMission();
 render();
 </script>
+<script src="a11y-helper.js"></script>
 </body>
 </html>
