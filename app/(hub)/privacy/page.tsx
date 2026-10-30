@@ -122,13 +122,15 @@ export default function PrivacyPage() {
       <section id="retention" className="privacy-section">
         <h2>3. 보유 기간과 파기</h2>
         <ul>
-          <li>회원 정보와 활동 기록: <Todo>보유 기간 (예: 회원 탈퇴 시까지)</Todo></li>
+          <li>회원 정보와 활동 기록: 회원 탈퇴 시까지. 탈퇴하면 바로 삭제합니다.</li>
           <li>평가 기록: <Todo>보유 기간과 삭제 방법</Todo></li>
           <li>방문 통계: <Todo>보유 기간</Todo></li>
         </ul>
         <p>
           보유 기간이 끝나거나 처리 목적을 달성한 개인정보는 지체 없이 복구할 수 없는 방법으로
-          파기합니다. <Todo>파기 절차와 회원 탈퇴 방법</Todo>
+          파기합니다. 회원은 My Hub의 &lsquo;회원 탈퇴&rsquo;에서 직접 탈퇴할 수 있으며, 탈퇴하면 프로필(치료사
+          인증 정보 포함), 댓글, 좋아요, 북마크, 평가 기록을 바로 삭제합니다. Google 로그인 계정은 같은
+          계정을 쓰는 다른 서비스가 있어 삭제하지 않으며, 계정 삭제는 아래 연락처로 요청할 수 있습니다.
         </p>
       </section>
 
