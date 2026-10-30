@@ -255,3 +255,12 @@
   font-size: 13px;
   cursor: pointer;
 }
+
+.auth-notice {
+  margin-bottom: 16px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: #ecf6ef;
+  color: #1f5132;
+  font-size: 13px;
+}

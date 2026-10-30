@@ -11,6 +11,8 @@ export async function GET(request: Request) {
     const supabase = await createClient();
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {
+      // 탈퇴 후 다시 로그인한 계정은 OTHub 프로필이 없으므로 일반 회원으로 새로 만든다
+      await Promise.resolve(supabase.rpc("othub_ensure_my_profile")).catch(() => {});
       return NextResponse.redirect(`${origin}${next}`);
     }
   }

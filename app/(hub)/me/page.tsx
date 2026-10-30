@@ -12,6 +12,7 @@ import { externalContentUrl } from "@/lib/catalog";
 import WorkspaceIcon from "@/components/WorkspaceIcon";
 import TherapistRequestForm from "./TherapistRequestForm";
 import SignOutButton from "./SignOutButton";
+import WithdrawForm from "./WithdrawForm";
 
 export const metadata: Metadata = {
   title: "My Hub",
@@ -249,6 +250,7 @@ export default async function ProfilePage({
             </div>
             <p className="account-email">{user.email}</p>
             <SignOutButton />
+            <WithdrawForm />
           </section>
           {role === "admin" && (
             <section className="workspace-panel">
