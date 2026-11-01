@@ -255,3 +255,10 @@
   font-size: 13px;
   cursor: pointer;
 }
+
+/* Google 로그인 버튼(GIS): Google이 그리는 버튼을 가운데 둔다 */
+.auth-gis-button {
+  display: flex;
+  justify-content: center;
+  min-height: 44px;
+}
