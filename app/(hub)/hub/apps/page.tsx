@@ -5,7 +5,7 @@ import { getPublishedContent } from "@/lib/supabase/content";
 import ToolCatalog from "@/components/ToolCatalog";
 
 export const metadata: Metadata = {
-  title: "Tool",
+  title: "훈련 도구",
   description:
     "키오스크 훈련, 손 동작 훈련, 시선 추적 훈련 웹앱을 찾아보세요.",
   alternates: { canonical: "/hub/apps" },

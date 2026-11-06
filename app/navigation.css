@@ -1,4 +1,4 @@
-.desktop-nav a[aria-current="page"] { background: var(--ice); color: var(--blue); font-weight: 750; }
+.desktop-nav a[aria-current="page"] { background: #e3f2ea; color: #134e3a; font-weight: 700; }
 .preview-notice { position: fixed; z-index: 100; bottom: 12px; left: 50%; transform: translateX(-50%); max-width: calc(100% - 24px); padding: 10px 16px; border-radius: 12px; background: #102442; color: white; font-size: 12px; text-align: center; box-shadow: 0 3px 16px #10244230; }
 .nav-hint { display: inline-block; width: .55rem; height: .55rem; margin-left: .65rem; border-radius: 50%; background: currentColor; opacity: 0; }
 .nav-hint[data-pending="true"] { opacity: .65; }
