@@ -159,7 +159,7 @@ export default function PrivacyPage() {
               <tr>
                 <td>Vercel Inc.</td>
                 <td>웹사이트 호스팅과 전송</td>
-                <td>미국 등 <Todo>처리 리전</Todo></td>
+                <td>미국 (서버 처리: 워싱턴 D.C. iad1 리전), 화면 파일은 이용자와 가까운 전송망 지점</td>
               </tr>
               <tr>
                 <td>Google LLC</td>
