@@ -426,6 +426,11 @@
 .home2-footer small {
   font-size: 12px;
 }
+/* 개인정보처리방침은 다른 하단 링크와 구별되게 굵게 표시한다 */
+.home2-footer .home2-footer-privacy {
+  font-weight: 700;
+  color: var(--h-green);
+}
 .home2-footer a {
   display: inline-flex;
   align-items: center;

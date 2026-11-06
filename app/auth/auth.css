@@ -256,6 +256,13 @@
   cursor: pointer;
 }
 
+/* 안내 문구 안의 링크는 색만으로 구분하지 않고 밑줄을 둔다 */
+.auth-note a {
+  color: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
 /* Google 로그인 버튼(GIS): Google이 그리는 버튼을 가운데 둔다 */
 .auth-gis-button {
   display: flex;
