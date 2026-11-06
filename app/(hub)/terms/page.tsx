@@ -11,12 +11,7 @@ export const metadata: Metadata = {
 
 /**
  * 이용약관. 서비스가 실제로 제공하는 기능(무료 도구, Google 로그인, 치료사 인증, 댓글)만 다룬다.
- * <Todo>로 감싼 부분은 운영자가 정해야 하는 값으로, 확정 전에는 공개 배포하지 않는다.
  */
-function Todo({ children }: { children: React.ReactNode }) {
-  return <mark className="privacy-todo">[확정 필요] {children}</mark>;
-}
-
 const CONTACT = "h2g0614@gmail.com";
 
 export default function TermsPage() {
@@ -32,11 +27,11 @@ export default function TermsPage() {
         </p>
         <h1>이용약관</h1>
         <p className="lead">
-          이 약관은 <Todo>운영 주체</Todo>(이하 &lsquo;운영자&rsquo;)가 제공하는 OTHub(이하
+          이 약관은 함형광(이하 &lsquo;운영자&rsquo;)가 제공하는 OTHub(이하
           &lsquo;서비스&rsquo;)의 이용 조건과 절차, 운영자와 이용자의 권리·의무를 정합니다.
         </p>
         <p className="privacy-meta">
-          시행일: <Todo>시행 날짜</Todo>
+          시행일: 2026년 11월 13일
         </p>
       </header>
 
@@ -59,8 +54,8 @@ export default function TermsPage() {
           </li>
           <li>계정은 본인만 사용해야 하며, 공용 기기에서는 사용 후 로그아웃해 주세요.</li>
           <li>
-            회원은 언제든 My Hub의 &lsquo;회원 탈퇴&rsquo;에서 직접 탈퇴할 수 있습니다. 탈퇴하면 프로필,
-            댓글, 좋아요, 북마크, 평가 기록이 바로 삭제됩니다. Google 로그인 계정은 같은 계정을 쓰는 다른
+            회원은 언제든 운영자 연락처로 탈퇴를 요청할 수 있습니다. 요청을 받으면 프로필, 댓글,
+            좋아요, 북마크, 평가 기록을 지체 없이 삭제합니다. Google 로그인 계정은 같은 계정을 쓰는 다른
             서비스가 있어 삭제하지 않습니다.
           </li>
         </ul>
@@ -111,7 +106,10 @@ export default function TermsPage() {
         <h2>제6조 콘텐츠의 권리</h2>
         <p>
           서비스가 제공하는 도구·문구·이미지의 권리는 운영자 또는 각 제작자에게 있습니다.
-          <Todo>도구 소스 공개 여부와 라이선스(예: MIT), 치료 현장에서의 이용·출력 허용 범위</Todo>
+          OTHub의 소스 코드는 MIT 라이선스로 공개합니다(
+          <a href="https://github.com/hamhyeonggwang/othub2">GitHub 저장소</a>). 치료실, 가정, 교육
+          현장에서 도구를 화면으로 쓰거나 출력해 쓰는 것은 자유롭습니다. 다만 OTHub 이름과 로고, 다른
+          제작자가 만든 외부 도구는 MIT 라이선스에 포함되지 않습니다.
         </p>
       </section>
 
@@ -135,7 +133,7 @@ export default function TermsPage() {
         <h2>제9조 약관의 변경과 분쟁 해결</h2>
         <ul>
           <li>약관을 바꾸면 시행 7일 전부터 이 페이지에 알립니다. 회원에게 불리한 변경은 30일 전부터 알립니다.</li>
-          <li>이 약관은 대한민국 법을 따르며, 분쟁이 생기면 먼저 성실히 협의합니다. <Todo>관할 법원</Todo></li>
+          <li>이 약관은 대한민국 법을 따르며, 분쟁이 생기면 먼저 성실히 협의합니다. 협의로 해결되지 않으면 민사소송법에 따른 관할 법원에서 해결합니다.</li>
           <li>문의: <a href={`mailto:${CONTACT}`}>{CONTACT}</a></li>
         </ul>
       </section>

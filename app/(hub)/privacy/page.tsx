@@ -12,12 +12,7 @@ export const metadata: Metadata = {
 /**
  * 개인정보처리방침.
  * 수집 항목·저장 위치·접근 통제는 코드와 DB 설정에서 확인한 사실만 적는다.
- * <Todo>로 감싼 부분은 운영자가 정해야 하는 값으로, 확정 전에는 공개 배포하지 않는다.
  */
-function Todo({ children }: { children: React.ReactNode }) {
-  return <mark className="privacy-todo">[확정 필요] {children}</mark>;
-}
-
 const CONTACT = "h2g0614@gmail.com";
 
 export default function PrivacyPage() {
@@ -37,7 +32,7 @@ export default function PrivacyPage() {
           보호하고, 관련 고충을 신속하게 처리하기 위해 다음과 같이 개인정보처리방침을 둡니다.
         </p>
         <p className="privacy-meta">
-          시행일: <Todo>시행 날짜</Todo>
+          시행일: 2026년 11월 13일
         </p>
       </header>
 
@@ -122,14 +117,14 @@ export default function PrivacyPage() {
       <section id="retention" className="privacy-section">
         <h2>3. 보유 기간과 파기</h2>
         <ul>
-          <li>회원 정보와 활동 기록: 회원 탈퇴 시까지. 탈퇴하면 바로 삭제합니다.</li>
-          <li>평가 기록: <Todo>보유 기간과 삭제 방법</Todo></li>
-          <li>방문 통계: <Todo>보유 기간</Todo></li>
+          <li>회원 정보와 활동 기록: 회원 탈퇴 시까지. 탈퇴하면 지체 없이 삭제합니다.</li>
+          <li>평가 기록: 회원 탈퇴 시까지. 탈퇴하면 회원 정보와 함께 지체 없이 삭제합니다.</li>
+          <li>방문 통계: 수집한 날부터 1년. 1년이 지난 기록은 매일 자동으로 삭제합니다.</li>
         </ul>
         <p>
           보유 기간이 끝나거나 처리 목적을 달성한 개인정보는 지체 없이 복구할 수 없는 방법으로
-          파기합니다. 회원은 My Hub의 &lsquo;회원 탈퇴&rsquo;에서 직접 탈퇴할 수 있으며, 탈퇴하면 프로필(치료사
-          인증 정보 포함), 댓글, 좋아요, 북마크, 평가 기록을 바로 삭제합니다. Google 로그인 계정은 같은
+          파기합니다. 회원은 아래 연락처로 탈퇴를 요청할 수 있으며, 요청을 받으면 프로필(치료사
+          인증 정보 포함), 댓글, 좋아요, 북마크, 평가 기록을 지체 없이 삭제합니다. Google 로그인 계정은 같은
           계정을 쓰는 다른 서비스가 있어 삭제하지 않으며, 계정 삭제는 아래 연락처로 요청할 수 있습니다.
         </p>
       </section>
@@ -138,7 +133,7 @@ export default function PrivacyPage() {
         <h2>4. 제3자 제공</h2>
         <p>
           서비스는 이용자의 개인정보를 제3자에게 제공하지 않습니다. 다만 법령에 특별한 규정이 있는
-          경우는 예외로 합니다. <Todo>제3자 제공이 없다는 운영 방침 확인</Todo>
+          경우는 예외로 합니다.
         </p>
       </section>
 
@@ -171,7 +166,13 @@ export default function PrivacyPage() {
         </div>
         <p>
           개인정보는 이용자가 서비스를 이용할 때 네트워크를 통해 위 업체의 서버로 전송됩니다.
-          <Todo>국외 이전 고지 항목 (이전 일시·방법, 보유 기간, 업체 연락처)과 이전 거부 방법</Todo>
+          이전하는 항목은 위 표의 위탁 업무에 필요한 정보이며, 서비스를 이용할 때마다 네트워크로
+          수시로 전송됩니다. 보유 기간은 3항과 같습니다. 각 업체의 개인정보 문의처는 업체의
+          개인정보처리방침(<a href="https://supabase.com/privacy">Supabase</a>,{" "}
+          <a href="https://vercel.com/legal/privacy-policy">Vercel</a>,{" "}
+          <a href="https://policies.google.com/privacy">Google</a>)에서 확인할 수 있습니다. 국외 이전을
+          원하지 않으면 회원으로 가입하지 않거나 탈퇴를 요청할 수 있습니다. 이 경우 로그인이 필요한
+          기능(저장, 댓글, 평가 기록)은 쓸 수 없지만, 로그인 없는 훈련 도구는 그대로 쓸 수 있습니다.
         </p>
       </section>
 
@@ -220,8 +221,8 @@ export default function PrivacyPage() {
       <section id="officer" className="privacy-section">
         <h2>9. 개인정보 보호책임자</h2>
         <ul>
-          <li>성명·직책: <Todo>개인정보 보호책임자</Todo></li>
-          <li>운영 주체: <Todo>개인 또는 기관명</Todo></li>
+          <li>성명·직책: 함형광 (운영자)</li>
+          <li>운영 주체: 개인 운영 (함형광)</li>
           <li>연락처: <a href={`mailto:${CONTACT}`}>{CONTACT}</a></li>
         </ul>
         <p>
