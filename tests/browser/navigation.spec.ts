@@ -7,7 +7,7 @@ test("slow page data shows navigation feedback while the sidebar stays usable", 
     await route.continue();
   });
   const menu = page.getByRole("navigation", { name: "주요 메뉴" });
-  const click = menu.getByRole("link", { name: "Content", exact: true }).click();
+  const click = menu.getByRole("link", { name: "자료", exact: true }).click();
   await expect(page.locator('.nav-hint[data-pending="true"], .route-loading [role="status"]').first()).toBeVisible({ timeout: 1000 });
   await expect(menu.getByRole("link", { name: "소개", exact: true })).toBeVisible();
   await click;
@@ -24,7 +24,7 @@ test("prefetch does not count; navigation survives telemetry failure", async ({ 
   });
   await page.goto("/");
   await expect.poll(() => views).toEqual(["/"]);
-  const tool = page.getByRole("navigation", { name: "주요 메뉴" }).getByRole("link", { name: "Tool", exact: true });
+  const tool = page.getByRole("navigation", { name: "주요 메뉴" }).getByRole("link", { name: "훈련 도구", exact: true });
   await tool.hover();
   await page.waitForTimeout(1200);
   expect(views).toEqual(["/"]);
@@ -49,7 +49,7 @@ test("mobile menu is accessible, fits, and closes after navigation", async ({ pa
   await expect(page.getByRole("button", { name: "메뉴 닫기" })).toHaveAttribute("aria-expanded", "true");
   const menu = page.getByRole("navigation", { name: "주요 메뉴" });
   await expect(menu.getByRole("link", { name: "소개", exact: true })).toBeInViewport();
-  await menu.getByRole("link", { name: "Tool", exact: true }).click();
+  await menu.getByRole("link", { name: "훈련 도구", exact: true }).click();
   await expect(page.getByRole("button", { name: "메뉴 열기" })).toHaveAttribute("aria-expanded", "false");
   await expect(page.getByRole("heading", { name: "훈련 도구", exact: true })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);

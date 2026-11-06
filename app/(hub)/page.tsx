@@ -1,10 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import BrandMark from "@/components/BrandMark";
-import WorkspaceIcon from "@/components/WorkspaceIcon";
-import { COLLECTIONS } from "@/lib/collections";
+import HomeToolPreview from "@/components/HomeToolPreview";
+import { getCollection } from "@/lib/collections";
 import "./hub/hub.css";
-import "./hub/catalog.css";
 import "./home.css";
 
 export const metadata: Metadata = { alternates: { canonical: "/" } };
@@ -31,248 +29,156 @@ const organization = {
   ],
 };
 
-const starters = [
+/** 도구 타일. 준비물 한 줄 = 치료사가 회기 전에 확인하는 입력 방식과 카메라 필요 여부 */
+const tiles = [
   {
-    href: "/hub/apps/cu-kiosk-trainer",
-    kind: "kiosk" as const,
-    name: "편의점 셀프계산대",
-    text: "상품 스캔부터 결제까지, 일상 속 과정을 차근차근 연습해요.",
-    label: "CU 키오스크 훈련",
-    environment: "카메라 없이",
+    href: "/hub/apps/everyday-cognition",
+    src: "/home/everyday-cognition.webp",
+    alt: "일상 인지활동의 재료 나눠 담기 화면",
+    name: "일상 인지활동",
+    needs: "내 이야기로 하는 인지활동. 터치로 조작, 성인과 노인",
+    big: true,
   },
   {
     href: "/hub/apps/korail-kiosk-trainer",
-    kind: "kiosk" as const,
+    src: "/home/korail-kiosk.webp",
+    alt: "기차표 예매 키오스크 훈련 화면",
     name: "기차표 예매하기",
-    text: "노선과 시간, 좌석을 선택하며 이동에 필요한 과정을 연습해요.",
-    label: "코레일 키오스크 훈련",
-    environment: "카메라 없이",
+    needs: "터치, 카메라 없이",
   },
   {
     href: "/hub/apps/airdrawing",
-    kind: "hand" as const,
+    src: "/home/airdrawing.webp",
+    alt: "에어 드로잉 시작 화면",
     name: "손으로 그리는 그림",
-    text: "웹캠 앞에서 손을 움직이며 허공에 그림을 그려보세요.",
-    label: "에어 드로잉",
-    environment: "카메라 필요",
+    needs: "카메라 필요",
+  },
+  {
+    href: "/hub/apps/gazeplay-stars",
+    src: "/home/gazeplay.webp",
+    alt: "시선으로 별자리를 그리는 화면",
+    name: "시선으로 별자리 그리기",
+    needs: "카메라 필요",
+  },
+  {
+    href: "/hub/apps/maratang-kiosk-trainer",
+    src: "/home/maratang-kiosk.webp",
+    alt: "마라탕 주문 키오스크 훈련 화면",
+    name: "마라탕 주문하기",
+    needs: "터치, 카메라 없이",
   },
 ];
 
+/** 지역사회 모음의 대표 과제 — 각 줄이 해당 도구로 바로 간다 */
+const communitySteps = [
+  { href: "/hub/apps/cu-kiosk-trainer", label: "편의점에서 장보기", icon: "M5 8h14l-1.5 10h-11zM9 8V6a3 3 0 0 1 6 0v2" },
+  { href: "/hub/apps/paik-kiosk-trainer", label: "카페에서 주문하기", icon: "M5 10h11v4a5 5 0 0 1-5 5h-1a5 5 0 0 1-5-5zM16 11h1.5a2.5 2.5 0 0 1 0 5H16M8 4v3M12 4v3" },
+  { href: "/hub/apps/korail-kiosk-trainer", label: "기차표 예매하기", icon: "M7 4h10a3 3 0 0 1 3 3v8a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3zM4 11h16M8 18l-2 3M16 18l2 3" },
+];
+
 export default function LandingPage() {
+  const community = getCollection("community-iadl");
   return (
-    <div className="product-home">
+    <div className="home2">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(organization) }}
       />
-      <main id="main" className="hub-shell home-main">
-        <section className="home-hero" aria-labelledby="home-title">
-          <div className="home-intro">
-            <p className="home-kicker">
-              <span /> BY OTs, FOR EVERYONE
-            </p>
-            <h1 id="home-title">
-              현장의 아이디어를,
-              <br />
-              <em>오늘의 도구로.</em>
+      <main id="main" className="hub-shell home2-main">
+        <section className="home2-hero" aria-labelledby="home-title">
+          <div>
+            <h1 id="home-title" className="home2-title">
+              <span className="home2-title-soft">현장의 아이디어가</span>
+              <span className="home2-title-strong">모두의 도구가 됩니다</span>
             </h1>
-            <p className="home-lead">
-              훈련 도구부터 임상 자료, 평가 기록까지.
-              <br />
-              작업치료사가 만들고 함께 사용하는 OTHub에서
-              <br className="home-wide-break" /> 오늘 필요한 도구를 찾아보세요.
+            <p className="home2-lead">
+              작업치료사가 현장에서 떠올린 아이디어를 키오스크, 손 동작, 인지활동 도구로 만들어
+              나눕니다. 치료실에서도 집에서도, 훈련 도구는 로그인 없이 시작할 수 있어요.
             </p>
-            <div className="home-actions">
-              <Link className="button home-primary" href="/hub/apps">
-                훈련 도구 둘러보기 <WorkspaceIcon kind="arrow" />
-              </Link>
-              <Link className="home-text-link" href="/about">
-                OTHub 소개 <span aria-hidden="true">↗</span>
-              </Link>
+            <div className="home2-actions">
+              <Link className="home2-btn home2-btn-primary" href="/hub/apps">훈련 도구 둘러보기</Link>
+              <Link className="home2-btn" href="/about">OTHub 소개</Link>
             </div>
-            <p className="home-access-note">
-              훈련 웹앱은 로그인 없이 시작할 수 있어요.
-            </p>
+            <p className="home2-note">카메라가 필요한 도구는 시작 전에 알려 드려요.</p>
           </div>
-          <div className="home-launchpad">
-            <div className="home-launchpad-heading">
-              <span className="home-mark">
-                <BrandMark />
-              </span>
-              <div>
-                <strong>오늘은 무엇을 해볼까요?</strong>
-                <small>필요한 곳으로 바로 이동하세요</small>
-              </div>
+          <HomeToolPreview />
+        </section>
+
+        <section className="home2-paths" aria-label="사용자별 시작하기">
+          <div className="home2-path home2-path-pro">
+            <div>
+              <h2>작업치료사라면</h2>
+              <p>도구를 치료에 쓰고 평가 기록을 이어 가세요. 써 본 경험이 다음 도구를 다듬습니다.</p>
             </div>
-            <Link href="/hub/apps" className="home-launch-row">
-              <span className="home-launch-icon">
-                <WorkspaceIcon kind="kiosk" />
-              </span>
-              <span>
-                <strong>일상 속 활동 연습하기</strong>
-                <small>키오스크 · 손 동작 · 시선 추적</small>
-              </span>
-              <WorkspaceIcon kind="arrow" />
-            </Link>
-            <Link href="/assess" className="home-launch-row">
-              <span className="home-launch-icon">
-                <WorkspaceIcon kind="assess" />
-              </span>
-              <span>
-                <strong>평가 기록 이어가기</strong>
-                <small>치료사 인증 회원 전용</small>
-              </span>
-              <WorkspaceIcon kind="arrow" />
-            </Link>
-            <Link href="/hub" className="home-launch-row">
-              <span className="home-launch-icon">
-                <WorkspaceIcon kind="content" />
-              </span>
-              <span>
-                <strong>필요한 자료 찾아보기</strong>
-                <small>영상 · 임상 정보 · 참고 자료</small>
-              </span>
-              <WorkspaceIcon kind="arrow" />
-            </Link>
-            <div className="home-launchpad-foot">
-              <span className="home-status-dot" /> 각자의 현장에서, 함께 만드는
-              도구
+            <Link className="home2-btn home2-btn-light" href="/assess">평가 이어 가기</Link>
+          </div>
+          <div className="home2-path home2-path-family">
+            <div>
+              <h2>보호자와 대상자라면</h2>
+              <p>익숙한 일상을 집에서도 연습해요. 로그인 없이, 큰 글자와 큰 버튼으로 만들었어요.</p>
             </div>
+            <Link className="home2-btn" href="/hub/apps">바로 해 보기</Link>
           </div>
         </section>
 
-        <section className="home-section" aria-labelledby="start-title">
-          <div className="home-section-heading">
-            <div>
-              <p className="workspace-eyebrow">START HERE</p>
-              <h2 id="start-title">익숙한 일상부터, 하나씩</h2>
-            </div>
-            <Link className="home-text-link" href="/hub/apps">
-              전체 도구 <span aria-hidden="true">→</span>
-            </Link>
+        <section className="home2-tools" aria-labelledby="tools-title">
+          <div className="home2-head">
+            <h2 id="tools-title">익숙한 일상부터, 하나씩</h2>
+            <Link className="home2-link" href="/hub/apps">전체 도구 보기</Link>
           </div>
-          <div className="home-starters">
-            {starters.map((item) => (
-              <Link
-                href={item.href}
-                key={item.href}
-                className="home-starter"
-                data-category={item.kind}
-              >
-                <div className="home-starter-visual" aria-hidden="true">
-                  <WorkspaceIcon kind={item.kind} />
-                  <span>{item.label}</span>
-                </div>
-                <div className="home-starter-copy">
-                  <span className="home-tool-environment">
-                    {item.environment}
-                  </span>
-                  <h3>{item.name}</h3>
-                  <p>{item.text}</p>
-                  <span className="home-start-action">
-                    도구 살펴보기 <WorkspaceIcon kind="arrow" />
-                  </span>
-                </div>
+          <div className="home2-bento">
+            {tiles.map((t) => (
+              <Link key={t.href} href={t.href} className={t.big ? "home2-tile home2-tile-big" : "home2-tile"}>
+                {/* next/image를 서버 컴포넌트에서 쓰면 홈 본문이 스트리밍 블록으로 밀려
+                    JavaScript 없이 보이지 않는다. 이미 줄여 둔 webp라 일반 img로 지연 로딩한다. */}
+                <img src={t.src} alt={t.alt} width={960} height={720} loading="lazy" decoding="async" />
+                <span className="home2-tile-meta">
+                  <strong>{t.name}</strong>
+                  <span>{t.needs}</span>
+                </span>
               </Link>
             ))}
           </div>
         </section>
 
-        {COLLECTIONS.map((collection) => (
-          <section
-            className="home-collection"
-            key={collection.slug}
-            aria-labelledby={`collection-${collection.slug}`}
-          >
+        {community && (
+          <section className="home2-community" aria-labelledby="community-title">
             <div>
-              <p className="workspace-eyebrow">함께 쓰면 좋은 도구 모음</p>
-              <h2 id={`collection-${collection.slug}`}>
-                지역사회 활동을
-                <br />
-                미리 연습해 보세요.
-              </h2>
-              <p>
-                편의점에서 계산하고, 카페에서 주문하고, 기차표를 예매하는 일.
-                <br />
-                하나의 주제에 연결된 도구를 모았습니다.
-              </p>
-              <Link
-                className="button button-secondary"
-                href={`/collections/${collection.slug}`}
-              >
-                {collection.title} 모음 보기 <WorkspaceIcon kind="arrow" />
+              <h2 id="community-title">지역사회 활동을 미리 연습해 보세요</h2>
+              <p>편의점에서 계산하고, 카페에서 주문하고, 기차표를 예매하는 일을 하나의 주제로 모았어요.</p>
+              <Link className="home2-btn home2-btn-light" href={`/collections/${community.slug}`}>
+                지역사회 모음 보기
               </Link>
             </div>
-            <div className="home-collection-route" aria-hidden="true">
-              <span>
-                <i>01</i> 편의점에서 장보기
-              </span>
-              <span>
-                <i>02</i> 카페에서 주문하기
-              </span>
-              <span>
-                <i>03</i> 기차표 예매하기
-              </span>
-            </div>
+            <ul className="home2-steps">
+              {communitySteps.map((s) => (
+                <li key={s.href}>
+                  <Link href={s.href}>
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d={s.icon} /></svg>
+                    {s.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
           </section>
-        ))}
+        )}
 
-        <section
-          className="home-section home-access"
-          aria-labelledby="access-title"
-        >
-          <div className="home-section-heading">
-            <div>
-              <p className="workspace-eyebrow">YOUR WORKSPACE</p>
-              <h2 id="access-title">필요한 만큼, 편하게 시작하세요</h2>
-            </div>
-          </div>
-          <div className="home-access-grid">
-            <div>
-              <span className="home-access-label">누구나</span>
-              <h3>먼저 도구를 경험해 보세요</h3>
-              <p>
-                훈련 웹앱과 공개 콘텐츠는 로그인 없이 둘러볼 수 있습니다.
-                카메라가 필요한 도구는 시작 전에 안내해요.
-              </p>
-              <Link href="/hub/apps" className="home-text-link">
-                도구 탐색하기 →
-              </Link>
-            </div>
-            <div>
-              <span className="home-access-label">회원 · 치료사</span>
-              <h3>내 작업을 이어가세요</h3>
-              <p>
-                로그인하면 자료를 저장하고 의견을 나눌 수 있어요. 평가 세션과
-                결과 관리는 치료사 인증 후 이용합니다.
-              </p>
-              <Link href="/me" className="home-text-link">
-                My Hub로 이동 →
-              </Link>
-            </div>
-          </div>
+        <section className="home2-feedback" aria-labelledby="feedback-title">
+          <h2 id="feedback-title">다음 도구는 당신의 아이디어에서 시작합니다</h2>
+          <p>현장에서 필요했던 도구, 써 보며 불편했던 점을 들려주세요. 듣고, 정리하고, 만들어 다시 나눕니다.</p>
+          <a className="home2-link" href="mailto:h2g0614@gmail.com">아이디어 보내기</a>
         </section>
-
-        <div className="home-support">
-          <div>
-            <strong>함께 다듬어가는 OTHub</strong>
-            <p>사용 중 불편한 점이나 필요한 도구가 있다면 알려주세요.</p>
-          </div>
-          <a href="mailto:h2g0614@gmail.com">
-            의견 보내기 <span aria-hidden="true">↗</span>
-          </a>
-        </div>
       </main>
-      <footer className="home-footer">
-        <div>
+      <footer className="home2-footer">
+        <p className="home2-footer-brand">
           <strong>OTHub</strong>
           <span>작업치료사가 만들고, 함께 쓰는</span>
-        </div>
+        </p>
         <nav aria-label="하단 메뉴">
           <Link href="/about">소개</Link>
           <Link href="/portfolio">만든 사람</Link>
           <Link href="/terms">이용약관</Link>
-          <Link href="/privacy" className="home-footer-privacy">개인정보처리방침</Link>
+          <Link href="/privacy" className="home2-footer-privacy">개인정보처리방침</Link>
           <a href="mailto:h2g0614@gmail.com">문의</a>
         </nav>
         <small>© {new Date().getFullYear()} OTHub</small>

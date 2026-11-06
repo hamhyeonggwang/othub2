@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useFormStatus } from "react-dom";
 import { signInWithGoogle } from "@/app/actions/auth";
+import GoogleSignInButton, { GOOGLE_CLIENT_ID } from "@/components/GoogleSignInButton";
 
 export default function LoginForm({
   error,
@@ -21,9 +22,9 @@ export default function LoginForm({
           문의 주소로 알려주세요.
         </div>
       )}
-      <GoogleSubmit />
+      {GOOGLE_CLIENT_ID ? <GoogleSignInButton next={next ?? "/me"} /> : <GoogleSubmit />}
       <p className="auth-note">
-        Google 로그인 화면으로 이동합니다.
+        {GOOGLE_CLIENT_ID ? "Google 계정 선택 창이 열립니다." : "Google 로그인 화면으로 이동합니다."}
         <br />
         비밀번호는 OTHub에서 입력하지 않습니다.
       </p>
