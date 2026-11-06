@@ -116,7 +116,7 @@ test("home content is readable without JavaScript or motion", async ({
   const page = await context.newPage();
   await page.goto("http://127.0.0.1:4180/");
   await expect(
-    page.getByRole("heading", { name: /현장의 아이디어를/ }),
+    page.getByRole("heading", { name: /회기에 쓸 훈련 도구를/ }),
   ).toBeVisible();
   await expect(
     page.getByRole("link", { name: "훈련 도구 둘러보기", exact: true }),

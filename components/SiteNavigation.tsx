@@ -6,8 +6,8 @@ import { usePathname } from "next/navigation";
 import BrandMark from "@/components/BrandMark";
 
 const links = [
-  ["/hub/apps", "Tool"], ["/assess", "Assess"], ["/hub", "Content"],
-  ["/links", "Link"], ["/lab", "Project"], ["/groups", "Group"], ["/about", "소개"],
+  ["/hub/apps", "훈련 도구"], ["/assess", "평가"], ["/hub", "자료"],
+  ["/links", "링크"], ["/lab", "프로젝트"], ["/groups", "모임"], ["/about", "소개"],
 ] as const;
 
 function NavigationHint() {

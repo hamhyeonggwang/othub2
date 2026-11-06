@@ -6,7 +6,7 @@ import { getPublishedContent } from "@/lib/supabase/content";
 import HubFeed from "./HubFeed";
 
 export const metadata: Metadata = {
-  title: "Content",
+  title: "자료",
   description: "치료 영상과 임상 도구를 한곳에서 탐색하세요.",
   alternates: { canonical: "/hub" },
 };
