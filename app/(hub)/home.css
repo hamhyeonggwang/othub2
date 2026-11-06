@@ -405,9 +405,18 @@
   color: var(--h-muted);
   font-size: 14px;
 }
+.home2-footer-brand {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+  margin: 0 auto 0 0;
+}
 .home2-footer strong {
-  margin-right: auto;
   color: var(--h-ink);
+}
+.home2-footer-brand span {
+  font-size: 14px;
 }
 .home2-footer nav {
   display: flex;

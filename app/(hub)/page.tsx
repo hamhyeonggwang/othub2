@@ -88,12 +88,12 @@ export default function LandingPage() {
         <section className="home2-hero" aria-labelledby="home-title">
           <div>
             <h1 id="home-title" className="home2-title">
-              <span className="home2-title-soft">회기에 쓸 훈련 도구를</span>
-              <span className="home2-title-strong">지금 바로 열어 보세요</span>
+              <span className="home2-title-soft">현장의 아이디어가</span>
+              <span className="home2-title-strong">모두의 도구가 됩니다</span>
             </h1>
             <p className="home2-lead">
-              작업치료사가 만든 키오스크, 손 동작, 인지활동 도구를 치료실과 집에서 함께 씁니다.
-              대부분 로그인 없이 시작할 수 있어요.
+              작업치료사가 현장에서 떠올린 아이디어를 키오스크, 손 동작, 인지활동 도구로 만들어
+              나눕니다. 치료실에서도 집에서도, 훈련 도구는 로그인 없이 시작할 수 있어요.
             </p>
             <div className="home2-actions">
               <Link className="home2-btn home2-btn-primary" href="/hub/apps">훈련 도구 둘러보기</Link>
@@ -107,15 +107,15 @@ export default function LandingPage() {
         <section className="home2-paths" aria-label="사용자별 시작하기">
           <div className="home2-path home2-path-pro">
             <div>
-              <h2>치료사라면</h2>
-              <p>오늘 회기에 쓸 도구를 고르고, 평가 기록을 이어 가세요.</p>
+              <h2>작업치료사라면</h2>
+              <p>도구를 치료에 쓰고 평가 기록을 이어 가세요. 써 본 경험이 다음 도구를 다듬습니다.</p>
             </div>
-            <Link className="home2-btn home2-btn-light" href="/assess">회기 준비하기</Link>
+            <Link className="home2-btn home2-btn-light" href="/assess">평가 이어 가기</Link>
           </div>
           <div className="home2-path home2-path-family">
             <div>
               <h2>보호자와 대상자라면</h2>
-              <p>로그인 없이 바로 해 볼 수 있어요. 큰 글자와 큰 버튼으로 만들었어요.</p>
+              <p>익숙한 일상을 집에서도 연습해요. 로그인 없이, 큰 글자와 큰 버튼으로 만들었어요.</p>
             </div>
             <Link className="home2-btn" href="/hub/apps">바로 해 보기</Link>
           </div>
@@ -123,7 +123,7 @@ export default function LandingPage() {
 
         <section className="home2-tools" aria-labelledby="tools-title">
           <div className="home2-head">
-            <h2 id="tools-title">도구를 직접 보고 고르세요</h2>
+            <h2 id="tools-title">익숙한 일상부터, 하나씩</h2>
             <Link className="home2-link" href="/hub/apps">전체 도구 보기</Link>
           </div>
           <div className="home2-bento">
@@ -164,13 +164,16 @@ export default function LandingPage() {
         )}
 
         <section className="home2-feedback" aria-labelledby="feedback-title">
-          <h2 id="feedback-title">함께 다듬어 가요</h2>
-          <p>사용하면서 불편한 점이나 필요한 도구가 있다면 알려 주세요.</p>
-          <a className="home2-link" href="mailto:h2g0614@gmail.com">의견 보내기</a>
+          <h2 id="feedback-title">다음 도구는 당신의 아이디어에서 시작합니다</h2>
+          <p>현장에서 필요했던 도구, 써 보며 불편했던 점을 들려주세요. 듣고, 정리하고, 만들어 다시 나눕니다.</p>
+          <a className="home2-link" href="mailto:h2g0614@gmail.com">아이디어 보내기</a>
         </section>
       </main>
       <footer className="home2-footer">
-        <strong>OTHub</strong>
+        <p className="home2-footer-brand">
+          <strong>OTHub</strong>
+          <span>작업치료사가 만들고, 함께 쓰는</span>
+        </p>
         <nav aria-label="하단 메뉴">
           <Link href="/about">소개</Link>
           <Link href="/portfolio">만든 사람</Link>
