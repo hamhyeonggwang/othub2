@@ -130,6 +130,95 @@ export function toCSV(rows) {
   return [cols.join(","), ...rows.map((r) => cols.map((c) => cell(r[c])).join(","))].join("\r\n");
 }
 
+/** 배열 섞기 (Fisher–Yates) */
+export function shuffle(rng, items) {
+  const a = items.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = randInt(rng, i + 1);
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+/**
+ * Stroop 시행 목록. 조건별 개수를 정확히 맞춘다.
+ * congruent: 뜻(또는 사물 고유색) = 잉크색 / incongruent: 다름 / neutral: 색과 무관한 자극.
+ * 같은 잉크색이 연속 3번 넘게 이어지지 않게 다시 섞는다.
+ */
+export function stroopTrials({ counts, colors, rng }) {
+  const trials = [];
+  for (const [condition, k] of Object.entries(counts)) {
+    for (let i = 0; i < k; i++) {
+      const ink = i % colors;
+      let meaning = null;
+      if (condition === "congruent") meaning = ink;
+      if (condition === "incongruent") meaning = (ink + 1 + randInt(rng, colors - 1)) % colors;
+      trials.push({ condition, ink, meaning });
+    }
+  }
+  for (let guard = 0; guard < 200; guard++) {
+    const s = shuffle(rng, trials);
+    if (s.every((t, i) => i < 3 || !(s[i - 1].ink === t.ink && s[i - 2].ink === t.ink && s[i - 3].ink === t.ink))) return s;
+  }
+  return shuffle(rng, trials);
+}
+
+/** Corsi 점등 순서: 서로 다른 블록 length개 */
+export function corsiSequence(rng, length, blocks = 9) {
+  return sample(rng, Array.from({ length: blocks }, (_, i) => i), length);
+}
+
+/** Corsi 정답 확인. 틀리면 처음 틀린 순서 번호(0부터)를 돌려준다 */
+export function corsiCheck(shown, tapped, backward = false) {
+  const target = backward ? shown.slice().reverse() : shown;
+  const firstError = target.findIndex((b, i) => tapped[i] !== b);
+  return { correct: firstError === -1 && tapped.length === target.length, firstError };
+}
+
+/**
+ * Corsi 길이 진행: 같은 길이 2시행 중 1번 이상 맞으면 +1, 2번 다 틀리면 끝.
+ * results: 이번 길이의 정답 여부 목록
+ */
+export function corsiNext(length, results, maxLength = 9) {
+  if (results.length < 2) return { length, done: false };
+  if (results.some(Boolean)) return length >= maxLength ? { length, done: true } : { length: length + 1, done: false };
+  return { length, done: true };
+}
+
+/** 카드 분류: 카드가 기준 카드와 어떤 차원에서 같은지 */
+export function matchDims(card, ref) {
+  return ["color", "shape", "count"].filter((d) => card[d] === ref[d]);
+}
+
+/**
+ * 카드 분류 한 번 채점.
+ * correct: 지금 규칙 차원으로 같은 카드를 골랐는지
+ * perseverative: 틀렸고, 고른 카드가 직전 규칙 차원으로는 같았는지 (단순화한 보속 오류 정의)
+ */
+export function scoreSort(card, chosenRef, rule, prevRule) {
+  const dims = matchDims(card, chosenRef);
+  const correct = dims.includes(rule);
+  return { correct, perseverative: !correct && prevRule !== null && dims.includes(prevRule), dims };
+}
+
+/** Hearts and Flowers 정답 쪽: 하트는 같은 쪽, 꽃은 반대쪽 */
+export function heartsFlowersAnswer(type, side) {
+  if (type === "heart") return side;
+  return side === "left" ? "right" : "left";
+}
+
+/** 혼합 블록 시행 목록. 첫 시행 다음부터 전환(switch)/반복(repeat)을 표시한다 */
+export function heartsFlowersTrials(kind, n, rng) {
+  const trials = [];
+  for (let i = 0; i < n; i++) {
+    const type = kind === "mixed" ? (rng() < 0.5 ? "heart" : "flower") : kind;
+    const side = rng() < 0.5 ? "left" : "right";
+    const transition = i === 0 || kind !== "mixed" ? null : type === trials[i - 1].type ? "repeat" : "switch";
+    trials.push({ type, side, answer: heartsFlowersAnswer(type, side), transition });
+  }
+  return trials;
+}
+
 /* ---------- 브라우저 전용 ---------- */
 
 /**

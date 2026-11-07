@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>불빛 순서 기억하기 (Corsi) · OTHub</title>
+<link rel="stylesheet" crossorigin="anonymous" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.css">
+<link rel="stylesheet" href="./ef.css">
+<style>
+  .co-board { position: relative; width: min(440px, 92vw); aspect-ratio: 1; background: #fff; border: 1.5px solid var(--ef-line); border-radius: 20px; }
+  .co-block {
+    position: absolute; width: 19%; aspect-ratio: 1; min-width: 64px; min-height: 64px;
+    border: 0; border-radius: 10px; background: #2f3b36; cursor: pointer; padding: 0;
+    box-shadow: 0 3px 0 #111;
+  }
+  .co-block[data-lit="true"] { background: #f3c623; box-shadow: 0 0 0 4px #f3c62366, 0 3px 0 #111; }
+  .co-block[data-tap="true"] { background: var(--ef-teal); }
+  .co-board[data-locked="true"] .co-block { cursor: default; }
+  .co-block:focus-visible { outline: 3px solid var(--ef-teal); outline-offset: 3px; }
+  .co-prompt { min-height: 32px; font-size: 20px; font-weight: 700; text-align: center; }
+  .co-progress { display: flex; gap: 6px; justify-content: center; min-height: 16px; }
+  .co-progress i { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--ef-teal); }
+  .co-progress i[data-done="true"] { background: var(--ef-teal); }
+</style>
+</head>
+<body>
+<main class="ef-app">
+
+  <section class="ef-screen ef-stack" id="intro" aria-labelledby="intro-title">
+    <h1 id="intro-title">불빛 순서 기억하기</h1>
+    <p class="ef-lead">네모에 차례로 불이 켜져요. 켜진 순서를 기억했다가 똑같이 눌러요.</p>
+    <div class="ef-card ef-stack">
+      <h2 id="dir-title">어떤 순서로 누를까요?</h2>
+      <div class="ef-choices" role="group" aria-labelledby="dir-title">
+        <button type="button" class="ef-choice" data-dir="forward" aria-pressed="true"><strong>켜진 순서대로</strong><span>처음 켜진 것부터 (정순)</span></button>
+        <button type="button" class="ef-choice" data-dir="backward" aria-pressed="false"><strong>거꾸로</strong><span>마지막에 켜진 것부터 (역순)</span></button>
+      </div>
+    </div>
+    <div class="ef-card ef-stack">
+      <h2>이렇게 해요</h2>
+      <p id="rule-text"></p>
+      <p class="ef-note">2개부터 시작해서, 맞히면 하나씩 늘어나요. 같은 개수에서 두 번 다 틀리면 끝나요.</p>
+      <div class="ef-row"><button type="button" class="ef-btn ef-btn-quiet" id="listen">설명 듣기</button></div>
+    </div>
+    <div class="ef-row"><button type="button" class="ef-btn ef-btn-primary" id="start">연습 시작</button></div>
+    <p class="ef-note">훈련과 관찰을 위한 도구예요. 표준화 검사가 아니며, 결과는 이 기기 화면에만 있고 저장되지 않아요.</p>
+  </section>
+
+  <section class="ef-screen" id="task" hidden aria-labelledby="task-title">
+    <div class="ef-task">
+      <div class="ef-status">
+        <h2 id="task-title" style="margin:0;font-size:20px"></h2>
+        <button type="button" class="ef-btn ef-btn-quiet" id="quit">그만하기</button>
+      </div>
+      <p class="co-prompt" id="prompt" role="status"></p>
+      <div class="co-board" id="board" data-locked="true" role="group" aria-label="네모 9개"></div>
+      <div class="co-progress" id="progress" aria-hidden="true"></div>
+      <p class="ef-feedback" id="feedback" role="status"></p>
+    </div>
+  </section>
+
+  <section class="ef-screen ef-stack" id="break" hidden aria-labelledby="break-title">
+    <h1 id="break-title">연습 끝! 이제 진짜로 해요</h1>
+    <p class="ef-lead" id="break-text">이제부터는 맞았는지 알려 주지 않아요. 불빛을 끝까지 잘 보고 눌러요.</p>
+    <div class="ef-row"><button type="button" class="ef-btn ef-btn-primary" id="next">시작하기</button></div>
+  </section>
+
+  <section class="ef-screen ef-stack" id="summary" hidden aria-labelledby="summary-title">
+    <h1 id="summary-title">끝까지 해냈어요!</h1>
+    <div class="ef-stars" id="summary-stars"></div>
+    <p class="ef-lead">불빛을 끝까지 따라가며 기억했어요.</p>
+    <div class="ef-row">
+      <button type="button" class="ef-btn ef-btn-primary" id="again">다시 하기</button>
+      <button type="button" class="ef-btn" id="pro-toggle" aria-expanded="false" aria-controls="pro">치료사 보기</button>
+    </div>
+    <div class="ef-card ef-stack" id="pro" hidden>
+      <h2>치료사 기록</h2>
+      <p class="ef-note-box">규준이 없는 훈련용 기록입니다. 수치로 정상 여부를 판정하지 마세요.</p>
+      <div class="ef-table-wrap"><table class="ef-table" id="pro-table"></table></div>
+      <p class="ef-note" id="pro-meta"></p>
+      <div class="ef-row"><button type="button" class="ef-btn" id="csv">시행 기록 CSV 내려받기</button></div>
+      <p class="ef-note">CSV에는 이름 같은 개인정보가 들어가지 않습니다. 이 화면을 닫으면 기록은 사라집니다.</p>
+    </div>
+  </section>
+</main>
+
+<script type="module">
+import { createRng, corsiSequence, corsiCheck, corsiNext, speak, deviceInfo, downloadCSV, sessionId, presentOnNextFrame, bindResponse } from "./engine.js";
+import { $, screens, bindChoices, renderStars, waitClick, wait, renderTable, bindProToggle, fileStamp } from "./ui.js";
+
+/* 설계서 4.4 초기값 (가정 A5). ?timing=fast 는 자동 테스트용 */
+const fast = new URLSearchParams(location.search).get("timing") === "fast";
+const CONFIG = { litMs: fast ? 80 : 1000, gapMs: fast ? 40 : 500, tapFlashMs: fast ? 40 : 250, startLength: 2, maxLength: 9, practiceTrials: 2 };
+/* 비정형 고정 배치 (보드 대비 % 좌표, OTHub 자체 배치) */
+const LAYOUT = [[6, 8], [42, 4], [76, 10], [20, 34], [56, 30], [80, 46], [8, 64], [40, 58], [66, 76]];
+
+const show = screens(["intro", "task", "break", "summary"]);
+const state = { dir: "forward", trials: [], aborted: false, session: sessionId(), device: null, startedAt: null };
+const ORDINAL = ["첫 번째", "두 번째", "세 번째", "네 번째", "다섯 번째", "여섯 번째", "일곱 번째", "여덟 번째", "아홉 번째"];
+
+function renderRule() {
+  $("rule-text").textContent = state.dir === "forward"
+    ? "불이 켜진 순서를 기억했다가, 처음 켜진 네모부터 차례로 눌러요."
+    : "불이 켜진 순서를 기억했다가, 마지막에 켜진 네모부터 거꾸로 눌러요.";
+}
+bindChoices("dir", (v) => { state.dir = v; renderRule(); });
+$("listen").addEventListener("click", () => {
+  if (!speak($("rule-text").textContent)) $("listen").textContent = "이 브라우저는 음성 안내를 지원하지 않아요";
+});
+renderRule();
+
+/* ---------- 보드 ---------- */
+let taking = null; // 지금 받는 중인 입력 { tapped: [], times: [], start, length, done }
+$("board").innerHTML = LAYOUT.map(([x, y], i) =>
+  `<button type="button" class="co-block" data-i="${i}" style="left:${x}%;top:${y}%" aria-label="네모 ${i + 1}"></button>`).join("");
+const blocks = [...$("board").children];
+blocks.forEach((b) => bindResponse(b, async (t) => {
+  if (!taking || taking.tapped.length >= taking.length) return;
+  const i = Number(b.dataset.i);
+  taking.tapped.push(i);
+  taking.times.push(Math.round(t - taking.start));
+  $("progress").children[taking.tapped.length - 1].dataset.done = "true";
+  b.dataset.tap = "true";
+  setTimeout(() => (b.dataset.tap = "false"), CONFIG.tapFlashMs);
+  if (taking.tapped.length === taking.length) taking.done();
+}));
+
+async function present(seq) {
+  $("board").dataset.locked = "true";
+  $("prompt").textContent = "잘 봐요";
+  $("progress").innerHTML = "";
+  await wait(fast ? 50 : 700);
+  for (const i of seq) {
+    if (state.aborted) return;
+    await presentOnNextFrame(() => (blocks[i].dataset.lit = "true"));
+    await wait(CONFIG.litMs);
+    await presentOnNextFrame(() => (blocks[i].dataset.lit = "false"));
+    await wait(CONFIG.gapMs);
+  }
+}
+
+function collect(length) {
+  $("board").dataset.locked = "false";
+  $("prompt").textContent = state.dir === "forward" ? "이제 켜진 순서대로 눌러요" : "이제 거꾸로 눌러요";
+  $("progress").innerHTML = Array.from({ length }, () => "<i></i>").join("");
+  return new Promise((resolve) => {
+    taking = { tapped: [], times: [], start: performance.now(), length, done: () => { const r = taking; taking = null; resolve(r); } };
+    blocks[0].focus({ preventScroll: true });
+  });
+}
+
+async function runTrial(phase, length, idx, rng) {
+  const seq = corsiSequence(rng, length);
+  await present(seq);
+  if (state.aborted) return null;
+  const input = await collect(length);
+  if (!input || state.aborted) return null;
+  $("board").dataset.locked = "true";
+  const { correct, firstError } = corsiCheck(seq, input.tapped, state.dir === "backward");
+  const rec = {
+    session: state.session, task: "corsi", direction: state.dir, phase, length, trial: idx,
+    shown: seq.map((i) => i + 1).join("-"), tapped: input.tapped.map((i) => i + 1).join("-"),
+    correct: correct ? 1 : 0, first_error_position: firstError === -1 ? "" : firstError + 1,
+    total_response_ms: input.times.at(-1) ?? "", tap_times_ms: input.times.join("-"),
+  };
+  state.trials.push(rec);
+  return rec;
+}
+
+async function runSession() {
+  Object.assign(state, { trials: [], aborted: false, startedAt: new Date() });
+  state.device ??= await deviceInfo();
+  const rng = createRng(Math.floor(Math.random() * 2 ** 31));
+  show("task");
+
+  for (let p = 1; p <= CONFIG.practiceTrials; p++) {
+    $("task-title").textContent = `연습 ${p}`;
+    $("feedback").textContent = "";
+    const r = await runTrial("practice", CONFIG.startLength, p, rng);
+    if (!r) return finish();
+    const fb = $("feedback");
+    fb.dataset.kind = r.correct ? "good" : "retry";
+    fb.textContent = r.correct ? "맞아요!" : `${ORDINAL[r.first_error_position - 1]} 네모가 달랐어요`;
+    await wait(fast ? 50 : 1200);
+  }
+  show("break");
+  await waitClick($("next"));
+  show("task");
+
+  let length = CONFIG.startLength;
+  let results = [];
+  let idx = 0;
+  for (;;) {
+    $("task-title").textContent = `${length}개`;
+    $("feedback").textContent = "";
+    const r = await runTrial("test", length, ++idx, rng);
+    if (!r) break;
+    results.push(Boolean(r.correct));
+    const next = corsiNext(length, results, CONFIG.maxLength);
+    if (next.done) break;
+    if (next.length !== length) { length = next.length; results = []; }
+    await wait(fast ? 30 : 600);
+  }
+  finish();
+}
+
+function finish() {
+  taking = null;
+  show("summary");
+  $("summary-title").textContent = state.aborted ? "오늘은 여기까지 해요" : "끝까지 해냈어요!";
+  const test = state.trials.filter((t) => t.phase === "test");
+  const lengths = [...new Set(test.map((t) => t.length))];
+  renderStars($("summary-stars"), Math.min(3, lengths.length), 3);
+  const rows = lengths.map((len) => {
+    const ts = test.filter((t) => t.length === len);
+    return { length: len, tries: ts.length, correct: ts.filter((t) => t.correct).length, detail: ts.map((t) => (t.correct ? "○" : `×(${t.first_error_position}번째)`)).join(" ") };
+  });
+  renderTable($("pro-table"), "길이별 기록 (×는 처음 틀린 순서)", [
+    { key: "length", label: "길이" }, { key: "tries", label: "시행" }, { key: "correct", label: "정답" }, { key: "detail", label: "결과" },
+  ], rows);
+  const passed = rows.filter((r) => r.correct > 0).map((r) => r.length);
+  const span = passed.length ? Math.max(...passed) : 0;
+  const totalCorrect = test.filter((t) => t.correct).length;
+  const d = state.device || {};
+  $("pro-meta").textContent =
+    `최대 스팬 ${span} · 총점(스팬×정답 시행) ${span * totalCorrect} · 정답 시행 ${totalCorrect}/${test.length} · ` +
+    `방향 ${state.dir === "forward" ? "정순" : "역순"} · 점등 ${CONFIG.litMs}ms + 간격 ${CONFIG.gapMs}ms · 화면 ${d.screen ?? "?"} · 세션 ${state.session}`;
+}
+
+/* 두 번 눌러도 회기가 하나만 시작되게 막는다 */
+let running = false;
+$("start").addEventListener("click", async () => {
+  if (running) return;
+  running = true;
+  try { await runSession(); } finally { running = false; }
+});
+$("again").addEventListener("click", () => { state.session = sessionId(); show("intro"); });
+$("quit").addEventListener("click", () => { state.aborted = true; if (taking) taking.done(); });
+bindProToggle($("pro-toggle"), $("pro"));
+$("csv").addEventListener("click", () => {
+  const d = state.device || {};
+  downloadCSV(`othub-corsi-${fileStamp(state.startedAt || new Date(), state.session)}.csv`, state.trials.map((t) => ({
+    ...t, screen: d.screen, refresh_hz: d.refresh_hz, touch: d.touch ? 1 : 0, user_agent: d.user_agent,
+  })));
+});
+</script>
+</body>
+</html>

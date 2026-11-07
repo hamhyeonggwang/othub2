@@ -322,7 +322,13 @@ function finish() {
     `제시 ${CONFIG.stimMs}ms + 간격 ${CONFIG.isiMs}ms · 화면 ${d.screen ?? "?"} · 주사율 약 ${d.refresh_hz ?? "?"}Hz · 세션 ${state.session}`;
 }
 
-$("start").addEventListener("click", runSession);
+/* 두 번 눌러도 회기가 하나만 시작되게 막는다 */
+let running = false;
+$("start").addEventListener("click", async () => {
+  if (running) return;
+  running = true;
+  try { await runSession(); } finally { running = false; }
+});
 $("again").addEventListener("click", () => { state.session = sessionId(); show("intro"); });
 $("quit").addEventListener("click", () => { state.aborted = true; });
 $("pro-toggle").addEventListener("click", () => {

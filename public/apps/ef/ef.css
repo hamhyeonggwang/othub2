@@ -44,7 +44,7 @@ p { margin: 0 0 16px; }
 }
 .ef-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--ef-ink); }
 .ef-btn-primary { background: var(--ef-teal); border-color: var(--ef-teal); color: #fff; box-shadow: 0 3px 0 #083a3d; }
-.ef-btn-quiet { min-height: 48px; font-size: 16px; box-shadow: none; }
+.ef-btn-quiet { font-size: 16px; box-shadow: none; }
 .ef-btn:focus-visible, .ef-choice:focus-visible { outline: 3px solid var(--ef-teal); outline-offset: 3px; }
 
 /* 선택지 (모드·시작 레벨) */

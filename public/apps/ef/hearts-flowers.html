@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>하트와 꽃 (Hearts and Flowers) · OTHub</title>
+<link rel="stylesheet" crossorigin="anonymous" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.css">
+<link rel="stylesheet" href="./ef.css">
+<style>
+  .hf-field { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; width: min(560px, 94vw); }
+  .hf-box { aspect-ratio: 1; display: grid; place-items: center; background: #fff; border: 1.5px solid var(--ef-line); border-radius: 20px; }
+  .hf-box svg { width: 70%; height: 70%; }
+  .hf-keys { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; width: min(560px, 94vw); }
+  .hf-keys .ef-btn { min-height: 96px; font-size: 24px; }
+  .hf-fix { font-size: 40px; color: var(--ef-muted); text-align: center; min-height: 48px; }
+  .hf-example { display: flex; gap: 24px; flex-wrap: wrap; }
+  .hf-example figure { margin: 0; display: grid; gap: 4px; justify-items: center; }
+  .hf-example .pair { display: grid; grid-template-columns: 56px 56px; gap: 6px; }
+  .hf-example .pair span { height: 56px; border: 1.5px solid var(--ef-line); border-radius: 10px; background: #fff; display: grid; place-items: center; }
+  .hf-example .pair span[data-press="true"] { border-color: var(--ef-teal); box-shadow: inset 0 0 0 3px var(--ef-teal); }
+  .hf-example svg { width: 40px; height: 40px; }
+  .hf-example figcaption { font-size: 14px; color: var(--ef-muted); }
+</style>
+</head>
+<body>
+<main class="ef-app">
+
+  <section class="ef-screen ef-stack" id="intro" aria-labelledby="intro-title">
+    <h1 id="intro-title">하트와 꽃</h1>
+    <p class="ef-lead">하트가 나오면 <b>같은 쪽</b>, 꽃이 나오면 <b>반대쪽</b>을 눌러요.</p>
+    <div class="ef-card ef-stack">
+      <h2>이렇게 해요</h2>
+      <p id="rule-text">하트는 나온 쪽과 같은 쪽 버튼을 눌러요. 꽃은 나온 쪽과 반대쪽 버튼을 눌러요. 하트만 → 꽃만 → 섞어서 두 번, 모두 네 판이에요.</p>
+      <div class="hf-example" id="example" aria-hidden="true"></div>
+      <div class="ef-row"><button type="button" class="ef-btn ef-btn-quiet" id="listen">설명 듣기</button></div>
+    </div>
+    <div class="ef-row"><button type="button" class="ef-btn ef-btn-primary" id="start">시작하기</button></div>
+    <p class="ef-note">훈련과 관찰을 위한 도구예요. 표준화 검사가 아니며, 결과는 이 기기 화면에만 있고 저장되지 않아요. 키보드에서는 ← → 화살표로도 할 수 있어요.</p>
+  </section>
+
+  <section class="ef-screen" id="task" hidden aria-labelledby="task-title">
+    <div class="ef-task">
+      <div class="ef-status">
+        <h2 id="task-title" style="margin:0;font-size:20px"></h2>
+        <button type="button" class="ef-btn ef-btn-quiet" id="quit">그만하기</button>
+      </div>
+      <div class="ef-dots" id="dots" aria-hidden="true"></div>
+      <div class="hf-field" role="img" aria-label="문제 화면" id="field">
+        <div class="hf-box" id="box-left"></div>
+        <div class="hf-box" id="box-right"></div>
+      </div>
+      <div class="hf-keys">
+        <button type="button" class="ef-btn ef-btn-primary" id="key-left">왼쪽</button>
+        <button type="button" class="ef-btn ef-btn-primary" id="key-right">오른쪽</button>
+      </div>
+      <p class="ef-feedback" id="feedback" role="status"></p>
+    </div>
+  </section>
+
+  <section class="ef-screen ef-stack" id="break" hidden aria-labelledby="break-title">
+    <h1 id="break-title"></h1>
+    <div class="ef-stars" id="break-stars"></div>
+    <p class="ef-lead" id="break-text"></p>
+    <div class="ef-row">
+      <button type="button" class="ef-btn ef-btn-quiet" id="break-listen">듣기</button>
+      <button type="button" class="ef-btn ef-btn-primary" id="next">시작하기</button>
+    </div>
+  </section>
+
+  <section class="ef-screen ef-stack" id="summary" hidden aria-labelledby="summary-title">
+    <h1 id="summary-title">끝까지 해냈어요!</h1>
+    <div class="ef-stars" id="summary-stars"></div>
+    <p class="ef-lead">하트와 꽃의 규칙을 바꿔 가며 끝까지 집중했어요.</p>
+    <div class="ef-row">
+      <button type="button" class="ef-btn ef-btn-primary" id="again">다시 하기</button>
+      <button type="button" class="ef-btn" id="pro-toggle" aria-expanded="false" aria-controls="pro">치료사 보기</button>
+    </div>
+    <div class="ef-card ef-stack" id="pro" hidden>
+      <h2>치료사 기록</h2>
+      <p class="ef-note-box">규준이 없는 훈련용 기록입니다. 수치로 정상 여부를 판정하지 마세요. 기기·브라우저마다 반응시간이 달라 다른 기기와 직접 비교하지 않습니다.</p>
+      <div class="ef-table-wrap"><table class="ef-table" id="pro-table"></table></div>
+      <p class="ef-note" id="pro-meta"></p>
+      <div class="ef-row"><button type="button" class="ef-btn" id="csv">시행 기록 CSV 내려받기</button></div>
+      <p class="ef-note">CSV에는 이름 같은 개인정보가 들어가지 않습니다. 이 화면을 닫으면 기록은 사라집니다.</p>
+    </div>
+  </section>
+</main>
+
+<script type="module">
+import { createRng, heartsFlowersTrials, mean, presentOnNextFrame, waitUntil, bindResponse, speak, deviceInfo, downloadCSV, sessionId } from "./engine.js";
+import { $, screens, renderStars, waitClick, wait, renderTable, bindProToggle, pct, ms, fileStamp } from "./ui.js";
+
+/* 설계서 4.5 초기값 (가정 A5). ?timing=fast 는 자동 테스트용 */
+const fast = new URLSearchParams(location.search).get("timing") === "fast";
+const T = (v) => (fast ? Math.round(v / 6) : v);
+const BLOCKS = [
+  { key: "hearts", kind: "heart", name: "하트만", practice: 4, n: 12, limit: T(2500),
+    text: "하트가 나오면 하트가 있는 쪽, 같은 쪽 버튼을 눌러요." },
+  { key: "flowers", kind: "flower", name: "꽃만", practice: 4, n: 12, limit: T(2500),
+    text: "꽃이 나오면 꽃이 있는 쪽의 반대쪽 버튼을 눌러요." },
+  { key: "mixed1", kind: "mixed", name: "섞어서 1", practice: 0, n: 20, limit: T(2500),
+    text: "이제 하트와 꽃이 섞여 나와요. 하트는 같은 쪽, 꽃은 반대쪽이에요." },
+  { key: "mixed2", kind: "mixed", name: "섞어서 2 (빠르게)", practice: 0, n: 20, limit: T(2000),
+    text: "마지막 판이에요. 조금 더 빨리 나와요. 하트는 같은 쪽, 꽃은 반대쪽!" },
+];
+const ITI = T(500);
+const FEEDBACK = T(700);
+const HEART = '<svg viewBox="0 0 100 100" aria-hidden="true"><path d="M50 88C20 66 8 48 8 32 8 18 19 8 32 8c8 0 14 4 18 10 4-6 10-10 18-10 13 0 24 10 24 24 0 16-12 34-42 56z" fill="#d1242f"/></svg>';
+const FLOWER = '<svg viewBox="0 0 100 100" aria-hidden="true"><g fill="#c04fd0"><circle cx="50" cy="24" r="18"/><circle cx="76" cy="44" r="18"/><circle cx="66" cy="74" r="18"/><circle cx="34" cy="74" r="18"/><circle cx="24" cy="44" r="18"/></g><circle cx="50" cy="52" r="14" fill="#f3c623"/></svg>';
+
+const show = screens(["intro", "task", "break", "summary"]);
+const state = { trials: [], blocks: [], stars: 0, aborted: false, session: sessionId(), device: null, startedAt: null };
+
+$("example").innerHTML = [
+  ["heart", "left", "하트 → 같은 쪽"], ["flower", "left", "꽃 → 반대쪽"],
+].map(([type, side, cap]) => {
+  const press = type === "heart" ? side : side === "left" ? "right" : "left";
+  const cell = (s) => `<span data-press="${s === press}">${s === side ? (type === "heart" ? HEART : FLOWER) : ""}</span>`;
+  return `<figure><div class="pair">${cell("left")}${cell("right")}</div><figcaption>${cap}</figcaption></figure>`;
+}).join("");
+$("listen").addEventListener("click", () => {
+  if (!speak($("rule-text").textContent)) $("listen").textContent = "이 브라우저는 음성 안내를 지원하지 않아요";
+});
+
+/* ---------- 입력: 버튼(터치) + 화살표 키 ---------- */
+let current = null;
+function respond(side, t, input) {
+  if (!current || current.response || t < current.onset) return;
+  current.response = { side, t, input };
+  current.resolve();
+}
+bindResponse($("key-left"), (t, input) => respond("left", t, input));
+bindResponse($("key-right"), (t, input) => respond("right", t, input));
+document.addEventListener("keydown", (e) => {
+  if (e.repeat || $("task").hidden) return;
+  if (e.key === "ArrowLeft") { e.preventDefault(); respond("left", performance.now(), "keyboard"); }
+  if (e.key === "ArrowRight") { e.preventDefault(); respond("right", performance.now(), "keyboard"); }
+});
+
+async function runTrial(trial, limit) {
+  $("box-left").innerHTML = ""; $("box-right").innerHTML = "";
+  await wait(ITI);
+  if (state.aborted) return null;
+  current = { onset: Infinity, response: null };
+  const answered = new Promise((r) => (current.resolve = r));
+  const onset = await presentOnNextFrame((t) => {
+    current.onset = t;
+    $(`box-${trial.side}`).innerHTML = trial.type === "heart" ? HEART : FLOWER;
+  });
+  await Promise.race([answered, waitUntil(onset + limit)]);
+  const r = current.response;
+  current = null;
+  await presentOnNextFrame(() => { $("box-left").innerHTML = ""; $("box-right").innerHTML = ""; });
+  return {
+    response: r ? r.side : null, input: r ? r.input : "", rt: r ? Math.round(r.t - onset) : null,
+    correct: r ? r.side === trial.answer : false, timeout: !r, onset,
+  };
+}
+
+async function runBlock(block, phase, n, withFeedback) {
+  const seed = Math.floor(Math.random() * 2 ** 31);
+  const list = heartsFlowersTrials(block.kind, n, createRng(seed));
+  $("task-title").textContent = phase === "practice" ? `${block.name} · 연습` : block.name;
+  $("dots").innerHTML = list.map(() => "<i></i>").join("");
+  const results = [];
+  for (let i = 0; i < list.length; i++) {
+    $("feedback").textContent = "";
+    const res = await runTrial(list[i], block.limit);
+    if (!res || state.aborted) return null;
+    const t = list[i];
+    state.trials.push({
+      session: state.session, task: "hearts_flowers", block: block.key, phase, trial: i + 1,
+      stimulus: t.type === "heart" ? "하트" : "꽃", side: t.side === "left" ? "왼쪽" : "오른쪽",
+      transition: t.transition ?? "", answer: t.answer === "left" ? "왼쪽" : "오른쪽",
+      response: res.response === null ? "" : res.response === "left" ? "왼쪽" : "오른쪽",
+      correct: res.correct ? 1 : 0, timeout: res.timeout ? 1 : 0, rt_ms: res.rt ?? "", input: res.input,
+      limit_ms: block.limit, onset_ms: Math.round(res.onset), seed,
+    });
+    results.push({ ...t, ...res });
+    $("dots").children[i].dataset.done = "true";
+    if (withFeedback) {
+      const fb = $("feedback");
+      fb.dataset.kind = res.correct ? "good" : "retry";
+      fb.textContent = res.correct ? "맞아요!" : res.timeout ? "조금 더 빨리 눌러 봐요" : t.type === "heart" ? "하트는 같은 쪽이에요" : "꽃은 반대쪽이에요";
+      await wait(FEEDBACK);
+    }
+  }
+  return results;
+}
+
+async function runSession() {
+  Object.assign(state, { trials: [], blocks: [], stars: 0, aborted: false, startedAt: new Date() });
+  state.device ??= await deviceInfo();
+  for (const block of BLOCKS) {
+    show("break");
+    $("break-title").textContent = state.stars === 0 ? "첫 판: 하트만" : `잘했어요! 다음은 ${block.name}`;
+    renderStars($("break-stars"), state.stars, BLOCKS.length);
+    $("break-text").textContent = block.text;
+    $("break-listen").onclick = () => speak(block.text);
+    await waitClick($("next"));
+    show("task");
+    if (block.practice) {
+      const p = await runBlock(block, "practice", block.practice, true);
+      if (!p) break;
+    }
+    const res = await runBlock(block, "test", block.n, false);
+    if (!res) break;
+    state.blocks.push({ block, results: res });
+    state.stars++;
+  }
+  finish();
+}
+
+function stat(list) {
+  return {
+    n: list.length,
+    accuracy: list.length ? list.filter((r) => r.correct).length / list.length : null,
+    rt: mean(list.filter((r) => r.correct).map((r) => r.rt)),
+    timeouts: list.filter((r) => r.timeout).length,
+  };
+}
+
+function finish() {
+  current = null;
+  show("summary");
+  $("summary-title").textContent = state.aborted ? "오늘은 여기까지 해요" : "끝까지 해냈어요!";
+  renderStars($("summary-stars"), state.stars, BLOCKS.length);
+  const rows = state.blocks.map(({ block, results }) => {
+    const s = stat(results);
+    let cost = null;
+    if (block.kind === "mixed") {
+      const sw = stat(results.filter((r) => r.transition === "switch")).rt;
+      const rp = stat(results.filter((r) => r.transition === "repeat")).rt;
+      cost = sw !== null && rp !== null ? sw - rp : null;
+    }
+    return { name: block.name, limit: block.limit, ...s, cost };
+  });
+  renderTable($("pro-table"), "판별 기록 (RT는 맞힌 시행만, 전환 비용 = 바뀐 시행 RT − 같은 종류 반복 RT)", [
+    { key: "name", label: "판" }, { key: "n", label: "시행" }, { key: "accuracy", label: "정확도", fmt: pct },
+    { key: "rt", label: "RT 평균", fmt: ms }, { key: "timeouts", label: "시간 초과" },
+    { key: "cost", label: "전환 비용", fmt: (v, r) => (r.name.startsWith("섞어서") ? ms(v) : "–") },
+  ], rows);
+  const d = state.device || {};
+  $("pro-meta").textContent = `응답 제한 ${BLOCKS.map((b) => b.limit + "ms").join("/")} · 간격 ${ITI}ms · 화면 ${d.screen ?? "?"} · 주사율 약 ${d.refresh_hz ?? "?"}Hz · 세션 ${state.session}`;
+}
+
+/* 두 번 눌러도 회기가 하나만 시작되게 막는다 */
+let running = false;
+$("start").addEventListener("click", async () => {
+  if (running) return;
+  running = true;
+  try { await runSession(); } finally { running = false; }
+});
+$("again").addEventListener("click", () => { state.session = sessionId(); show("intro"); });
+$("quit").addEventListener("click", () => { state.aborted = true; if (current) current.resolve(); });
+bindProToggle($("pro-toggle"), $("pro"));
+$("csv").addEventListener("click", () => {
+  const d = state.device || {};
+  downloadCSV(`othub-hearts-flowers-${fileStamp(state.startedAt || new Date(), state.session)}.csv`, state.trials.map((t) => ({
+    ...t, screen: d.screen, refresh_hz: d.refresh_hz, touch: d.touch ? 1 : 0, user_agent: d.user_agent,
+  })));
+});
+</script>
+</body>
+</html>
