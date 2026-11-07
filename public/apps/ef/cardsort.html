@@ -16,6 +16,10 @@
   .cs-test { height: clamp(96px, 34vh, 220px); aspect-ratio: 100 / 140; }
   .cs-rule { min-height: 28px; margin: 0; font-size: 20px; font-weight: 700; text-align: center; color: var(--ef-teal); }
   .cs-legend { display: flex; flex-wrap: wrap; gap: 16px; }
+  .cs-demo { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .cs-demo figure { margin: 0; width: 88px; display: grid; gap: 4px; justify-items: center; text-align: center; font-size: 14px; color: var(--ef-muted); }
+  .cs-demo .card { width: 64px; border-radius: 10px; }
+  .cs-demo .arrow { font-size: 28px; color: var(--ef-teal); }
   .cs-legend figure { margin: 0; width: 96px; text-align: center; font-size: 14px; color: var(--ef-muted); }
 </style>
 </head>
@@ -36,7 +40,9 @@
       <h2>이렇게 해요</h2>
       <p id="rule-text"></p>
       <div class="cs-legend" id="legend" aria-hidden="true"></div>
-      <div class="ef-row"><button type="button" class="ef-btn ef-btn-quiet" id="listen">설명 듣기</button></div>
+      <div class="cs-demo ef-demo" id="demo" aria-hidden="true" style="--demo-step:1s"></div>
+      <div class="ef-row"><button type="button" class="ef-btn ef-btn-quiet" id="listen">설명 듣기</button>
+        <button type="button" class="ef-btn ef-btn-quiet" id="voice" aria-pressed="true">음성 안내 켜짐</button></div>
     </div>
     <div class="ef-startbar"><button type="button" class="ef-btn ef-btn-primary" id="start">시작하기</button></div>
     <p class="ef-note">훈련과 관찰을 위한 도구예요. 표준화 검사가 아니며, 카드 그림은 OTHub가 새로 그렸어요. 결과는 이 기기 화면에만 있고 저장되지 않아요.</p>
@@ -89,6 +95,7 @@
 
 <script type="module">
 import { createRng, shuffle, randInt, scoreSort, mean, speak, deviceInfo, downloadCSV, sessionId, presentOnNextFrame, bindResponse } from "./engine.js";
+import { announce, primeVoice, bindVoiceToggle } from "./ui.js";
 import { $, screens, bindChoices, renderStars, waitClick, wait, renderTable, bindProToggle, pct, ms, fileStamp } from "./ui.js";
 
 /* 설계서 4.3 (가정 A5). ?timing=fast 는 자동 테스트용 */
@@ -137,6 +144,13 @@ function renderRule() {
     : "아래 카드를 위 카드 4장 중 하나에 맞춰 놓아요. 규칙은 알려 주지 않아요. ‘맞아요’와 ‘아니에요’를 보고 규칙을 찾아요. 규칙은 중간에 몰래 바뀌어요.";
   const refs = state.from === 1 ? DCCS_REFS : WCST_REFS;
   $("legend").innerHTML = refs.map((r) => `<figure>${cardSVG(r)}<figcaption>${describe(r)}</figcaption></figure>`).join("");
+  // 시연: 아래 카드 → 같은 색 기준 카드 (규칙 찾기는 놓은 뒤 맞다/아니다가 나온다는 것까지)
+  const test = state.from === 1 ? DCCS_CARDS[0] : { color: "red", shape: "triangle", count: 3 };
+  const target = state.from === 1 ? DCCS_REFS[1] : WCST_REFS[0];
+  $("demo").innerHTML =
+    `<figure style="--i:0"><div class="card">${cardSVG(test)}</div><figcaption>이 카드를</figcaption></figure>` +
+    `<figure style="--i:1"><span class="arrow">→</span></figure>` +
+    `<figure style="--i:2"><div class="card ef-demo-hit">${cardSVG(target)}</div><figcaption>${state.from === 1 ? "색이 같은 카드에" : "골라서 놓으면<br>맞아요 / 아니에요"}</figcaption></figure>`;
 }
 bindChoices("from", (v) => { state.from = Number(v); renderRule(); });
 $("listen").addEventListener("click", () => {
@@ -150,7 +164,7 @@ function setRefs(refs) {
   $("refs").style.setProperty("--n", String(refs.length));
   $("refs").innerHTML = refs.map((r, i) => `<button type="button" class="cs-ref" data-i="${i}" aria-label="${i + 1}번 카드: ${describe(r)}">${cardSVG(r)}</button>`).join("");
   [...$("refs").children].forEach((b) => bindResponse(b, (t) => {
-    if (!current || current.response !== null || t < current.onset) return;
+    if (!current || current.response !== null || current.onset === Infinity) return; // 자극이 그려지기 전 누름은 무시
     current.response = Number(b.dataset.i);
     current.t = t;
     b.dataset.chosen = "true";
@@ -168,7 +182,7 @@ async function present(card, border) {
     $("test").setAttribute("aria-label", `놓을 카드: ${describe(card, border)}`);
   });
   await done;
-  const r = { choice: current.response, rt: current.response === null ? null : Math.round(current.t - onset) };
+  const r = { choice: current.response, rt: current.response === null ? null : Math.max(0, Math.round(current.t - onset)) };
   current = null;
   return r;
 }
@@ -191,6 +205,7 @@ async function intermission(title, text) {
   $("break-text").textContent = text;
   const say = () => speak(text);
   $("break-listen").onclick = say;
+  announce(text);
   await waitClick($("next"));
   show("task");
 }
@@ -326,11 +341,13 @@ let running = false;
 $("start").addEventListener("click", async () => {
   if (running) return;
   running = true;
+  primeVoice();
   try { await runSession(); } finally { running = false; }
 });
 $("again").addEventListener("click", () => { state.session = sessionId(); show("intro"); });
 $("quit").addEventListener("click", () => { state.aborted = true; if (current) current.resolve(); });
 bindProToggle($("pro-toggle"), $("pro"));
+bindVoiceToggle($("voice"));
 $("csv").addEventListener("click", () => {
   const d = state.device || {};
   downloadCSV(`othub-cardsort-${fileStamp(state.startedAt || new Date(), state.session)}.csv`, state.trials.map((t) => ({

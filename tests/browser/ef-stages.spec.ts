@@ -93,8 +93,10 @@ test("Stroop: 시간 초과와 오답이 조건별로 기록되고 판정 문구
   await runToSummary(page);
   const rows = await proRows(page);
   const test3 = rows.filter((r) => r[0] === "본 과제");
-  expect(test3.map((r) => r[1])).toEqual(["일치", "불일치", "중립"]);
-  expect(test3.reduce((s, r) => s + Number(r[5]), 0)).toBe(24); // 48시행 중 절반 시간 초과
+  expect(test3.map((r) => r[2])).toEqual(["일치", "불일치", "중립"]);
+  expect(test3.reduce((s, r) => s + Number(r[6]), 0)).toBe(24); // 48시행 중 절반 시간 초과
+  // 정확도가 50% 미만이어도 1단계 아래로는 내려가지 않는다
+  expect(rows.filter((r) => /번째/.test(r[0])).map((r) => r[1])).toEqual(["1", "1", "1", "1", "1", "1"]);
   await expect(page.locator("#pro")).not.toContainText(/정상입니다|저하/);
 });
 
@@ -222,8 +224,10 @@ test("하트와 꽃: 꽃에서 같은 쪽을 누르면 꽃 판 정확도가 0%�
   await runToSummary(page);
   const rows = await proRows(page);
   expect(rows.map((r) => r[0])).toEqual(["하트만", "꽃만", "섞어서 1", "섞어서 2 (빠르게)"]);
-  expect(rows[0][2]).toBe("100%");
-  expect(rows[1][2]).toBe("0%");
-  expect(rows[2][5]).toMatch(/^-?\d+ms$/);
-  expect(rows[3][5]).toMatch(/^-?\d+ms$/);
+  expect(rows[0][4]).toBe("100%");
+  expect(rows[1][4]).toBe("0%");
+  // 단계: 하트 100% → 다음 판 2단계, 꽃 0% → 다음 판 1단계, 섞어서 1 정답 → 2단계
+  expect(rows.map((r) => r[1])).toEqual(["1", "2", "1", "2"]);
+  expect(rows[2][7]).toMatch(/^-?\d+ms$/);
+  expect(rows[3][7]).toMatch(/^-?\d+ms$/);
 });

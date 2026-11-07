@@ -35,12 +35,20 @@
         <button type="button" class="ef-choice" data-mode="word" aria-pressed="true"><strong>글자</strong><span>&lsquo;빨강&rsquo; 같은 색 이름 글자 (글을 읽을 수 있을 때)</span></button>
         <button type="button" class="ef-choice" data-mode="picture" aria-pressed="false"><strong>그림</strong><span>파란 바나나처럼 색이 바뀐 그림 (글을 몰라도 돼요)</span></button>
       </div>
+      <h2 id="level-title">얼마나 빠르게 할까요?</h2>
+      <div class="ef-choices" role="group" aria-labelledby="level-title">
+        <button type="button" class="ef-choice" data-level="1" aria-pressed="true"><strong>1단계</strong><span>2.5초 안에 (처음)</span></button>
+        <button type="button" class="ef-choice" data-level="2" aria-pressed="false"><strong>2단계</strong><span>2초 안에</span></button>
+        <button type="button" class="ef-choice" data-level="3" aria-pressed="false"><strong>3단계</strong><span>1.5초 안에</span></button>
+      </div>
+      <p class="ef-note">본 과제 앞부분 정확도가 80% 이상이면 한 단계 빠르게, 50% 미만이면 한 단계 느리게 바뀌어요.</p>
     </div>
     <div class="ef-card ef-stack">
       <h2>이렇게 해요</h2>
       <p id="rule-text"></p>
-      <div class="st-example" id="example" aria-hidden="true"></div>
-      <div class="ef-row"><button type="button" class="ef-btn ef-btn-quiet" id="listen">설명 듣기</button></div>
+      <div class="st-example ef-demo" id="example" aria-hidden="true"></div>
+      <div class="ef-row"><button type="button" class="ef-btn ef-btn-quiet" id="listen">설명 듣기</button>
+        <button type="button" class="ef-btn ef-btn-quiet" id="voice" aria-pressed="true">음성 안내 켜짐</button></div>
     </div>
     <div class="ef-startbar"><button type="button" class="ef-btn ef-btn-primary" id="start">색 이름부터 확인하기</button></div>
     <p class="ef-note">훈련과 관찰을 위한 도구예요. 표준화 검사가 아니며, 결과는 이 기기 화면에만 있고 저장되지 않아요.</p>
@@ -89,14 +97,16 @@
 </main>
 
 <script type="module">
-import { createRng, stroopTrials, shuffle, mean, presentOnNextFrame, waitUntil, bindResponse, speak, deviceInfo, downloadCSV, sessionId } from "./engine.js";
+import { createRng, stroopTrials, shuffle, mean, nextLevel, presentOnNextFrame, waitUntil, bindResponse, speak, deviceInfo, downloadCSV, sessionId } from "./engine.js";
+import { announce, primeVoice, bindVoiceToggle } from "./ui.js";
 import { $, screens, bindChoices, renderStars, waitClick, wait, renderTable, bindProToggle, pct, ms, fileStamp } from "./ui.js";
 
 /* 설계서 4.2 초기값 (가정 A5). ?timing=fast 는 자동 테스트용 */
 const fast = new URLSearchParams(location.search).get("timing") === "fast";
 const CONFIG = {
   fixationMs: fast ? 40 : 500,
-  limitMs: fast ? 700 : 2500,
+  /* 단계별 응답 제한: 1단계 2.5초, 2단계 2초, 3단계 1.5초 */
+  limits: fast ? [700, 560, 420] : [2500, 2000, 1500],
   feedbackMs: fast ? 40 : 700,
   checkTrials: 8,
   practice: { congruent: 4, incongruent: 4, neutral: 4 },
@@ -119,7 +129,7 @@ const OBJECTS = [
 const NEUTRAL_SVG = (c) => `<circle cx="50" cy="50" r="36" fill="${c}" stroke="#222" stroke-width="2.5"/>`;
 
 const show = screens(["intro", "task", "break", "summary"]);
-const state = { mode: "word", order: [], trials: [], segments: [], colorCheck: null, stars: 0, aborted: false, session: sessionId(), device: null, startedAt: null };
+const state = { mode: "word", startLevel: 1, level: 1, order: [], trials: [], segments: [], colorCheck: null, stars: 0, aborted: false, session: sessionId(), device: null, startedAt: null };
 
 /* ---------- 시작 화면 ---------- */
 function stimHTML(t, mode) {
@@ -136,10 +146,11 @@ function renderRule() {
     ? "‘빨강’이라는 글자가 파란색으로 쓰여 있으면 ‘파랑’을 눌러요. 글자를 읽지 말고 색을 봐요."
     : "바나나가 파란색으로 칠해져 있으면 ‘파랑’을 눌러요. 원래 색 말고 지금 칠해진 색을 봐요.";
   const ex = [{ ink: 1, meaning: 0 }, { ink: 2, meaning: 2 }, { ink: 3, meaning: 1 }];
-  $("example").innerHTML = ex.map((t) =>
-    `<figure><div class="tile">${stimHTML(t, state.mode)}</div><figcaption>→ <b>${COLORS[t.ink].name}</b></figcaption></figure>`).join("");
+  $("example").innerHTML = ex.map((t, i) =>
+    `<figure style="--i:${i}"><div class="tile">${stimHTML(t, state.mode)}</div><figcaption>→ <b>${COLORS[t.ink].name}</b></figcaption></figure>`).join("");
 }
 bindChoices("mode", (v) => { state.mode = v; renderRule(); });
+bindChoices("level", (v) => { state.startLevel = Number(v); });
 $("listen").addEventListener("click", () => {
   if (!speak($("rule-text").textContent)) $("listen").textContent = "이 브라우저는 음성 안내를 지원하지 않아요";
 });
@@ -152,28 +163,28 @@ function buildAnswers() {
     `<button type="button" class="ef-btn" data-color="${i}"><span class="st-dot" style="background:${COLORS[i].hex}"></span>${COLORS[i].name}</button>`).join("");
   $("answers").querySelectorAll("button").forEach((b) =>
     bindResponse(b, (t, input) => {
-      if (!current || current.response || t < current.onset) return;
+      if (!current || current.response || current.onset === Infinity) return; // 자극이 그려지기 전 누름은 무시
       current.response = { t, input, color: Number(b.dataset.color) };
       current.resolve?.();
     }));
 }
 
 /* ---------- 시행 ---------- */
-async function runTrial(content, { timed, ink }) {
+async function runTrial(content, { timed, ink, limit }) {
   $("stage").innerHTML = `<span class="st-fix" aria-hidden="true">+</span>`;
   await wait(CONFIG.fixationMs);
   if (state.aborted) return { onset: 0, response: null, input: "", rt: null, correct: false, timeout: true };
   current = { onset: Infinity, response: null };
   const answered = new Promise((r) => (current.resolve = r));
   const onset = await presentOnNextFrame((t) => { current.onset = t; $("stage").innerHTML = content; });
-  if (timed) await Promise.race([answered, waitUntil(onset + CONFIG.limitMs)]);
+  if (timed) await Promise.race([answered, waitUntil(onset + limit)]);
   else await answered;
   const r = current.response;
   current = null;
   await presentOnNextFrame(() => ($("stage").innerHTML = ""));
   return {
     onset, response: r ? r.color : null, input: r ? r.input : "",
-    rt: r ? Math.round(r.t - onset) : null, correct: r ? r.color === ink : false, timeout: !r,
+    rt: r ? Math.max(0, Math.round(r.t - onset)) : null, correct: r ? r.color === ink : false, timeout: !r,
   };
 }
 
@@ -202,9 +213,9 @@ async function colorCheck() {
   return { errors, total: inks.length };
 }
 
-function row(phase, segment, trial, t, res) {
+function row(phase, segment, trial, t, res, level = "", limit = "") {
   return {
-    session: state.session, task: "stroop", mode: state.mode, phase, segment, trial,
+    session: state.session, task: "stroop", mode: state.mode, phase, segment, level, limit_ms: limit, trial,
     condition: t.condition, ink: COLORS[t.ink].name,
     stimulus: t.meaning === null ? (t.condition === "swatch" ? "색 동그라미" : state.mode === "word" ? NEUTRAL_WORDS[t.ink] : "동그라미")
       : state.mode === "word" ? COLORS[t.meaning].name : OBJECTS[t.meaning].name,
@@ -213,36 +224,39 @@ function row(phase, segment, trial, t, res) {
   };
 }
 
-async function runSegment(phase, segment, counts, withFeedback) {
+async function runSegment(phase, segment, counts, withFeedback, level) {
+  const limit = CONFIG.limits[level - 1];
   const seed = Math.floor(Math.random() * 2 ** 31);
   const list = stroopTrials({ counts, colors: COLORS.length, rng: createRng(seed) });
-  $("task-title").textContent = phase === "practice" ? "연습" : `${segment}번째`;
+  $("task-title").textContent = phase === "practice" ? "연습" : `${segment}번째 · ${level}단계`;
   $("dots").innerHTML = list.map(() => "<i></i>").join("");
   const results = [];
   for (let i = 0; i < list.length; i++) {
     if (state.aborted) return null;
     $("feedback").textContent = "";
-    const res = await runTrial(stimHTML(list[i], state.mode), { timed: true, ink: list[i].ink });
-    const r = row(phase, segment, i + 1, list[i], res);
+    const res = await runTrial(stimHTML(list[i], state.mode), { timed: true, ink: list[i].ink, limit });
+    const r = row(phase, segment, i + 1, list[i], res, level, limit);
     r.seed = seed;
     state.trials.push(r);
     results.push({ ...list[i], ...res });
     $("dots").children[i].dataset.done = "true";
     if (withFeedback) { feedback(res.correct, res.timeout); await wait(CONFIG.feedbackMs); }
   }
-  return { phase, segment, results };
+  const accuracy = results.length ? results.filter((r) => r.correct).length / results.length : 0;
+  return { phase, segment, level, limit, accuracy, results };
 }
 
 async function breakScreen(text) {
   show("break");
   renderStars($("break-stars"), state.stars, 3);
   $("break-text").textContent = text;
+  announce(text);
   await waitClick($("next"));
   show("task");
 }
 
 async function runSession() {
-  Object.assign(state, { trials: [], segments: [], stars: 0, aborted: false, startedAt: new Date() });
+  Object.assign(state, { trials: [], segments: [], stars: 0, aborted: false, startedAt: new Date(), level: state.startLevel });
   state.order = shuffle(createRng(Math.floor(Math.random() * 2 ** 31)), [0, 1, 2, 3]);
   state.device ??= await deviceInfo();
   buildAnswers();
@@ -254,16 +268,20 @@ async function runSession() {
     ? "이제 연습해요. 글자를 읽지 말고, 칠해진 색을 골라요."
     : "이제 연습해요. 원래 색 말고, 지금 칠해진 색을 골라요.");
 
-  const practice = await runSegment("practice", 0, CONFIG.practice, true);
+  const practice = await runSegment("practice", 0, CONFIG.practice, true, 1); // 연습은 항상 2.5초
   if (!practice) return finish();
   state.segments.push(practice);
   state.stars++;
   for (let s = 1; s <= 2; s++) {
-    await breakScreen(s === 1 ? "연습을 마쳤어요. 이제부터는 맞았는지 알려 주지 않아요." : "절반 왔어요. 한 번 더 해 봐요.");
-    const seg = await runSegment("test", s, CONFIG.half, false);
+    const prev = state.segments.at(-1);
+    const faster = s === 2 && state.level > prev.level, slower = s === 2 && state.level < prev.level;
+    await breakScreen(s === 1 ? "연습을 마쳤어요. 이제부터는 맞았는지 알려 주지 않아요."
+      : faster ? "잘하고 있어요! 이번에는 조금 더 빨리 나와요." : slower ? "이번에는 조금 더 천천히 해요." : "절반 왔어요. 한 번 더 해 봐요.");
+    const seg = await runSegment("test", s, CONFIG.half, false, state.level);
     if (!seg) break;
     state.segments.push(seg);
     state.stars++;
+    state.level = nextLevel(state.level, seg.accuracy, { min: 1, max: 3 });
   }
   finish();
 }
@@ -287,12 +305,13 @@ function finish() {
   const practice = state.segments.filter((s) => s.phase === "practice").flatMap((s) => s.results);
   const label = { congruent: "일치", incongruent: "불일치", neutral: "중립" };
   const rows = [];
-  for (const [name, list] of [["연습", practice], ["본 과제", test]]) {
+  const parts = [["연습", practice, 1], ["본 과제", test, null], ...state.segments.filter((g) => g.phase === "test").map((g) => [`${g.segment}번째`, g.results, g.level])];
+  for (const [name, list, level] of parts) {
     const s = summarize(list);
-    for (const cond of ["congruent", "incongruent", "neutral"]) rows.push({ part: name, cond: label[cond], ...s[cond] });
+    for (const cond of ["congruent", "incongruent", "neutral"]) rows.push({ part: name, level: level ?? "–", cond: label[cond], ...s[cond] });
   }
-  renderTable($("pro-table"), "조건별 기록 (반응시간은 맞힌 시행만)", [
-    { key: "part", label: "구분" }, { key: "cond", label: "조건" }, { key: "n", label: "시행" },
+  renderTable($("pro-table"), "조건별 기록 (반응시간은 맞힌 시행만, '본 과제'는 앞·뒤 합계)", [
+    { key: "part", label: "구분" }, { key: "level", label: "단계" }, { key: "cond", label: "조건" }, { key: "n", label: "시행" },
     { key: "accuracy", label: "정확도", fmt: pct }, { key: "rt", label: "RT 평균", fmt: ms }, { key: "timeouts", label: "시간 초과" },
   ], rows.filter((r) => r.n));
   const s = summarize(test);
@@ -304,7 +323,7 @@ function finish() {
   $("pro-meta").textContent =
     `간섭효과(불일치 RT − 일치 RT) ${interference === null ? "–" : Math.round(interference) + "ms"} · ` +
     `모드 ${state.mode === "word" ? "글자" : "그림"} · 색 이름 확인 ${cc ? `${cc.total - cc.errors}/${cc.total}` : "–"} · ` +
-    `응답 제한 ${CONFIG.limitMs}ms · 버튼 순서 ${state.order.map((i) => COLORS[i].name).join("·")} · 화면 ${d.screen ?? "?"} · 주사율 약 ${d.refresh_hz ?? "?"}Hz · 세션 ${state.session}`;
+    `단계 ${state.segments.filter((g) => g.phase === "test").map((g) => `${g.level}(${g.limit}ms)`).join(" → ") || "–"} · 버튼 순서 ${state.order.map((i) => COLORS[i].name).join("·")} · 화면 ${d.screen ?? "?"} · 주사율 약 ${d.refresh_hz ?? "?"}Hz · 세션 ${state.session}`;
 }
 
 /* 두 번 눌러도 회기가 하나만 시작되게 막는다 */
@@ -312,11 +331,13 @@ let running = false;
 $("start").addEventListener("click", async () => {
   if (running) return;
   running = true;
+  primeVoice();
   try { await runSession(); } finally { running = false; }
 });
 $("again").addEventListener("click", () => { state.session = sessionId(); show("intro"); });
 $("quit").addEventListener("click", () => { state.aborted = true; if (current) current.resolve?.(); });
 bindProToggle($("pro-toggle"), $("pro"));
+bindVoiceToggle($("voice"));
 $("csv").addEventListener("click", () => {
   const d = state.device || {};
   downloadCSV(`othub-stroop-${fileStamp(state.startedAt || new Date(), state.session)}.csv`, state.trials.map((t) => ({

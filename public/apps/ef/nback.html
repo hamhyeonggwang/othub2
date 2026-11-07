@@ -47,9 +47,10 @@
     <div class="ef-card ef-stack" aria-live="polite">
       <h2>이렇게 해요</h2>
       <p id="rule-text"></p>
-      <div class="nb-example" id="example" aria-hidden="true"></div>
+      <div class="nb-example ef-demo" id="example" aria-hidden="true"></div>
       <div class="ef-row">
         <button type="button" class="ef-btn ef-btn-quiet" id="listen">설명 듣기</button>
+        <button type="button" class="ef-btn ef-btn-quiet" id="voice" aria-pressed="true">음성 안내 켜짐</button>
       </div>
     </div>
 
@@ -108,6 +109,7 @@ import {
   createRng, nbackSequence, signalDetection, nextLevel, mean,
   presentOnNextFrame, waitUntil, bindResponse, speak, deviceInfo, downloadCSV, sessionId,
 } from "./engine.js";
+import { announce, primeVoice, bindVoiceToggle } from "./ui.js";
 
 /* 설정값: 문헌 패러다임을 참고한 초기값이며 파일럿에서 보정한다 (설계서 4.1, 가정 A5).
    ?timing=fast 는 자동 테스트용으로 시간을 줄인다. */
@@ -166,8 +168,9 @@ function renderRule() {
     const tile = state.mode === "verbal"
       ? `<div class="tile">${SYLLABLES[s]}</div>`
       : `<div class="tile mini">${gridHTML(s)}</div>`;
-    const cap = i === ex0.length - 1 ? "<b>같아요!</b>" : "";
-    return `<figure>${tile}<figcaption>${cap}</figcaption></figure>`;
+    const last = i === ex0.length - 1;
+    const cap = last ? "<b>같아요!</b>" : "";
+    return `<figure style="--i:${i}">${last ? tile.replace('class="tile', 'class="ef-demo-hit tile') : tile}<figcaption>${cap}</figcaption></figure>`;
   }).join("");
 }
 $("listen").addEventListener("click", () => {
@@ -189,7 +192,7 @@ function starsHTML(on, total) {
 let current = null; // 지금 시행 (반응 버튼이 기록하는 대상)
 bindResponse($("respond"), (t, inputType) => {
   if (!current || current.response) return;
-  if (t < current.onset) return; // 자극이 뜨기 전 누름은 무시
+  if (current.onset === Infinity) return; // 자극이 그려지기 전 누름은 무시 (프레임 시각과 비교하면 같은 프레임 반응이 빠질 수 있다)
   current.response = { t, inputType };
   $("respond").dataset.pressed = "true";
 });
@@ -235,7 +238,7 @@ async function runBlock({ phase, blockNo, level }) {
 
     const responded = Boolean(current.response);
     const correct = responded === item.isTarget;
-    const rt = responded ? Math.round(current.response.t - onset) : null;
+    const rt = responded ? Math.max(0, Math.round(current.response.t - onset)) : null;
     if (item.scored) {
       if (item.isTarget && responded) { counts.hits++; hitRTs.push(rt); }
       else if (item.isTarget) counts.misses++;
@@ -286,6 +289,7 @@ async function runSession() {
     $("break-text").textContent = b === 1
       ? "연습을 마쳤어요. 이제부터는 맞았는지 알려 주지 않아요. 천천히 집중해 봐요."
       : ruleText(state.level, state.mode);
+    announce($("break-text").textContent);
     await new Promise((r) => $("next").addEventListener("click", r, { once: true }));
     show("task");
     $("respond").focus({ preventScroll: true });
@@ -329,10 +333,12 @@ let running = false;
 $("start").addEventListener("click", async () => {
   if (running) return;
   running = true;
+  primeVoice();
   try { await runSession(); } finally { running = false; }
 });
 $("again").addEventListener("click", () => { state.session = sessionId(); show("intro"); });
 $("quit").addEventListener("click", () => { state.aborted = true; });
+bindVoiceToggle($("voice"));
 $("pro-toggle").addEventListener("click", () => {
   const open = $("pro").hidden;
   $("pro").hidden = !open;
