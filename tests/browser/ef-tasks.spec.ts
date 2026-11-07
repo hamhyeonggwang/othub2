@@ -77,8 +77,10 @@ test("Stroop: color check, practice and two halves end with condition table and 
   const rows = await csvRows(page);
   expect(rows).toHaveLength(8 + 12 + 48);
   expect(rows.every((r) => r.correct === "1")).toBe(true);
-  await expect(page.locator("#pro-table tbody tr")).toHaveCount(6);
+  await expect(page.locator("#pro-table tbody tr")).toHaveCount(12); // 연습·본 과제 합계·앞·뒤 × 3조건
   await expect(page.locator("#pro-meta")).toContainText("간섭효과");
+  // 앞부분 100% → 뒷부분은 한 단계 빠르게
+  await expect(page.locator("#pro-meta")).toContainText(/단계 1\(\d+ms\) → 2\(\d+ms\)/);
   await expect(page.locator("#color-warn")).toBeHidden();
   expect(errors).toEqual([]);
 });
@@ -190,7 +192,9 @@ test("Hearts and Flowers: four blocks with practice, switch cost in mixed blocks
   expect(rows.every((r) => r.correct === "1")).toBe(true);
   const table = page.locator("#pro-table tbody tr");
   await expect(table).toHaveCount(4);
-  await expect(table.nth(2).locator("td").nth(5)).toHaveText(/-?\d+ms|–/);
+  await expect(table.nth(2).locator("td").nth(7)).toHaveText(/-?\d+ms|–/);
+  // 모든 판 100% → 단계가 1 → 2 → 3 → 3
+  expect(await table.locator("td:nth-child(2)").allTextContents()).toEqual(["1", "2", "3", "3"]);
   expect(errors).toEqual([]);
 });
 

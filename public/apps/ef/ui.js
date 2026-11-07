@@ -72,3 +72,43 @@ export const ms = (v) => (v === null || v === undefined ? "–" : `${Math.round(
 export function fileStamp(date, session) {
   return `${date.toISOString().slice(0, 16).replace(/[-:T]/g, "")}-${session}`;
 }
+
+/* ---------- 음성 안내 ----------
+ * 쉬는 화면·규칙이 바뀔 때 안내 문구를 자동으로 읽는다. 시작 화면의 버튼으로 끄고 켤 수 있고,
+ * 설정은 이 기기에만 기억한다(저장이 막힌 브라우저면 매번 켜짐으로 시작).
+ */
+const VOICE_KEY = "othub-ef-voice";
+let voiceOn = true;
+try { voiceOn = localStorage.getItem(VOICE_KEY) !== "off"; } catch { /* 저장소를 못 쓰면 기본값 */ }
+
+export function bindVoiceToggle(button) {
+  const render = () => {
+    button.setAttribute("aria-pressed", String(voiceOn));
+    button.textContent = voiceOn ? "음성 안내 켜짐" : "음성 안내 꺼짐";
+  };
+  button.addEventListener("click", () => {
+    voiceOn = !voiceOn;
+    try { localStorage.setItem(VOICE_KEY, voiceOn ? "on" : "off"); } catch { /* 무시 */ }
+    if (!voiceOn && "speechSynthesis" in window) speechSynthesis.cancel();
+    render();
+  });
+  render();
+}
+
+/** 안내 문구를 읽는다 (음성 안내가 켜져 있고 브라우저가 지원할 때만) */
+export function announce(text) {
+  if (!voiceOn || !("speechSynthesis" in window) || !text) return;
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = "ko-KR";
+  u.rate = 0.95;
+  speechSynthesis.speak(u);
+}
+
+/** iPhone·iPad Safari는 첫 음성을 사용자 터치 안에서만 허용한다 — 시작 버튼을 누를 때 한 번 깨워 둔다 */
+export function primeVoice() {
+  if (!voiceOn || !("speechSynthesis" in window)) return;
+  const u = new SpeechSynthesisUtterance(" ");
+  u.volume = 0;
+  speechSynthesis.speak(u);
+}

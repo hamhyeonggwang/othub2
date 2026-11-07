@@ -18,6 +18,13 @@
   .co-board[data-locked="true"] .co-block { cursor: default; }
   .co-block:focus-visible { outline: 3px solid var(--ef-teal); outline-offset: 3px; }
   .co-prompt { min-height: 28px; margin: 0; font-size: 20px; font-weight: 700; text-align: center; }
+  .co-demo { position: relative; width: 160px; aspect-ratio: 1; background: #fff; border: 1.5px solid var(--ef-line); border-radius: 12px; }
+  .co-demo i { position: absolute; width: 19%; aspect-ratio: 1; border-radius: 5px; background: #2f3b36; }
+  @media (prefers-reduced-motion: no-preference) {
+    .co-demo i[data-step] { animation: co-demo-lit 5s infinite both; animation-delay: calc(var(--i) * .9s); }
+  }
+  @media (prefers-reduced-motion: reduce) { .co-demo i[data-step] { background: #f3c623; } }
+  @keyframes co-demo-lit { 0%, 2% { background: #2f3b36; } 5%, 15% { background: #f3c623; } 18%, 100% { background: #2f3b36; } }
   .co-progress { display: flex; gap: 6px; justify-content: center; min-height: 16px; }
   .co-progress i { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--ef-teal); }
   .co-progress i[data-done="true"] { background: var(--ef-teal); }
@@ -39,8 +46,13 @@
     <div class="ef-card ef-stack">
       <h2>이렇게 해요</h2>
       <p id="rule-text"></p>
+      <div class="ef-demo-wrap" aria-hidden="true">
+        <div class="co-demo" id="demo"></div>
+        <p class="ef-demo-label" id="demo-label"></p>
+      </div>
       <p class="ef-note">2개부터 시작해서, 맞히면 하나씩 늘어나요. 같은 개수에서 두 번 다 틀리면 끝나요.</p>
-      <div class="ef-row"><button type="button" class="ef-btn ef-btn-quiet" id="listen">설명 듣기</button></div>
+      <div class="ef-row"><button type="button" class="ef-btn ef-btn-quiet" id="listen">설명 듣기</button>
+        <button type="button" class="ef-btn ef-btn-quiet" id="voice" aria-pressed="true">음성 안내 켜짐</button></div>
     </div>
     <div class="ef-startbar"><button type="button" class="ef-btn ef-btn-primary" id="start">연습 시작</button></div>
     <p class="ef-note">훈련과 관찰을 위한 도구예요. 표준화 검사가 아니며, 결과는 이 기기 화면에만 있고 저장되지 않아요.</p>
@@ -89,6 +101,7 @@
 
 <script type="module">
 import { createRng, corsiSequence, corsiCheck, corsiNext, speak, deviceInfo, downloadCSV, sessionId, presentOnNextFrame, bindResponse } from "./engine.js";
+import { announce, primeVoice, bindVoiceToggle } from "./ui.js";
 import { $, screens, bindChoices, renderStars, waitClick, wait, renderTable, bindProToggle, fileStamp } from "./ui.js";
 
 /* 설계서 4.4 초기값 (가정 A5). ?timing=fast 는 자동 테스트용 */
@@ -101,7 +114,15 @@ const show = screens(["intro", "task", "break", "summary"]);
 const state = { dir: "forward", trials: [], aborted: false, session: sessionId(), device: null, startedAt: null };
 const ORDINAL = ["첫 번째", "두 번째", "세 번째", "네 번째", "다섯 번째", "여섯 번째", "일곱 번째", "여덟 번째", "아홉 번째"];
 
+const DEMO = [3, 1, 7];
+$("demo").innerHTML = LAYOUT.map(([x, y], i) => {
+  const step = DEMO.indexOf(i);
+  return `<i style="left:${x}%;top:${y}%${step >= 0 ? `;--i:${step}` : ""}"${step >= 0 ? ` data-step="${step + 1}"` : ""}></i>`;
+}).join("");
 function renderRule() {
+  $("demo-label").textContent = state.dir === "forward"
+    ? "불이 1 → 2 → 3 차례로 켜지면, 같은 차례로 눌러요"
+    : "불이 1 → 2 → 3 차례로 켜지면, 3 → 2 → 1 거꾸로 눌러요";
   $("rule-text").textContent = state.dir === "forward"
     ? "불이 켜진 순서를 기억했다가, 처음 켜진 네모부터 차례로 눌러요."
     : "불이 켜진 순서를 기억했다가, 마지막에 켜진 네모부터 거꾸로 눌러요.";
@@ -187,6 +208,7 @@ async function runSession() {
     await wait(fast ? 50 : 1200);
   }
   show("break");
+  announce($("break-text").textContent);
   await waitClick($("next"));
   show("task");
 
@@ -235,11 +257,13 @@ let running = false;
 $("start").addEventListener("click", async () => {
   if (running) return;
   running = true;
+  primeVoice();
   try { await runSession(); } finally { running = false; }
 });
 $("again").addEventListener("click", () => { state.session = sessionId(); show("intro"); });
 $("quit").addEventListener("click", () => { state.aborted = true; if (taking) taking.done(); });
 bindProToggle($("pro-toggle"), $("pro"));
+bindVoiceToggle($("voice"));
 $("csv").addEventListener("click", () => {
   const d = state.device || {};
   downloadCSV(`othub-corsi-${fileStamp(state.startedAt || new Date(), state.session)}.csv`, state.trials.map((t) => ({

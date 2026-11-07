@@ -111,3 +111,21 @@ table.ef-table { width: 100%; border-collapse: collapse; font-size: 14px; }
   .ef-card { padding: 16px; }
   .ef-stack > * + * { margin-top: 12px; }
 }
+
+/* 시작 화면 시연: 예시가 하나씩 나타나고 정답이 강조되며 반복된다. 움직임 줄이기 설정이면 멈춘 그림 */
+.ef-demo-wrap { display: grid; gap: 8px; }
+.ef-demo-label { margin: 0; font-size: 14px; color: var(--ef-muted); }
+@media (prefers-reduced-motion: no-preference) {
+  .ef-demo > * { animation: ef-demo-step var(--demo-cycle, 6s) ease-in-out infinite both; animation-delay: calc(var(--i, 0) * var(--demo-step, 1.1s)); }
+  .ef-demo .ef-demo-hit { animation: ef-demo-hit var(--demo-cycle, 6s) ease-in-out infinite both; animation-delay: calc(var(--i, 0) * var(--demo-step, 1.1s) + .4s); }
+}
+@keyframes ef-demo-step {
+  0% { opacity: 0; transform: translateY(8px) scale(.94); }
+  10%, 78% { opacity: 1; transform: none; }
+  90%, 100% { opacity: 0; }
+}
+@keyframes ef-demo-hit {
+  0%, 8% { box-shadow: 0 0 0 0 transparent; }
+  14%, 34% { box-shadow: 0 0 0 4px var(--ef-teal); }
+  44%, 100% { box-shadow: 0 0 0 0 transparent; }
+}

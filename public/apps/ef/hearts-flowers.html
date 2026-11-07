@@ -29,10 +29,20 @@
     <h1 id="intro-title">하트와 꽃</h1>
     <p class="ef-lead">하트가 나오면 <b>같은 쪽</b>, 꽃이 나오면 <b>반대쪽</b>을 눌러요.</p>
     <div class="ef-card ef-stack">
+      <h2 id="level-title">얼마나 빠르게 할까요?</h2>
+      <div class="ef-choices" role="group" aria-labelledby="level-title">
+        <button type="button" class="ef-choice" data-level="1" aria-pressed="true"><strong>1단계</strong><span>2.5초 안에 (처음)</span></button>
+        <button type="button" class="ef-choice" data-level="2" aria-pressed="false"><strong>2단계</strong><span>2초 안에</span></button>
+        <button type="button" class="ef-choice" data-level="3" aria-pressed="false"><strong>3단계</strong><span>1.5초 안에</span></button>
+      </div>
+      <p class="ef-note">판마다 정확도가 80% 이상이면 다음 판이 한 단계 빠르게, 50% 미만이면 한 단계 느리게 바뀌어요.</p>
+    </div>
+    <div class="ef-card ef-stack">
       <h2>이렇게 해요</h2>
       <p id="rule-text">하트는 나온 쪽과 같은 쪽 버튼을 눌러요. 꽃은 나온 쪽과 반대쪽 버튼을 눌러요. 하트만 → 꽃만 → 섞어서 두 번, 모두 네 판이에요.</p>
-      <div class="hf-example" id="example" aria-hidden="true"></div>
-      <div class="ef-row"><button type="button" class="ef-btn ef-btn-quiet" id="listen">설명 듣기</button></div>
+      <div class="hf-example ef-demo" id="example" aria-hidden="true" style="--demo-step:1.6s"></div>
+      <div class="ef-row"><button type="button" class="ef-btn ef-btn-quiet" id="listen">설명 듣기</button>
+        <button type="button" class="ef-btn ef-btn-quiet" id="voice" aria-pressed="true">음성 안내 켜짐</button></div>
     </div>
     <div class="ef-startbar"><button type="button" class="ef-btn ef-btn-primary" id="start">시작하기</button></div>
     <p class="ef-note">훈련과 관찰을 위한 도구예요. 표준화 검사가 아니며, 결과는 이 기기 화면에만 있고 저장되지 않아요. 키보드에서는 ← → 화살표로도 할 수 있어요.</p>
@@ -91,20 +101,24 @@
 </main>
 
 <script type="module">
-import { createRng, heartsFlowersTrials, mean, presentOnNextFrame, waitUntil, bindResponse, speak, deviceInfo, downloadCSV, sessionId } from "./engine.js";
-import { $, screens, renderStars, waitClick, wait, renderTable, bindProToggle, pct, ms, fileStamp } from "./ui.js";
+import { createRng, heartsFlowersTrials, mean, nextLevel, presentOnNextFrame, waitUntil, bindResponse, speak, deviceInfo, downloadCSV, sessionId } from "./engine.js";
+import { announce, primeVoice, bindVoiceToggle } from "./ui.js";
+import { $, screens, bindChoices, renderStars, waitClick, wait, renderTable, bindProToggle, pct, ms, fileStamp } from "./ui.js";
 
 /* 설계서 4.5 초기값 (가정 A5). ?timing=fast 는 자동 테스트용 */
 const fast = new URLSearchParams(location.search).get("timing") === "fast";
 const T = (v) => (fast ? Math.round(v / 6) : v);
+/* 단계별 응답 제한(기본): 1단계 2.5초, 2단계 2초, 3단계 1.5초. '섞어서 2'는 여기서 0.5초 더 빠르게(최소 1초) */
+const LEVEL_LIMITS = [2500, 2000, 1500];
+const limitFor = (block, level) => T(Math.max(1000, LEVEL_LIMITS[level - 1] - (block.faster ? 500 : 0)));
 const BLOCKS = [
-  { key: "hearts", kind: "heart", name: "하트만", practice: 4, n: 12, limit: T(2500),
+  { key: "hearts", kind: "heart", name: "하트만", practice: 4, n: 12,
     text: "하트가 나오면 하트가 있는 쪽, 같은 쪽 버튼을 눌러요." },
-  { key: "flowers", kind: "flower", name: "꽃만", practice: 4, n: 12, limit: T(2500),
+  { key: "flowers", kind: "flower", name: "꽃만", practice: 4, n: 12,
     text: "꽃이 나오면 꽃이 있는 쪽의 반대쪽 버튼을 눌러요." },
-  { key: "mixed1", kind: "mixed", name: "섞어서 1", practice: 0, n: 20, limit: T(2500),
+  { key: "mixed1", kind: "mixed", name: "섞어서 1", practice: 0, n: 20,
     text: "이제 하트와 꽃이 섞여 나와요. 하트는 같은 쪽, 꽃은 반대쪽이에요." },
-  { key: "mixed2", kind: "mixed", name: "섞어서 2 (빠르게)", practice: 0, n: 20, limit: T(2000),
+  { key: "mixed2", kind: "mixed", name: "섞어서 2 (빠르게)", practice: 0, n: 20, faster: true,
     text: "마지막 판이에요. 조금 더 빨리 나와요. 하트는 같은 쪽, 꽃은 반대쪽!" },
 ];
 const ITI = T(500);
@@ -113,15 +127,16 @@ const HEART = '<svg viewBox="0 0 100 100" aria-hidden="true"><path d="M50 88C20 
 const FLOWER = '<svg viewBox="0 0 100 100" aria-hidden="true"><g fill="#c04fd0"><circle cx="50" cy="24" r="18"/><circle cx="76" cy="44" r="18"/><circle cx="66" cy="74" r="18"/><circle cx="34" cy="74" r="18"/><circle cx="24" cy="44" r="18"/></g><circle cx="50" cy="52" r="14" fill="#f3c623"/></svg>';
 
 const show = screens(["intro", "task", "break", "summary"]);
-const state = { trials: [], blocks: [], stars: 0, aborted: false, session: sessionId(), device: null, startedAt: null };
+const state = { startLevel: 1, level: 1, trials: [], blocks: [], stars: 0, aborted: false, session: sessionId(), device: null, startedAt: null };
 
 $("example").innerHTML = [
   ["heart", "left", "하트 → 같은 쪽"], ["flower", "left", "꽃 → 반대쪽"],
-].map(([type, side, cap]) => {
+].map(([type, side, cap], i) => {
   const press = type === "heart" ? side : side === "left" ? "right" : "left";
-  const cell = (s) => `<span data-press="${s === press}">${s === side ? (type === "heart" ? HEART : FLOWER) : ""}</span>`;
-  return `<figure><div class="pair">${cell("left")}${cell("right")}</div><figcaption>${cap}</figcaption></figure>`;
+  const cell = (s) => `<span data-press="${s === press}"${s === press ? ' class="ef-demo-hit"' : ""}>${s === side ? (type === "heart" ? HEART : FLOWER) : ""}</span>`;
+  return `<figure style="--i:${i}"><div class="pair">${cell("left")}${cell("right")}</div><figcaption>${cap}</figcaption></figure>`;
 }).join("");
+bindChoices("level", (v) => { state.startLevel = Number(v); });
 $("listen").addEventListener("click", () => {
   if (!speak($("rule-text").textContent)) $("listen").textContent = "이 브라우저는 음성 안내를 지원하지 않아요";
 });
@@ -129,7 +144,7 @@ $("listen").addEventListener("click", () => {
 /* ---------- 입력: 버튼(터치) + 화살표 키 ---------- */
 let current = null;
 function respond(side, t, input) {
-  if (!current || current.response || t < current.onset) return;
+  if (!current || current.response || current.onset === Infinity) return; // 자극이 그려지기 전 누름은 무시
   current.response = { side, t, input };
   current.resolve();
 }
@@ -156,29 +171,30 @@ async function runTrial(trial, limit) {
   current = null;
   await presentOnNextFrame(() => { $("box-left").innerHTML = ""; $("box-right").innerHTML = ""; });
   return {
-    response: r ? r.side : null, input: r ? r.input : "", rt: r ? Math.round(r.t - onset) : null,
+    response: r ? r.side : null, input: r ? r.input : "", rt: r ? Math.max(0, Math.round(r.t - onset)) : null,
     correct: r ? r.side === trial.answer : false, timeout: !r, onset,
   };
 }
 
-async function runBlock(block, phase, n, withFeedback) {
+async function runBlock(block, phase, n, withFeedback, level) {
+  const limit = phase === "practice" ? T(2500) : limitFor(block, level);
   const seed = Math.floor(Math.random() * 2 ** 31);
   const list = heartsFlowersTrials(block.kind, n, createRng(seed));
-  $("task-title").textContent = phase === "practice" ? `${block.name} · 연습` : block.name;
+  $("task-title").textContent = phase === "practice" ? `${block.name} · 연습` : `${block.name} · ${level}단계`;
   $("dots").innerHTML = list.map(() => "<i></i>").join("");
   const results = [];
   for (let i = 0; i < list.length; i++) {
     $("feedback").textContent = "";
-    const res = await runTrial(list[i], block.limit);
+    const res = await runTrial(list[i], limit);
     if (!res || state.aborted) return null;
     const t = list[i];
     state.trials.push({
-      session: state.session, task: "hearts_flowers", block: block.key, phase, trial: i + 1,
+      session: state.session, task: "hearts_flowers", block: block.key, phase, level: phase === "practice" ? "" : level, trial: i + 1,
       stimulus: t.type === "heart" ? "하트" : "꽃", side: t.side === "left" ? "왼쪽" : "오른쪽",
       transition: t.transition ?? "", answer: t.answer === "left" ? "왼쪽" : "오른쪽",
       response: res.response === null ? "" : res.response === "left" ? "왼쪽" : "오른쪽",
       correct: res.correct ? 1 : 0, timeout: res.timeout ? 1 : 0, rt_ms: res.rt ?? "", input: res.input,
-      limit_ms: block.limit, onset_ms: Math.round(res.onset), seed,
+      limit_ms: limit, onset_ms: Math.round(res.onset), seed,
     });
     results.push({ ...t, ...res });
     $("dots").children[i].dataset.done = "true";
@@ -189,11 +205,11 @@ async function runBlock(block, phase, n, withFeedback) {
       await wait(FEEDBACK);
     }
   }
-  return results;
+  return { results, limit };
 }
 
 async function runSession() {
-  Object.assign(state, { trials: [], blocks: [], stars: 0, aborted: false, startedAt: new Date() });
+  Object.assign(state, { trials: [], blocks: [], stars: 0, aborted: false, startedAt: new Date(), level: state.startLevel });
   state.device ??= await deviceInfo();
   for (const block of BLOCKS) {
     show("break");
@@ -201,16 +217,19 @@ async function runSession() {
     renderStars($("break-stars"), state.stars, BLOCKS.length);
     $("break-text").textContent = block.text;
     $("break-listen").onclick = () => speak(block.text);
+    announce(block.text);
     await waitClick($("next"));
     show("task");
     if (block.practice) {
-      const p = await runBlock(block, "practice", block.practice, true);
+      const p = await runBlock(block, "practice", block.practice, true, state.level);
       if (!p) break;
     }
-    const res = await runBlock(block, "test", block.n, false);
+    const res = await runBlock(block, "test", block.n, false, state.level);
     if (!res) break;
-    state.blocks.push({ block, results: res });
+    const acc = res.results.filter((r) => r.correct).length / res.results.length;
+    state.blocks.push({ block, results: res.results, level: state.level, limit: res.limit });
     state.stars++;
+    state.level = nextLevel(state.level, acc, { min: 1, max: 3 });
   }
   finish();
 }
@@ -229,7 +248,7 @@ function finish() {
   show("summary");
   $("summary-title").textContent = state.aborted ? "오늘은 여기까지 해요" : "끝까지 해냈어요!";
   renderStars($("summary-stars"), state.stars, BLOCKS.length);
-  const rows = state.blocks.map(({ block, results }) => {
+  const rows = state.blocks.map(({ block, results, level, limit }) => {
     const s = stat(results);
     let cost = null;
     if (block.kind === "mixed") {
@@ -237,15 +256,15 @@ function finish() {
       const rp = stat(results.filter((r) => r.transition === "repeat")).rt;
       cost = sw !== null && rp !== null ? sw - rp : null;
     }
-    return { name: block.name, limit: block.limit, ...s, cost };
+    return { name: block.name, level, limit, ...s, cost };
   });
   renderTable($("pro-table"), "판별 기록 (RT는 맞힌 시행만, 전환 비용 = 바뀐 시행 RT − 같은 종류 반복 RT)", [
-    { key: "name", label: "판" }, { key: "n", label: "시행" }, { key: "accuracy", label: "정확도", fmt: pct },
+    { key: "name", label: "판" }, { key: "level", label: "단계" }, { key: "limit", label: "응답 제한", fmt: ms }, { key: "n", label: "시행" }, { key: "accuracy", label: "정확도", fmt: pct },
     { key: "rt", label: "RT 평균", fmt: ms }, { key: "timeouts", label: "시간 초과" },
     { key: "cost", label: "전환 비용", fmt: (v, r) => (r.name.startsWith("섞어서") ? ms(v) : "–") },
   ], rows);
   const d = state.device || {};
-  $("pro-meta").textContent = `응답 제한 ${BLOCKS.map((b) => b.limit + "ms").join("/")} · 간격 ${ITI}ms · 화면 ${d.screen ?? "?"} · 주사율 약 ${d.refresh_hz ?? "?"}Hz · 세션 ${state.session}`;
+  $("pro-meta").textContent = `시작 ${state.startLevel}단계 · 간격 ${ITI}ms · 화면 ${d.screen ?? "?"} · 주사율 약 ${d.refresh_hz ?? "?"}Hz · 세션 ${state.session}`;
 }
 
 /* 두 번 눌러도 회기가 하나만 시작되게 막는다 */
@@ -253,11 +272,13 @@ let running = false;
 $("start").addEventListener("click", async () => {
   if (running) return;
   running = true;
+  primeVoice();
   try { await runSession(); } finally { running = false; }
 });
 $("again").addEventListener("click", () => { state.session = sessionId(); show("intro"); });
 $("quit").addEventListener("click", () => { state.aborted = true; if (current) current.resolve(); });
 bindProToggle($("pro-toggle"), $("pro"));
+bindVoiceToggle($("voice"));
 $("csv").addEventListener("click", () => {
   const d = state.device || {};
   downloadCSV(`othub-hearts-flowers-${fileStamp(state.startedAt || new Date(), state.session)}.csv`, state.trials.map((t) => ({
