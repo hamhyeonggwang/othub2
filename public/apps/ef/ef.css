@@ -58,20 +58,38 @@ p { margin: 0 0 16px; }
 .ef-choice span { color: var(--ef-muted); font-size: 14px; }
 .ef-choice[aria-pressed="true"] { border-color: var(--ef-teal); background: var(--ef-teal-soft); box-shadow: inset 0 0 0 1.5px var(--ef-teal); }
 
-/* 과제 화면 */
-.ef-task { display: grid; gap: 24px; justify-items: center; }
-.ef-status { width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 12px; color: var(--ef-muted); }
+/* 과제 화면: 도구 상세 페이지의 작은 틀(데스크톱 약 610×381) 안에서도 스크롤 없이
+   자극과 반응 버튼이 함께 보이도록, 화면(틀) 높이 전체를 채우고 남는 공간에 자극을 맞춘다. */
+.ef-full { position: fixed; inset: 0; z-index: 10; background: var(--ef-bg); padding: 8px 12px 10px; display: flex; flex-direction: column; }
+.ef-full[hidden] { display: none; }
+.ef-task { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 8px; }
+.ef-status { flex: none; width: 100%; display: flex; align-items: center; gap: 12px; color: var(--ef-muted); }
+.ef-task-title { margin: 0; font-size: 18px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ef-status .ef-dots { flex: 1; justify-content: center; }
+.ef-btn-small { min-height: 48px; min-width: 48px; padding: 0 16px; font-size: 16px; box-shadow: none; }
 .ef-dots { display: flex; gap: 4px; flex-wrap: wrap; }
 .ef-dots i { width: 8px; height: 8px; border-radius: 50%; background: var(--ef-line); }
 .ef-dots i[data-done="true"] { background: var(--ef-teal); }
+/* 자극 영역: 남는 공간 전체. 안의 정사각형은 가로·세로 중 짧은 쪽에 맞춘다 */
+.ef-play { flex: 1; min-height: 0; min-width: 0; container-type: size; display: grid; place-items: center; }
 .ef-stage {
-  width: min(360px, 80vw); aspect-ratio: 1; display: grid; place-items: center;
-  background: var(--ef-card); border: 1.5px solid var(--ef-line); border-radius: 20px;
+  width: min(100cqw, 100cqh); height: min(100cqw, 100cqh); display: grid; place-items: center;
+  background: var(--ef-card); border: 1.5px solid var(--ef-line); border-radius: 16px; overflow: hidden;
 }
-.ef-respond { min-height: 96px; min-width: min(360px, 80vw); font-size: 32px; }
-.ef-feedback { min-height: 32px; font-size: 20px; font-weight: 700; }
+.ef-controls { flex: none; display: grid; justify-items: center; align-content: center; gap: 6px; }
+.ef-respond { min-height: 72px; width: min(420px, 100%); font-size: 28px; }
+.ef-feedback { min-height: 24px; margin: 0; font-size: 18px; line-height: 24px; font-weight: 700; text-align: center; }
 .ef-feedback[data-kind="good"] { color: var(--ef-good); }
 .ef-feedback[data-kind="retry"] { color: var(--ef-warn); }
+/* 가로로 넓고 낮은 틀: 자극은 왼쪽, 반응 버튼은 오른쪽 */
+@media (min-aspect-ratio: 5/4) and (max-height: 720px) {
+  .ef-task:not(.ef-task-stack) { display: grid; grid-template-columns: minmax(0, 1fr) minmax(200px, 40%); grid-template-rows: auto minmax(0, 1fr); }
+  .ef-task:not(.ef-task-stack) > .ef-status { grid-column: 1 / -1; }
+}
+
+/* 시작 버튼은 설명이 길어도 항상 화면 아래에 보이게 */
+.ef-startbar { position: sticky; bottom: 0; z-index: 2; padding: 12px 0; margin-top: 8px; background: linear-gradient(rgba(251,248,241,0), var(--ef-bg) 24%); }
+.ef-startbar .ef-btn { width: min(420px, 100%); }
 
 /* 보상 */
 .ef-stars { display: flex; gap: 8px; justify-content: center; font-size: 48px; line-height: 1; color: var(--ef-teal); }
@@ -85,8 +103,11 @@ table.ef-table { width: 100%; border-collapse: collapse; font-size: 14px; }
 .ef-note { color: var(--ef-muted); font-size: 14px; }
 .ef-note-box { background: var(--ef-warn-soft); border-radius: 8px; padding: 12px 16px; font-size: 14px; }
 
-@media (max-width: 560px) {
+@media (max-width: 560px), (max-height: 600px) {
+  .ef-app { padding: 12px 12px 0; }
   h1 { font-size: 24px; }
+  h2 { font-size: 20px; }
   .ef-lead { font-size: 16px; }
   .ef-card { padding: 16px; }
+  .ef-stack > * + * { margin-top: 12px; }
 }

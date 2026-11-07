@@ -7,7 +7,7 @@
 <link rel="stylesheet" crossorigin="anonymous" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.css">
 <link rel="stylesheet" href="./ef.css">
 <style>
-  .nb-symbol { font-size: 120px; font-weight: 700; line-height: 1; }
+  .nb-symbol { font-size: min(120px, 30cqmin); font-weight: 700; line-height: 1; }
   .nb-grid { width: 86%; aspect-ratio: 1; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
   .nb-grid i { border-radius: 10px; background: #efe9db; }
   .nb-grid i[data-on="true"] { background: var(--ef-teal); }
@@ -53,23 +53,25 @@
       </div>
     </div>
 
-    <div class="ef-row">
+    <div class="ef-startbar">
       <button type="button" class="ef-btn ef-btn-primary" id="start">연습 시작</button>
     </div>
     <p class="ef-note">훈련과 관찰을 위한 도구예요. 표준화 검사가 아니며, 결과는 이 기기 화면에만 있고 저장되지 않아요.</p>
   </section>
 
   <!-- 2. 과제 -->
-  <section class="ef-screen" id="task" hidden aria-labelledby="task-title">
+  <section class="ef-screen ef-full" id="task" hidden aria-labelledby="task-title">
     <div class="ef-task">
       <div class="ef-status">
-        <h2 id="task-title" style="margin:0;font-size:20px"></h2>
-        <button type="button" class="ef-btn ef-btn-quiet" id="quit">그만하기</button>
+        <h2 id="task-title" class="ef-task-title"></h2>
+        <div class="ef-dots" id="dots" aria-hidden="true"></div>
+        <button type="button" class="ef-btn ef-btn-small" id="quit">그만하기</button>
       </div>
-      <div class="ef-dots" id="dots" aria-hidden="true"></div>
-      <div class="ef-stage" id="stage" role="img" aria-label="문제 화면"></div>
-      <button type="button" class="ef-btn ef-btn-primary ef-respond" id="respond">같아요</button>
-      <p class="ef-feedback" id="feedback" role="status"></p>
+      <div class="ef-play"><div class="ef-stage" id="stage" role="img" aria-label="문제 화면"></div></div>
+      <div class="ef-controls">
+        <button type="button" class="ef-btn ef-btn-primary ef-respond" id="respond">같아요</button>
+        <p class="ef-feedback" id="feedback" role="status"></p>
+      </div>
     </div>
   </section>
 
@@ -271,7 +273,7 @@ async function runSession() {
   state.level = state.startLevel; state.startedAt = new Date();
   state.device ??= await deviceInfo();
   show("task");
-  $("respond").focus();
+  $("respond").focus({ preventScroll: true });
 
   const practice = await runBlock({ phase: "practice", blockNo: 0, level: state.level });
   if (!practice) return finish();
@@ -286,7 +288,7 @@ async function runSession() {
       : ruleText(state.level, state.mode);
     await new Promise((r) => $("next").addEventListener("click", r, { once: true }));
     show("task");
-    $("respond").focus();
+    $("respond").focus({ preventScroll: true });
     const res = await runBlock({ phase: "test", blockNo: b, level: state.level });
     if (!res) break;
     state.blocks.push(res);

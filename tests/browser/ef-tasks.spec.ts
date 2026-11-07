@@ -193,3 +193,33 @@ test("Hearts and Flowers: four blocks with practice, switch cost in mixed blocks
   await expect(table.nth(2).locator("td").nth(5)).toHaveText(/-?\d+ms|–/);
   expect(errors).toEqual([]);
 });
+
+/*
+ * 도구 상세 페이지의 실제 틀 크기에서 과제를 쓸 수 있는지:
+ * 시작 버튼이 스크롤 없이 보이고, 과제 화면에서 자극·반응 버튼·그만하기가 모두 화면 안에 있어야 한다.
+ * (데스크톱 1440 폭에서 틀은 약 610×381, 세로 iPad 768×479, iPhone 348×542)
+ */
+const FRAMES = [[610, 381], [768, 479], [348, 542]] as const;
+const LAYOUTS = [
+  { page: "nback", brk: false, keys: ["#stage", "#respond", "#quit"] },
+  { page: "stroop", brk: false, keys: ["#stage", "#answers", "#quit"] },
+  { page: "corsi", brk: false, keys: ["#board", "#prompt", "#quit"] },
+  { page: "cardsort", brk: true, keys: ["#refs", "#test", "#quit"] },
+  { page: "hearts-flowers", brk: true, keys: ["#field", ".hf-keys", "#quit"] },
+];
+for (const [w, h] of FRAMES) {
+  test(`all five tasks fit an embedded ${w}x${h} frame without scrolling`, async ({ page }) => {
+    await page.setViewportSize({ width: w, height: h });
+    for (const t of LAYOUTS) {
+      await page.goto(`/apps/ef/${t.page}.html`);
+      await expect(page.locator("#start")).toBeInViewport({ ratio: 1 });
+      await page.locator("#start").click();
+      if (t.brk) {
+        await expect(page.locator("#next")).toBeInViewport({ ratio: 1 });
+        await page.locator("#next").click();
+      }
+      await expect(page.locator("#task")).toBeVisible();
+      for (const k of t.keys) await expect(page.locator(k), `${t.page} ${k}`).toBeInViewport({ ratio: 1 });
+    }
+  });
+}

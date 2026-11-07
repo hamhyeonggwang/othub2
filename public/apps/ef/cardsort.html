@@ -7,14 +7,14 @@
 <link rel="stylesheet" crossorigin="anonymous" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.css">
 <link rel="stylesheet" href="./ef.css">
 <style>
-  .cs-refs { display: grid; gap: 12px; width: min(560px, 94vw); }
-  .cs-ref { padding: 6px; border: 1.5px solid var(--ef-line); border-radius: 12px; background: #fff; cursor: pointer; min-height: 64px; box-shadow: 0 3px 0 var(--ef-line); }
+  .cs-refs { display: flex; gap: 8px; justify-content: center; align-items: center; width: 100%; height: 100%; }
+  .cs-ref { height: min(100cqh, calc((100cqw - (var(--n) - 1) * 8px) / var(--n) * 1.4)); aspect-ratio: 100 / 140; padding: 4px; border: 1.5px solid var(--ef-line); border-radius: 12px; background: #fff; cursor: pointer; min-height: 64px; box-shadow: 0 3px 0 var(--ef-line); }
   .cs-ref:active { transform: translateY(2px); box-shadow: none; }
   .cs-ref:focus-visible { outline: 3px solid var(--ef-teal); outline-offset: 3px; }
   .cs-ref[data-chosen="true"] { border-color: var(--ef-teal); box-shadow: 0 0 0 3px var(--ef-teal); }
-  .cs-ref svg, .cs-test svg { width: 100%; height: auto; display: block; }
-  .cs-test { width: min(150px, 34vw); }
-  .cs-rule { min-height: 32px; font-size: 20px; font-weight: 700; text-align: center; color: var(--ef-teal); }
+  .cs-ref svg, .cs-test svg { width: 100%; height: 100%; display: block; }
+  .cs-test { height: clamp(96px, 34vh, 220px); aspect-ratio: 100 / 140; }
+  .cs-rule { min-height: 28px; margin: 0; font-size: 20px; font-weight: 700; text-align: center; color: var(--ef-teal); }
   .cs-legend { display: flex; flex-wrap: wrap; gap: 16px; }
   .cs-legend figure { margin: 0; width: 96px; text-align: center; font-size: 14px; color: var(--ef-muted); }
 </style>
@@ -38,20 +38,23 @@
       <div class="cs-legend" id="legend" aria-hidden="true"></div>
       <div class="ef-row"><button type="button" class="ef-btn ef-btn-quiet" id="listen">설명 듣기</button></div>
     </div>
-    <div class="ef-row"><button type="button" class="ef-btn ef-btn-primary" id="start">시작하기</button></div>
+    <div class="ef-startbar"><button type="button" class="ef-btn ef-btn-primary" id="start">시작하기</button></div>
     <p class="ef-note">훈련과 관찰을 위한 도구예요. 표준화 검사가 아니며, 카드 그림은 OTHub가 새로 그렸어요. 결과는 이 기기 화면에만 있고 저장되지 않아요.</p>
   </section>
 
-  <section class="ef-screen" id="task" hidden aria-labelledby="task-title">
+  <section class="ef-screen ef-full" id="task" hidden aria-labelledby="task-title">
     <div class="ef-task">
       <div class="ef-status">
-        <h2 id="task-title" style="margin:0;font-size:20px"></h2>
-        <button type="button" class="ef-btn ef-btn-quiet" id="quit">그만하기</button>
+        <h2 id="task-title" class="ef-task-title"></h2>
+        <span class="ef-dots" aria-hidden="true"></span>
+        <button type="button" class="ef-btn ef-btn-small" id="quit">그만하기</button>
       </div>
-      <div class="cs-refs" id="refs" role="group" aria-label="놓을 자리 카드"></div>
-      <p class="cs-rule" id="rule" role="status"></p>
-      <div class="cs-test" id="test" role="img"></div>
-      <p class="ef-feedback" id="feedback" role="status"></p>
+      <div class="ef-play"><div class="cs-refs" id="refs" role="group" aria-label="놓을 자리 카드"></div></div>
+      <div class="ef-controls">
+        <p class="cs-rule" id="rule" role="status"></p>
+        <div class="cs-test" id="test" role="img"></div>
+        <p class="ef-feedback" id="feedback" role="status"></p>
+      </div>
     </div>
   </section>
 
@@ -144,7 +147,7 @@ renderRule();
 /* ---------- 입력 ---------- */
 let current = null;
 function setRefs(refs) {
-  $("refs").style.gridTemplateColumns = `repeat(${refs.length}, 1fr)`;
+  $("refs").style.setProperty("--n", String(refs.length));
   $("refs").innerHTML = refs.map((r, i) => `<button type="button" class="cs-ref" data-i="${i}" aria-label="${i + 1}번 카드: ${describe(r)}">${cardSVG(r)}</button>`).join("");
   [...$("refs").children].forEach((b) => bindResponse(b, (t) => {
     if (!current || current.response !== null || t < current.onset) return;

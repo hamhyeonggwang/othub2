@@ -7,12 +7,12 @@
 <link rel="stylesheet" crossorigin="anonymous" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.css">
 <link rel="stylesheet" href="./ef.css">
 <style>
-  .st-word { font-size: 88px; font-weight: 800; line-height: 1; -webkit-text-stroke: 1px rgba(0,0,0,.25); }
-  .st-fix { font-size: 48px; color: var(--ef-muted); }
+  .st-word { font-size: min(88px, 20cqmin); font-weight: 800; line-height: 1; -webkit-text-stroke: 1px rgba(0,0,0,.25); }
+  .st-fix { font-size: min(48px, 14cqmin); color: var(--ef-muted); }
   .st-stage svg { width: 72%; height: 72%; }
   .st-swatch { width: 60%; aspect-ratio: 1; border-radius: 50%; }
-  .st-answers { display: grid; grid-template-columns: repeat(2, minmax(140px, 1fr)); gap: 12px; width: min(420px, 92vw); }
-  .st-answers .ef-btn { justify-content: flex-start; min-height: 72px; }
+  .st-answers { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; width: min(420px, 100%); }
+  .st-answers .ef-btn { justify-content: flex-start; min-height: 64px; padding: 0 12px; }
   .st-dot { width: 32px; height: 32px; border-radius: 50%; flex: none; border: 1.5px solid rgba(0,0,0,.2); }
   .st-example { display: flex; gap: 16px; flex-wrap: wrap; }
   .st-example figure { margin: 0; display: grid; justify-items: center; gap: 4px; }
@@ -42,20 +42,22 @@
       <div class="st-example" id="example" aria-hidden="true"></div>
       <div class="ef-row"><button type="button" class="ef-btn ef-btn-quiet" id="listen">설명 듣기</button></div>
     </div>
-    <div class="ef-row"><button type="button" class="ef-btn ef-btn-primary" id="start">색 이름부터 확인하기</button></div>
+    <div class="ef-startbar"><button type="button" class="ef-btn ef-btn-primary" id="start">색 이름부터 확인하기</button></div>
     <p class="ef-note">훈련과 관찰을 위한 도구예요. 표준화 검사가 아니며, 결과는 이 기기 화면에만 있고 저장되지 않아요.</p>
   </section>
 
-  <section class="ef-screen" id="task" hidden aria-labelledby="task-title">
+  <section class="ef-screen ef-full" id="task" hidden aria-labelledby="task-title">
     <div class="ef-task">
       <div class="ef-status">
-        <h2 id="task-title" style="margin:0;font-size:20px"></h2>
-        <button type="button" class="ef-btn ef-btn-quiet" id="quit">그만하기</button>
+        <h2 id="task-title" class="ef-task-title"></h2>
+        <div class="ef-dots" id="dots" aria-hidden="true"></div>
+        <button type="button" class="ef-btn ef-btn-small" id="quit">그만하기</button>
       </div>
-      <div class="ef-dots" id="dots" aria-hidden="true"></div>
-      <div class="ef-stage st-stage" id="stage" role="img" aria-label="문제 화면"></div>
-      <div class="st-answers" id="answers" role="group" aria-label="색 고르기"></div>
-      <p class="ef-feedback" id="feedback" role="status"></p>
+      <div class="ef-play"><div class="ef-stage st-stage" id="stage" role="img" aria-label="문제 화면"></div></div>
+      <div class="ef-controls">
+        <div class="st-answers" id="answers" role="group" aria-label="색 고르기"></div>
+        <p class="ef-feedback" id="feedback" role="status"></p>
+      </div>
     </div>
   </section>
 
