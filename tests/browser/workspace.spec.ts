@@ -47,6 +47,34 @@ test("detail preserves embedded tools, category, camera and login return path", 
   ).toBeVisible();
 });
 
+test("fullscreen falls back to a full-viewport frame when the Fullscreen API is missing (iPhone Safari)", async ({
+  page,
+}) => {
+  // iPhone Safari처럼 요소 전체화면 API가 없는 브라우저를 흉내 낸다
+  await page.addInitScript(() => {
+    // @ts-expect-error 테스트용으로 API를 지운다
+    delete Element.prototype.requestFullscreen;
+    // @ts-expect-error 테스트용으로 API를 지운다
+    delete Element.prototype.webkitRequestFullscreen;
+  });
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/hub/apps/cu-kiosk-trainer");
+  const frame = page.locator(".app-frame-wrap");
+  await page.getByRole("button", { name: "전체화면으로 보기" }).click();
+  await expect(frame).toHaveClass(/is-pseudo-fullscreen/);
+  const box = await frame.boundingBox();
+  expect(box).toMatchObject({ x: 0, y: 0, width: 390, height: 844 });
+  await expect(page.locator("body")).toHaveCSS("overflow", "hidden");
+  // 종료 버튼이 화면 안에 있고, Esc로도 닫힌다
+  await expect(page.getByRole("button", { name: "전체화면 종료" })).toBeInViewport();
+  await page.keyboard.press("Escape");
+  await expect(frame).not.toHaveClass(/is-pseudo-fullscreen/);
+  await page.getByRole("button", { name: "전체화면으로 보기" }).click();
+  await page.getByRole("button", { name: "전체화면 종료" }).click();
+  await expect(frame).not.toHaveClass(/is-pseudo-fullscreen/);
+  await expect(page.locator("body")).not.toHaveCSS("overflow", "hidden");
+});
+
 test("member workspace has actionable empty state and certification, not privileged links", async ({
   page,
   context,
