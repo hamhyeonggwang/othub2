@@ -1,0 +1,339 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>카드 나누기 (Card Sort) · OTHub</title>
+<link rel="stylesheet" crossorigin="anonymous" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.css">
+<link rel="stylesheet" href="./ef.css">
+<style>
+  .cs-refs { display: grid; gap: 12px; width: min(560px, 94vw); }
+  .cs-ref { padding: 6px; border: 1.5px solid var(--ef-line); border-radius: 12px; background: #fff; cursor: pointer; min-height: 64px; box-shadow: 0 3px 0 var(--ef-line); }
+  .cs-ref:active { transform: translateY(2px); box-shadow: none; }
+  .cs-ref:focus-visible { outline: 3px solid var(--ef-teal); outline-offset: 3px; }
+  .cs-ref[data-chosen="true"] { border-color: var(--ef-teal); box-shadow: 0 0 0 3px var(--ef-teal); }
+  .cs-ref svg, .cs-test svg { width: 100%; height: auto; display: block; }
+  .cs-test { width: min(150px, 34vw); }
+  .cs-rule { min-height: 32px; font-size: 20px; font-weight: 700; text-align: center; color: var(--ef-teal); }
+  .cs-legend { display: flex; flex-wrap: wrap; gap: 16px; }
+  .cs-legend figure { margin: 0; width: 96px; text-align: center; font-size: 14px; color: var(--ef-muted); }
+</style>
+</head>
+<body>
+<main class="ef-app">
+
+  <section class="ef-screen ef-stack" id="intro" aria-labelledby="intro-title">
+    <h1 id="intro-title">카드 나누기</h1>
+    <p class="ef-lead">아래 카드를 위의 카드 중 하나에 맞춰 놓아요. 놀이 규칙이 중간에 바뀌어요.</p>
+    <div class="ef-card ef-stack">
+      <h2 id="start-title">어디서 시작할까요?</h2>
+      <div class="ef-choices" role="group" aria-labelledby="start-title">
+        <button type="button" class="ef-choice" data-from="1" aria-pressed="true"><strong>1단계부터</strong><span>색 놀이 → 모양 놀이 → 테두리 놀이 → 규칙 찾기</span></button>
+        <button type="button" class="ef-choice" data-from="3" aria-pressed="false"><strong>규칙 찾기만</strong><span>규칙을 알려 주지 않아요. 맞다/아니다만 보고 찾아요</span></button>
+      </div>
+    </div>
+    <div class="ef-card ef-stack">
+      <h2>이렇게 해요</h2>
+      <p id="rule-text"></p>
+      <div class="cs-legend" id="legend" aria-hidden="true"></div>
+      <div class="ef-row"><button type="button" class="ef-btn ef-btn-quiet" id="listen">설명 듣기</button></div>
+    </div>
+    <div class="ef-row"><button type="button" class="ef-btn ef-btn-primary" id="start">시작하기</button></div>
+    <p class="ef-note">훈련과 관찰을 위한 도구예요. 표준화 검사가 아니며, 카드 그림은 OTHub가 새로 그렸어요. 결과는 이 기기 화면에만 있고 저장되지 않아요.</p>
+  </section>
+
+  <section class="ef-screen" id="task" hidden aria-labelledby="task-title">
+    <div class="ef-task">
+      <div class="ef-status">
+        <h2 id="task-title" style="margin:0;font-size:20px"></h2>
+        <button type="button" class="ef-btn ef-btn-quiet" id="quit">그만하기</button>
+      </div>
+      <div class="cs-refs" id="refs" role="group" aria-label="놓을 자리 카드"></div>
+      <p class="cs-rule" id="rule" role="status"></p>
+      <div class="cs-test" id="test" role="img"></div>
+      <p class="ef-feedback" id="feedback" role="status"></p>
+    </div>
+  </section>
+
+  <section class="ef-screen ef-stack" id="break" hidden aria-labelledby="break-title">
+    <h1 id="break-title"></h1>
+    <div class="ef-stars" id="break-stars"></div>
+    <p class="ef-lead" id="break-text"></p>
+    <div class="ef-row">
+      <button type="button" class="ef-btn ef-btn-quiet" id="break-listen">듣기</button>
+      <button type="button" class="ef-btn ef-btn-primary" id="next">시작하기</button>
+    </div>
+  </section>
+
+  <section class="ef-screen ef-stack" id="summary" hidden aria-labelledby="summary-title">
+    <h1 id="summary-title">끝까지 해냈어요!</h1>
+    <div class="ef-stars" id="summary-stars"></div>
+    <p class="ef-lead">바뀌는 규칙에 맞춰 생각을 바꿔 봤어요.</p>
+    <div class="ef-row">
+      <button type="button" class="ef-btn ef-btn-primary" id="again">다시 하기</button>
+      <button type="button" class="ef-btn" id="pro-toggle" aria-expanded="false" aria-controls="pro">치료사 보기</button>
+    </div>
+    <div class="ef-card ef-stack" id="pro" hidden>
+      <h2>치료사 기록</h2>
+      <p class="ef-note-box">규준이 없는 훈련용 기록입니다. 수치로 정상 여부를 판정하지 마세요. 보속 오류는 &lsquo;직전 규칙으로는 맞는 카드를 고른 오류&rsquo;로 단순화해 셉니다.</p>
+      <div class="ef-table-wrap"><table class="ef-table" id="pro-table"></table></div>
+      <p class="ef-note" id="pro-meta"></p>
+      <div class="ef-row"><button type="button" class="ef-btn" id="csv">시행 기록 CSV 내려받기</button></div>
+      <p class="ef-note">CSV에는 이름 같은 개인정보가 들어가지 않습니다. 이 화면을 닫으면 기록은 사라집니다.</p>
+    </div>
+  </section>
+</main>
+
+<script type="module">
+import { createRng, shuffle, randInt, scoreSort, mean, speak, deviceInfo, downloadCSV, sessionId, presentOnNextFrame, bindResponse } from "./engine.js";
+import { $, screens, bindChoices, renderStars, waitClick, wait, renderTable, bindProToggle, pct, ms, fileStamp } from "./ui.js";
+
+/* 설계서 4.3 (가정 A5). ?timing=fast 는 자동 테스트용 */
+const fast = new URLSearchParams(location.search).get("timing") === "fast";
+const CONFIG = {
+  feedbackMs: fast ? 30 : 900, gapMs: fast ? 20 : 400,
+  dccsTrials: 6, dccsPass: 5, borderTrials: 12, borderPass: 9,
+  wcstRun: 10, wcstMaxTrials: 60, wcstMaxCategories: 6,
+};
+const COLORS = { red: ["빨강", "#d1242f"], green: ["초록", "#1a7f37"], yellow: ["노랑", "#e0a800"], blue: ["파랑", "#1f5fd6"] };
+const SHAPES = {
+  circle: ["동그라미", '<circle r="13"/>'],
+  triangle: ["세모", '<path d="M0-14L14 12H-14z"/>'],
+  square: ["네모", '<rect x="-12" y="-12" width="24" height="24"/>'],
+  star: ["별", '<path d="M0-15l4.4 9 9.9 1.4-7.2 6.9 1.7 9.8L0 7.5l-8.8 4.6 1.7-9.8-7.2-6.9 9.9-1.4z"/>'],
+};
+const SPOTS = { 1: [[50, 70]], 2: [[50, 45], [50, 95]], 3: [[50, 35], [50, 70], [50, 105]], 4: [[30, 45], [70, 45], [30, 95], [70, 95]] };
+const RULE_NAME = { color: "색", shape: "모양", count: "개수" };
+
+/* 1·2단계: 기준 카드 2장, 검사 카드는 서로 엇갈린 2장 */
+const DCCS_REFS = [{ color: "red", shape: "star", count: 1 }, { color: "blue", shape: "triangle", count: 1 }];
+const DCCS_CARDS = [{ color: "blue", shape: "star", count: 1 }, { color: "red", shape: "triangle", count: 1 }];
+/* 3단계: 기준 카드 4장 (OTHub 자체 구성) */
+const WCST_REFS = [
+  { color: "red", shape: "circle", count: 1 }, { color: "green", shape: "triangle", count: 2 },
+  { color: "yellow", shape: "square", count: 3 }, { color: "blue", shape: "star", count: 4 },
+];
+const WCST_RULES = ["color", "shape", "count", "color", "shape", "count"];
+
+function cardSVG(card, border = false) {
+  const [, hex] = COLORS[card.color];
+  const shapes = SPOTS[card.count].map(([x, y]) => `<g transform="translate(${x} ${y}) scale(1.25)" fill="${hex}" stroke="#222" stroke-width="1.2">${SHAPES[card.shape][1]}</g>`).join("");
+  const frame = border
+    ? '<rect x="5" y="5" width="90" height="130" rx="10" fill="#fff" stroke="#111" stroke-width="8"/>'
+    : '<rect x="2" y="2" width="96" height="136" rx="12" fill="#fff" stroke="#e2dccd" stroke-width="1"/>';
+  return `<svg viewBox="0 0 100 140" aria-hidden="true">${frame}${shapes}</svg>`;
+}
+const describe = (c, border) => `${COLORS[c.color][0]} ${SHAPES[c.shape][0]} ${c.count}개${border ? ", 테두리 있음" : ""}`;
+
+const show = screens(["intro", "task", "break", "summary"]);
+const state = { from: 1, trials: [], stages: [], stars: 0, aborted: false, session: sessionId(), device: null, startedAt: null };
+
+function renderRule() {
+  $("rule-text").textContent = state.from === 1
+    ? "처음엔 ‘색 놀이’예요. 아래 카드와 색이 같은 위 카드를 눌러요. 나중엔 ‘모양 놀이’로 바뀌어요."
+    : "아래 카드를 위 카드 4장 중 하나에 맞춰 놓아요. 규칙은 알려 주지 않아요. ‘맞아요’와 ‘아니에요’를 보고 규칙을 찾아요. 규칙은 중간에 몰래 바뀌어요.";
+  const refs = state.from === 1 ? DCCS_REFS : WCST_REFS;
+  $("legend").innerHTML = refs.map((r) => `<figure>${cardSVG(r)}<figcaption>${describe(r)}</figcaption></figure>`).join("");
+}
+bindChoices("from", (v) => { state.from = Number(v); renderRule(); });
+$("listen").addEventListener("click", () => {
+  if (!speak($("rule-text").textContent)) $("listen").textContent = "이 브라우저는 음성 안내를 지원하지 않아요";
+});
+renderRule();
+
+/* ---------- 입력 ---------- */
+let current = null;
+function setRefs(refs) {
+  $("refs").style.gridTemplateColumns = `repeat(${refs.length}, 1fr)`;
+  $("refs").innerHTML = refs.map((r, i) => `<button type="button" class="cs-ref" data-i="${i}" aria-label="${i + 1}번 카드: ${describe(r)}">${cardSVG(r)}</button>`).join("");
+  [...$("refs").children].forEach((b) => bindResponse(b, (t) => {
+    if (!current || current.response !== null || t < current.onset) return;
+    current.response = Number(b.dataset.i);
+    current.t = t;
+    b.dataset.chosen = "true";
+    current.resolve();
+  }));
+}
+
+async function present(card, border) {
+  [...$("refs").children].forEach((b) => (b.dataset.chosen = "false"));
+  current = { response: null, onset: Infinity };
+  const done = new Promise((r) => (current.resolve = r));
+  const onset = await presentOnNextFrame((t) => {
+    current.onset = t;
+    $("test").innerHTML = cardSVG(card, border);
+    $("test").setAttribute("aria-label", `놓을 카드: ${describe(card, border)}`);
+  });
+  await done;
+  const r = { choice: current.response, rt: current.response === null ? null : Math.round(current.t - onset) };
+  current = null;
+  return r;
+}
+
+function record(stage, trial, card, border, rule, prevRule, res, refs) {
+  const s = res.choice === null ? { correct: false, perseverative: false } : scoreSort(card, refs[res.choice], rule, prevRule);
+  const row = {
+    session: state.session, task: "cardsort", stage, trial, card: describe(card, border), rule: RULE_NAME[rule],
+    chosen: res.choice === null ? "" : res.choice + 1, correct: s.correct ? 1 : 0,
+    perseverative: stage === 3 ? (s.perseverative ? 1 : 0) : "", rt_ms: res.rt ?? "",
+  };
+  state.trials.push(row);
+  return s;
+}
+
+async function intermission(title, text) {
+  show("break");
+  $("break-title").textContent = title;
+  renderStars($("break-stars"), state.stars, 3);
+  $("break-text").textContent = text;
+  const say = () => speak(text);
+  $("break-listen").onclick = say;
+  await waitClick($("next"));
+  show("task");
+}
+
+/* ---------- 1단계: 색 놀이 → 모양 놀이 ---------- */
+async function stageDCCS(rng) {
+  setRefs(DCCS_REFS);
+  $("feedback").textContent = "";
+  let n = 0;
+  const games = [["color", "색 놀이"], ["shape", "모양 놀이"]];
+  let post = 0;
+  for (const [g, [rule, name]] of games.entries()) {
+    if (g === 1) await intermission("이제 모양 놀이예요", "이제부터는 모양 놀이예요. 색은 신경 쓰지 말고, 모양이 같은 카드를 눌러요.");
+    $("task-title").textContent = `1단계 · ${name}`;
+    $("rule").textContent = rule === "color" ? "색이 같은 카드에 놓아요" : "모양이 같은 카드에 놓아요";
+    const cards = shuffle(rng, [0, 1, 0, 1, 0, 1]);
+    for (const ci of cards) {
+      if (state.aborted) return null;
+      const res = await present(DCCS_CARDS[ci], false);
+      if (state.aborted) return null;
+      const s = record(1, ++n, DCCS_CARDS[ci], false, rule, g === 1 ? "color" : null, res, DCCS_REFS);
+      if (g === 1 && s.correct) post++;
+      await wait(CONFIG.gapMs);
+    }
+  }
+  return { stage: 1, score: post, of: CONFIG.dccsTrials, passed: post >= CONFIG.dccsPass };
+}
+
+/* ---------- 2단계: 테두리 있으면 모양, 없으면 색 ---------- */
+async function stageBorder(rng) {
+  setRefs(DCCS_REFS);
+  $("task-title").textContent = "2단계 · 테두리 놀이";
+  $("rule").textContent = "테두리 있으면 모양, 없으면 색";
+  const borders = shuffle(rng, Array.from({ length: CONFIG.borderTrials }, (_, i) => i % 2 === 0));
+  let ok = 0;
+  for (let i = 0; i < borders.length; i++) {
+    if (state.aborted) return null;
+    const card = DCCS_CARDS[randInt(rng, 2)];
+    const rule = borders[i] ? "shape" : "color";
+    const res = await present(card, borders[i]);
+    if (state.aborted) return null;
+    if (record(2, i + 1, card, borders[i], rule, null, res, DCCS_REFS).correct) ok++;
+    await wait(CONFIG.gapMs);
+  }
+  return { stage: 2, score: ok, of: CONFIG.borderTrials, passed: ok >= CONFIG.borderPass };
+}
+
+/* ---------- 3단계: 규칙 찾기 (규칙 비공개, 맞다/아니다만) ---------- */
+function wcstCard(rng) {
+  for (;;) {
+    const c = { color: Object.keys(COLORS)[randInt(rng, 4)], shape: Object.keys(SHAPES)[randInt(rng, 4)], count: 1 + randInt(rng, 4) };
+    if (!WCST_REFS.some((r) => r.color === c.color && r.shape === c.shape && r.count === c.count)) return c;
+  }
+}
+async function stageWCST(rng) {
+  setRefs(WCST_REFS);
+  $("task-title").textContent = "3단계 · 규칙 찾기";
+  $("rule").textContent = "";
+  let cat = 0, run = 0, errors = 0, persev = 0, toFirst = null, trial = 0;
+  while (trial < CONFIG.wcstMaxTrials && cat < CONFIG.wcstMaxCategories) {
+    if (state.aborted) return null;
+    const rule = WCST_RULES[cat];
+    const prevRule = cat === 0 ? null : WCST_RULES[cat - 1];
+    const card = wcstCard(rng);
+    $("feedback").textContent = "";
+    const res = await present(card, false);
+    if (state.aborted) return null;
+    trial++;
+    const s = record(3, trial, card, false, rule, prevRule, res, WCST_REFS);
+    const fb = $("feedback");
+    fb.dataset.kind = s.correct ? "good" : "retry";
+    fb.textContent = s.correct ? "맞아요" : "아니에요";
+    if (s.correct) run++;
+    else { run = 0; errors++; if (s.perseverative) persev++; }
+    if (run >= CONFIG.wcstRun) { cat++; run = 0; if (toFirst === null) toFirst = trial; }
+    await wait(CONFIG.feedbackMs);
+  }
+  return { stage: 3, categories: cat, errors, perseverative: persev, trials: trial, toFirst, passed: cat > 0 };
+}
+
+async function runSession() {
+  Object.assign(state, { trials: [], stages: [], stars: 0, aborted: false, startedAt: new Date() });
+  state.device ??= await deviceInfo();
+  const rng = createRng(Math.floor(Math.random() * 2 ** 31));
+  if (state.from === 1) {
+    await intermission("1단계: 색 놀이", "색 놀이예요. 아래 카드와 색이 같은 위 카드를 눌러요.");
+    const s1 = await stageDCCS(rng);
+    if (!s1) return finish();
+    state.stages.push(s1); state.stars++;
+    if (!s1.passed) return finish();
+    await intermission("2단계: 테두리 놀이", "테두리가 있는 카드는 모양 놀이, 테두리가 없는 카드는 색 놀이예요.");
+    const s2 = await stageBorder(rng);
+    if (!s2) return finish();
+    state.stages.push(s2); state.stars++;
+    if (!s2.passed) return finish();
+  }
+  await intermission("3단계: 규칙 찾기", "이번에는 규칙을 알려 주지 않아요. 카드를 놓으면 맞아요 또는 아니에요가 나와요. 그걸 보고 규칙을 찾아요. 규칙은 중간에 몰래 바뀌어요.");
+  const s3 = await stageWCST(rng);
+  if (s3) { state.stages.push(s3); state.stars++; }
+  finish();
+}
+
+function finish() {
+  current = null;
+  show("summary");
+  $("summary-title").textContent = state.aborted ? "오늘은 여기까지 해요" : "끝까지 해냈어요!";
+  renderStars($("summary-stars"), state.stars, state.from === 1 ? 3 : 1);
+  const name = { 1: "1단계 색→모양", 2: "2단계 테두리", 3: "3단계 규칙 찾기" };
+  const rows = state.stages.map((s) => {
+    const ts = state.trials.filter((t) => t.stage === s.stage);
+    return {
+      stage: name[s.stage],
+      result: s.stage === 3 ? `범주 ${s.categories}개 완료` : `${s.score}/${s.of} (${s.passed ? "통과" : "미통과"})`,
+      accuracy: ts.length ? ts.filter((t) => t.correct).length / ts.length : null,
+      rt: mean(ts.filter((t) => t.rt_ms !== "").map((t) => t.rt_ms)),
+      errors: s.stage === 3 ? s.errors : ts.filter((t) => !t.correct).length,
+      persev: s.stage === 3 ? s.perseverative : "–",
+    };
+  });
+  renderTable($("pro-table"), "단계별 기록 (1단계 점수는 규칙 바뀐 뒤 6시행 기준, 통과 5/6 · 2단계 통과 9/12)", [
+    { key: "stage", label: "단계" }, { key: "result", label: "결과" }, { key: "accuracy", label: "정확도", fmt: pct },
+    { key: "rt", label: "RT 평균", fmt: ms }, { key: "errors", label: "오류" }, { key: "persev", label: "보속 오류" },
+  ], rows);
+  const s3 = state.stages.find((s) => s.stage === 3);
+  const d = state.device || {};
+  $("pro-meta").textContent = (s3
+    ? `3단계: 시행 ${s3.trials} · 완료 범주 ${s3.categories} · 첫 범주까지 ${s3.toFirst ?? "–"}시행 · 오류 ${s3.errors} · 보속 오류 ${s3.perseverative} · `
+    : "") + `범주 전환 기준 연속 ${CONFIG.wcstRun}회 정답 · 화면 ${d.screen ?? "?"} · 세션 ${state.session}`;
+}
+
+/* 두 번 눌러도 회기가 하나만 시작되게 막는다 */
+let running = false;
+$("start").addEventListener("click", async () => {
+  if (running) return;
+  running = true;
+  try { await runSession(); } finally { running = false; }
+});
+$("again").addEventListener("click", () => { state.session = sessionId(); show("intro"); });
+$("quit").addEventListener("click", () => { state.aborted = true; if (current) current.resolve(); });
+bindProToggle($("pro-toggle"), $("pro"));
+$("csv").addEventListener("click", () => {
+  const d = state.device || {};
+  downloadCSV(`othub-cardsort-${fileStamp(state.startedAt || new Date(), state.session)}.csv`, state.trials.map((t) => ({
+    ...t, screen: d.screen, refresh_hz: d.refresh_hz, touch: d.touch ? 1 : 0, user_agent: d.user_agent,
+  })));
+});
+</script>
+</body>
+</html>

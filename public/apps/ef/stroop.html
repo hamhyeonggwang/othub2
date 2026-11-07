@@ -1,0 +1,326 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>색깔 맞히기 (Stroop) · OTHub</title>
+<link rel="stylesheet" crossorigin="anonymous" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.css">
+<link rel="stylesheet" href="./ef.css">
+<style>
+  .st-word { font-size: 88px; font-weight: 800; line-height: 1; -webkit-text-stroke: 1px rgba(0,0,0,.25); }
+  .st-fix { font-size: 48px; color: var(--ef-muted); }
+  .st-stage svg { width: 72%; height: 72%; }
+  .st-swatch { width: 60%; aspect-ratio: 1; border-radius: 50%; }
+  .st-answers { display: grid; grid-template-columns: repeat(2, minmax(140px, 1fr)); gap: 12px; width: min(420px, 92vw); }
+  .st-answers .ef-btn { justify-content: flex-start; min-height: 72px; }
+  .st-dot { width: 32px; height: 32px; border-radius: 50%; flex: none; border: 1.5px solid rgba(0,0,0,.2); }
+  .st-example { display: flex; gap: 16px; flex-wrap: wrap; }
+  .st-example figure { margin: 0; display: grid; justify-items: center; gap: 4px; }
+  .st-example .tile { width: 96px; height: 96px; display: grid; place-items: center; border: 1.5px solid var(--ef-line); border-radius: 10px; background: #fff; }
+  .st-example .tile .st-word { font-size: 32px; -webkit-text-stroke: 0; }
+  .st-example .tile svg { width: 72px; height: 72px; }
+  .st-example figcaption { font-size: 14px; color: var(--ef-muted); }
+  .st-example figcaption b { color: var(--ef-teal); }
+</style>
+</head>
+<body>
+<main class="ef-app">
+
+  <section class="ef-screen ef-stack" id="intro" aria-labelledby="intro-title">
+    <h1 id="intro-title">색깔 맞히기</h1>
+    <p class="ef-lead">글자나 그림이 <b>무슨 색으로 칠해졌는지</b> 골라요. 글자의 뜻이나 원래 색에 속지 않는 게 핵심이에요.</p>
+    <div class="ef-card ef-stack">
+      <h2 id="mode-title">무엇으로 할까요?</h2>
+      <div class="ef-choices" role="group" aria-labelledby="mode-title">
+        <button type="button" class="ef-choice" data-mode="word" aria-pressed="true"><strong>글자</strong><span>&lsquo;빨강&rsquo; 같은 색 이름 글자 (글을 읽을 수 있을 때)</span></button>
+        <button type="button" class="ef-choice" data-mode="picture" aria-pressed="false"><strong>그림</strong><span>파란 바나나처럼 색이 바뀐 그림 (글을 몰라도 돼요)</span></button>
+      </div>
+    </div>
+    <div class="ef-card ef-stack">
+      <h2>이렇게 해요</h2>
+      <p id="rule-text"></p>
+      <div class="st-example" id="example" aria-hidden="true"></div>
+      <div class="ef-row"><button type="button" class="ef-btn ef-btn-quiet" id="listen">설명 듣기</button></div>
+    </div>
+    <div class="ef-row"><button type="button" class="ef-btn ef-btn-primary" id="start">색 이름부터 확인하기</button></div>
+    <p class="ef-note">훈련과 관찰을 위한 도구예요. 표준화 검사가 아니며, 결과는 이 기기 화면에만 있고 저장되지 않아요.</p>
+  </section>
+
+  <section class="ef-screen" id="task" hidden aria-labelledby="task-title">
+    <div class="ef-task">
+      <div class="ef-status">
+        <h2 id="task-title" style="margin:0;font-size:20px"></h2>
+        <button type="button" class="ef-btn ef-btn-quiet" id="quit">그만하기</button>
+      </div>
+      <div class="ef-dots" id="dots" aria-hidden="true"></div>
+      <div class="ef-stage st-stage" id="stage" role="img" aria-label="문제 화면"></div>
+      <div class="st-answers" id="answers" role="group" aria-label="색 고르기"></div>
+      <p class="ef-feedback" id="feedback" role="status"></p>
+    </div>
+  </section>
+
+  <section class="ef-screen ef-stack" id="break" hidden aria-labelledby="break-title">
+    <h1 id="break-title">잘했어요! 잠깐 쉬어요</h1>
+    <div class="ef-stars" id="break-stars"></div>
+    <p class="ef-lead" id="break-text"></p>
+    <div class="ef-row"><button type="button" class="ef-btn ef-btn-primary" id="next">계속하기</button></div>
+  </section>
+
+  <section class="ef-screen ef-stack" id="summary" hidden aria-labelledby="summary-title">
+    <h1 id="summary-title">끝까지 해냈어요!</h1>
+    <div class="ef-stars" id="summary-stars"></div>
+    <p class="ef-lead">헷갈리는 색도 끝까지 집중했어요.</p>
+    <div class="ef-row">
+      <button type="button" class="ef-btn ef-btn-primary" id="again">다시 하기</button>
+      <button type="button" class="ef-btn" id="pro-toggle" aria-expanded="false" aria-controls="pro">치료사 보기</button>
+    </div>
+    <div class="ef-card ef-stack" id="pro" hidden>
+      <h2>치료사 기록</h2>
+      <p class="ef-note-box">규준이 없는 훈련용 기록입니다. 수치로 정상 여부를 판정하지 마세요. 기기·브라우저마다 반응시간이 달라 다른 기기와 직접 비교하지 않습니다.</p>
+      <p class="ef-note-box" id="color-warn" hidden></p>
+      <div class="ef-table-wrap"><table class="ef-table" id="pro-table"></table></div>
+      <p class="ef-note" id="pro-meta"></p>
+      <div class="ef-row"><button type="button" class="ef-btn" id="csv">시행 기록 CSV 내려받기</button></div>
+      <p class="ef-note">CSV에는 이름 같은 개인정보가 들어가지 않습니다. 이 화면을 닫으면 기록은 사라집니다.</p>
+    </div>
+  </section>
+</main>
+
+<script type="module">
+import { createRng, stroopTrials, shuffle, mean, presentOnNextFrame, waitUntil, bindResponse, speak, deviceInfo, downloadCSV, sessionId } from "./engine.js";
+import { $, screens, bindChoices, renderStars, waitClick, wait, renderTable, bindProToggle, pct, ms, fileStamp } from "./ui.js";
+
+/* 설계서 4.2 초기값 (가정 A5). ?timing=fast 는 자동 테스트용 */
+const fast = new URLSearchParams(location.search).get("timing") === "fast";
+const CONFIG = {
+  fixationMs: fast ? 40 : 500,
+  limitMs: fast ? 700 : 2500,
+  feedbackMs: fast ? 40 : 700,
+  checkTrials: 8,
+  practice: { congruent: 4, incongruent: 4, neutral: 4 },
+  half: { congruent: 8, incongruent: 8, neutral: 8 }, // 본 과제 48시행을 24시행 두 번으로 (불일치 33%)
+};
+const COLORS = [
+  { name: "빨강", hex: "#d1242f" },
+  { name: "파랑", hex: "#1f5fd6" },
+  { name: "초록", hex: "#1a7f37" },
+  { name: "노랑", hex: "#e0a800" },
+];
+const NEUTRAL_WORDS = ["책상", "의자", "시계", "가방"];
+/* 그림 모드: 고유색이 뚜렷한 사물. 원래 색 순서는 COLORS와 같다 (딸기=빨강, 물방울=파랑, 나뭇잎=초록, 바나나=노랑) */
+const OBJECTS = [
+  { name: "딸기", svg: (c) => `<path d="M50 92C22 72 14 44 24 32c10-12 42-12 52 0 10 12 2 40-26 60z" fill="${c}" stroke="#222" stroke-width="2.5"/><g fill="#fff"><circle cx="38" cy="48" r="2.4"/><circle cx="56" cy="44" r="2.4"/><circle cx="48" cy="60" r="2.4"/><circle cx="62" cy="58" r="2.4"/><circle cx="40" cy="66" r="2.4"/></g><path d="M38 26l12-10 12 10" fill="none" stroke="#222" stroke-width="2.5"/>` },
+  { name: "물방울", svg: (c) => `<path d="M50 8C50 8 20 48 20 64a30 30 0 0 0 60 0C80 48 50 8 50 8z" fill="${c}" stroke="#222" stroke-width="2.5"/><path d="M36 62a14 14 0 0 0 10 16" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round"/>` },
+  { name: "나뭇잎", svg: (c) => `<path d="M14 86C14 40 48 14 88 12c-2 40-28 74-74 74z" fill="${c}" stroke="#222" stroke-width="2.5"/><path d="M14 86L70 30" stroke="#fff" stroke-width="3"/>` },
+  { name: "바나나", svg: (c) => `<path d="M14 26c8 46 46 70 76 40-26 8-54-6-66-42z" fill="${c}" stroke="#222" stroke-width="2.5" stroke-linejoin="round"/><path d="M12 22l6 6" stroke="#222" stroke-width="5" stroke-linecap="round"/>` },
+];
+const NEUTRAL_SVG = (c) => `<circle cx="50" cy="50" r="36" fill="${c}" stroke="#222" stroke-width="2.5"/>`;
+
+const show = screens(["intro", "task", "break", "summary"]);
+const state = { mode: "word", order: [], trials: [], segments: [], colorCheck: null, stars: 0, aborted: false, session: sessionId(), device: null, startedAt: null };
+
+/* ---------- 시작 화면 ---------- */
+function stimHTML(t, mode) {
+  const ink = COLORS[t.ink].hex;
+  if (mode === "word") {
+    const text = t.meaning === null ? NEUTRAL_WORDS[t.ink] : COLORS[t.meaning].name;
+    return `<span class="st-word" style="color:${ink}">${text}</span>`;
+  }
+  const body = t.meaning === null ? NEUTRAL_SVG(ink) : OBJECTS[t.meaning].svg(ink);
+  return `<svg viewBox="0 0 100 100" aria-hidden="true">${body}</svg>`;
+}
+function renderRule() {
+  $("rule-text").textContent = state.mode === "word"
+    ? "‘빨강’이라는 글자가 파란색으로 쓰여 있으면 ‘파랑’을 눌러요. 글자를 읽지 말고 색을 봐요."
+    : "바나나가 파란색으로 칠해져 있으면 ‘파랑’을 눌러요. 원래 색 말고 지금 칠해진 색을 봐요.";
+  const ex = [{ ink: 1, meaning: 0 }, { ink: 2, meaning: 2 }, { ink: 3, meaning: 1 }];
+  $("example").innerHTML = ex.map((t) =>
+    `<figure><div class="tile">${stimHTML(t, state.mode)}</div><figcaption>→ <b>${COLORS[t.ink].name}</b></figcaption></figure>`).join("");
+}
+bindChoices("mode", (v) => { state.mode = v; renderRule(); });
+$("listen").addEventListener("click", () => {
+  if (!speak($("rule-text").textContent)) $("listen").textContent = "이 브라우저는 음성 안내를 지원하지 않아요";
+});
+renderRule();
+
+/* ---------- 응답 버튼: 회기 안에서 위치 고정, 회기마다 무작위 ---------- */
+let current = null;
+function buildAnswers() {
+  $("answers").innerHTML = state.order.map((i) =>
+    `<button type="button" class="ef-btn" data-color="${i}"><span class="st-dot" style="background:${COLORS[i].hex}"></span>${COLORS[i].name}</button>`).join("");
+  $("answers").querySelectorAll("button").forEach((b) =>
+    bindResponse(b, (t, input) => {
+      if (!current || current.response || t < current.onset) return;
+      current.response = { t, input, color: Number(b.dataset.color) };
+      current.resolve?.();
+    }));
+}
+
+/* ---------- 시행 ---------- */
+async function runTrial(content, { timed, ink }) {
+  $("stage").innerHTML = `<span class="st-fix" aria-hidden="true">+</span>`;
+  await wait(CONFIG.fixationMs);
+  if (state.aborted) return { onset: 0, response: null, input: "", rt: null, correct: false, timeout: true };
+  current = { onset: Infinity, response: null };
+  const answered = new Promise((r) => (current.resolve = r));
+  const onset = await presentOnNextFrame((t) => { current.onset = t; $("stage").innerHTML = content; });
+  if (timed) await Promise.race([answered, waitUntil(onset + CONFIG.limitMs)]);
+  else await answered;
+  const r = current.response;
+  current = null;
+  await presentOnNextFrame(() => ($("stage").innerHTML = ""));
+  return {
+    onset, response: r ? r.color : null, input: r ? r.input : "",
+    rt: r ? Math.round(r.t - onset) : null, correct: r ? r.color === ink : false, timeout: !r,
+  };
+}
+
+function feedback(ok, timeout) {
+  const fb = $("feedback");
+  fb.dataset.kind = ok ? "good" : "retry";
+  fb.textContent = ok ? "맞아요!" : timeout ? "조금 더 빨리 눌러 봐요" : "칠해진 색을 다시 봐요";
+}
+
+async function colorCheck() {
+  $("task-title").textContent = "색 이름 확인";
+  const rng = createRng(Math.floor(Math.random() * 2 ** 31));
+  const inks = shuffle(rng, Array.from({ length: CONFIG.checkTrials }, (_, i) => i % COLORS.length));
+  $("dots").innerHTML = inks.map(() => "<i></i>").join("");
+  let errors = 0;
+  for (let i = 0; i < inks.length; i++) {
+    if (state.aborted) return null;
+    $("feedback").textContent = "";
+    const res = await runTrial(`<div class="st-swatch" style="background:${COLORS[inks[i]].hex}"></div>`, { timed: false, ink: inks[i] });
+    if (!res.correct) errors++;
+    state.trials.push(row("color_check", 0, i + 1, { condition: "swatch", ink: inks[i], meaning: null }, res));
+    feedback(res.correct, false);
+    $("dots").children[i].dataset.done = "true";
+    await wait(CONFIG.feedbackMs);
+  }
+  return { errors, total: inks.length };
+}
+
+function row(phase, segment, trial, t, res) {
+  return {
+    session: state.session, task: "stroop", mode: state.mode, phase, segment, trial,
+    condition: t.condition, ink: COLORS[t.ink].name,
+    stimulus: t.meaning === null ? (t.condition === "swatch" ? "색 동그라미" : state.mode === "word" ? NEUTRAL_WORDS[t.ink] : "동그라미")
+      : state.mode === "word" ? COLORS[t.meaning].name : OBJECTS[t.meaning].name,
+    response: res.response === null ? "" : COLORS[res.response].name, correct: res.correct ? 1 : 0,
+    timeout: res.timeout ? 1 : 0, rt_ms: res.rt ?? "", input: res.input, onset_ms: Math.round(res.onset),
+  };
+}
+
+async function runSegment(phase, segment, counts, withFeedback) {
+  const seed = Math.floor(Math.random() * 2 ** 31);
+  const list = stroopTrials({ counts, colors: COLORS.length, rng: createRng(seed) });
+  $("task-title").textContent = phase === "practice" ? "연습" : `${segment}번째`;
+  $("dots").innerHTML = list.map(() => "<i></i>").join("");
+  const results = [];
+  for (let i = 0; i < list.length; i++) {
+    if (state.aborted) return null;
+    $("feedback").textContent = "";
+    const res = await runTrial(stimHTML(list[i], state.mode), { timed: true, ink: list[i].ink });
+    const r = row(phase, segment, i + 1, list[i], res);
+    r.seed = seed;
+    state.trials.push(r);
+    results.push({ ...list[i], ...res });
+    $("dots").children[i].dataset.done = "true";
+    if (withFeedback) { feedback(res.correct, res.timeout); await wait(CONFIG.feedbackMs); }
+  }
+  return { phase, segment, results };
+}
+
+async function breakScreen(text) {
+  show("break");
+  renderStars($("break-stars"), state.stars, 3);
+  $("break-text").textContent = text;
+  await waitClick($("next"));
+  show("task");
+}
+
+async function runSession() {
+  Object.assign(state, { trials: [], segments: [], stars: 0, aborted: false, startedAt: new Date() });
+  state.order = shuffle(createRng(Math.floor(Math.random() * 2 ** 31)), [0, 1, 2, 3]);
+  state.device ??= await deviceInfo();
+  buildAnswers();
+  show("task");
+
+  state.colorCheck = await colorCheck();
+  if (!state.colorCheck) return finish();
+  await breakScreen(state.mode === "word"
+    ? "이제 연습해요. 글자를 읽지 말고, 칠해진 색을 골라요."
+    : "이제 연습해요. 원래 색 말고, 지금 칠해진 색을 골라요.");
+
+  const practice = await runSegment("practice", 0, CONFIG.practice, true);
+  if (!practice) return finish();
+  state.segments.push(practice);
+  state.stars++;
+  for (let s = 1; s <= 2; s++) {
+    await breakScreen(s === 1 ? "연습을 마쳤어요. 이제부터는 맞았는지 알려 주지 않아요." : "절반 왔어요. 한 번 더 해 봐요.");
+    const seg = await runSegment("test", s, CONFIG.half, false);
+    if (!seg) break;
+    state.segments.push(seg);
+    state.stars++;
+  }
+  finish();
+}
+
+function summarize(results) {
+  const by = (cond) => results.filter((r) => r.condition === cond);
+  const stat = (list) => ({
+    n: list.length,
+    accuracy: list.length ? list.filter((r) => r.correct).length / list.length : null,
+    rt: mean(list.filter((r) => r.correct).map((r) => r.rt)),
+    timeouts: list.filter((r) => r.timeout).length,
+  });
+  return { congruent: stat(by("congruent")), incongruent: stat(by("incongruent")), neutral: stat(by("neutral")) };
+}
+
+function finish() {
+  show("summary");
+  renderStars($("summary-stars"), state.stars, 3);
+  $("summary-title").textContent = state.aborted ? "오늘은 여기까지 해요" : "끝까지 해냈어요!";
+  const test = state.segments.filter((s) => s.phase === "test").flatMap((s) => s.results);
+  const practice = state.segments.filter((s) => s.phase === "practice").flatMap((s) => s.results);
+  const label = { congruent: "일치", incongruent: "불일치", neutral: "중립" };
+  const rows = [];
+  for (const [name, list] of [["연습", practice], ["본 과제", test]]) {
+    const s = summarize(list);
+    for (const cond of ["congruent", "incongruent", "neutral"]) rows.push({ part: name, cond: label[cond], ...s[cond] });
+  }
+  renderTable($("pro-table"), "조건별 기록 (반응시간은 맞힌 시행만)", [
+    { key: "part", label: "구분" }, { key: "cond", label: "조건" }, { key: "n", label: "시행" },
+    { key: "accuracy", label: "정확도", fmt: pct }, { key: "rt", label: "RT 평균", fmt: ms }, { key: "timeouts", label: "시간 초과" },
+  ], rows.filter((r) => r.n));
+  const s = summarize(test);
+  const interference = s.incongruent.rt !== null && s.congruent.rt !== null ? s.incongruent.rt - s.congruent.rt : null;
+  const cc = state.colorCheck;
+  $("color-warn").hidden = !(cc && cc.errors >= 2);
+  $("color-warn").textContent = cc ? `색 이름 확인에서 ${cc.total}번 중 ${cc.errors}번 다르게 골랐습니다. 색 구별이나 색 이름이 어려우면 이 과제 기록은 해석하지 않는 편이 좋습니다.` : "";
+  const d = state.device || {};
+  $("pro-meta").textContent =
+    `간섭효과(불일치 RT − 일치 RT) ${interference === null ? "–" : Math.round(interference) + "ms"} · ` +
+    `모드 ${state.mode === "word" ? "글자" : "그림"} · 색 이름 확인 ${cc ? `${cc.total - cc.errors}/${cc.total}` : "–"} · ` +
+    `응답 제한 ${CONFIG.limitMs}ms · 버튼 순서 ${state.order.map((i) => COLORS[i].name).join("·")} · 화면 ${d.screen ?? "?"} · 주사율 약 ${d.refresh_hz ?? "?"}Hz · 세션 ${state.session}`;
+}
+
+/* 두 번 눌러도 회기가 하나만 시작되게 막는다 */
+let running = false;
+$("start").addEventListener("click", async () => {
+  if (running) return;
+  running = true;
+  try { await runSession(); } finally { running = false; }
+});
+$("again").addEventListener("click", () => { state.session = sessionId(); show("intro"); });
+$("quit").addEventListener("click", () => { state.aborted = true; if (current) current.resolve?.(); });
+bindProToggle($("pro-toggle"), $("pro"));
+$("csv").addEventListener("click", () => {
+  const d = state.device || {};
+  downloadCSV(`othub-stroop-${fileStamp(state.startedAt || new Date(), state.session)}.csv`, state.trials.map((t) => ({
+    seed: "", ...t, screen: d.screen, refresh_hz: d.refresh_hz, touch: d.touch ? 1 : 0, user_agent: d.user_agent,
+  })));
+});
+</script>
+</body>
+</html>

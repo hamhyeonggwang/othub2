@@ -30,6 +30,20 @@ export const COLLECTIONS: Collection[] = [
     ],
     assessNote: "K-IADL 평가는 OTHub Assess(치료사 회원 전용)에서 진행합니다.",
   },
+  {
+    slug: "executive-function",
+    eyebrow: "EXECUTIVE FUNCTION",
+    title: "실행기능 훈련",
+    description:
+      "작업기억, 억제, 인지유연성을 한 회기 3~5분 과제로 연습합니다. 다섯 과제가 같은 방식(연습 → 본 과제 → 결과)으로 진행되고, 치료사는 결과 화면에서 시행 기록을 CSV로 받을 수 있습니다. 표준화 검사가 아닌 훈련·관찰 도구이며, 결과는 기기 화면에만 남습니다.",
+    appSlugs: [
+      "ef-nback",
+      "ef-corsi",
+      "ef-stroop",
+      "ef-hearts-flowers",
+      "ef-cardsort",
+    ],
+  },
 ];
 
 export function getCollection(slug: string): Collection | undefined {
