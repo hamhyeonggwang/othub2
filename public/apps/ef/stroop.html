@@ -51,7 +51,7 @@
         <button type="button" class="ef-btn ef-btn-quiet" id="voice" aria-pressed="true">음성 안내 켜짐</button></div>
     </div>
     <div class="ef-startbar"><button type="button" class="ef-btn ef-btn-primary" id="start">색 이름부터 확인하기</button></div>
-    <p class="ef-note">훈련과 관찰을 위한 도구예요. 표준화 검사가 아니며, 결과는 이 기기 화면에만 있고 저장되지 않아요.</p>
+    <p class="ef-note">훈련과 관찰을 위한 도구예요. 표준화 검사가 아니며, 결과는 이 기기 화면에만 있어요. 치료사 회원은 대상자 코드로 저장해 회기별 변화를 볼 수 있어요.</p>
   </section>
 
   <section class="ef-screen ef-full" id="task" hidden aria-labelledby="task-title">
@@ -91,14 +91,14 @@
       <div class="ef-table-wrap"><table class="ef-table" id="pro-table"></table></div>
       <p class="ef-note" id="pro-meta"></p>
       <div class="ef-row"><button type="button" class="ef-btn" id="csv">시행 기록 CSV 내려받기</button></div>
-      <p class="ef-note">CSV에는 이름 같은 개인정보가 들어가지 않습니다. 이 화면을 닫으면 기록은 사라집니다.</p>
+      <p class="ef-note">CSV에는 이름 같은 개인정보가 들어가지 않습니다. 저장하지 않으면 이 화면을 닫을 때 기록이 사라집니다.</p>
     </div>
   </section>
 </main>
 
 <script type="module">
 import { createRng, stroopTrials, shuffle, mean, nextLevel, presentOnNextFrame, waitUntil, bindResponse, speak, deviceInfo, downloadCSV, sessionId } from "./engine.js";
-import { announce, primeVoice, bindVoiceToggle } from "./ui.js";
+import { announce, primeVoice, bindVoiceToggle, setupSave } from "./ui.js";
 import { $, screens, bindChoices, renderStars, waitClick, wait, renderTable, bindProToggle, pct, ms, fileStamp } from "./ui.js";
 
 /* 설계서 4.2 초기값 (가정 A5). ?timing=fast 는 자동 테스트용 */
@@ -317,6 +317,14 @@ function finish() {
   const s = summarize(test);
   const interference = s.incongruent.rt !== null && s.congruent.rt !== null ? s.incongruent.rt - s.congruent.rt : null;
   const cc = state.colorCheck;
+  const testSegs = state.segments.filter((g) => g.phase === "test");
+  state.summary = {
+    mode: state.mode, startLevel: state.startLevel, aborted: state.aborted,
+    levels: testSegs.map((g) => g.level), accuracy: test.length ? test.filter((r) => r.correct).length / test.length : null,
+    interferenceMs: interference === null ? null : Math.round(interference),
+    timeouts: test.filter((r) => r.timeout).length, conditions: s,
+    colorCheck: cc ? { errors: cc.errors, total: cc.total } : null,
+  };
   $("color-warn").hidden = !(cc && cc.errors >= 2);
   $("color-warn").textContent = cc ? `색 이름 확인에서 ${cc.total}번 중 ${cc.errors}번 다르게 골랐습니다. 색 구별이나 색 이름이 어려우면 이 과제 기록은 해석하지 않는 편이 좋습니다.` : "";
   const d = state.device || {};
@@ -344,6 +352,11 @@ $("csv").addEventListener("click", () => {
     seed: "", ...t, screen: d.screen, refresh_hz: d.refresh_hz, touch: d.touch ? 1 : 0, user_agent: d.user_agent,
   })));
 });
+/* 치료사 기록 저장: 인증 치료사에게만 저장 상자가 보인다 */
+setupSave("stroop", () => state.startedAt && state.trials.length ? {
+  sessionKey: state.session, summary: state.summary ?? {}, trials: state.trials,
+  device: state.device ?? {}, startedAt: state.startedAt.toISOString(),
+} : null);
 </script>
 </body>
 </html>

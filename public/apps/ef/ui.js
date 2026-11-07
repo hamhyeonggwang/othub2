@@ -112,3 +112,68 @@ export function primeVoice() {
   u.volume = 0;
   speechSynthesis.speak(u);
 }
+
+/* ---------- 치료사 기록 저장 (2단계) ----------
+ * 인증 치료사·관리자로 로그인한 경우에만 결과 화면의 치료사 보기에 '저장' 상자가 나타난다.
+ * 대상자는 영문·숫자 코드로만 구분하고, 같은 회기는 한 번만 저장한다.
+ * getData(): { sessionKey, summary, trials, device, startedAt } — 저장할 것이 없으면 null
+ */
+const CODE_RE = /^[A-Za-z0-9_-]{1,20}$/;
+export function setupSave(task, getData) {
+  const panel = document.getElementById("pro");
+  const box = document.createElement("div");
+  box.className = "ef-save ef-card ef-stack";
+  box.hidden = true;
+  box.innerHTML = `
+    <h3 style="margin:0;font-size:18px">치료사 기록 저장</h3>
+    <p class="ef-note" style="margin:0">대상자 코드로 저장하면 회기별 추이를 볼 수 있어요. <b>이름·생년월일은 넣지 마세요</b>(영문·숫자·-·_ 20자).
+      14세 미만 아동의 기록은 소속 기관 절차에 따라 보호자 동의를 받은 뒤 저장하세요.</p>
+    <div class="ef-row">
+      <label for="ef-subject" style="font-weight:700">대상자 코드</label>
+      <input id="ef-subject" inputmode="text" autocomplete="off" autocapitalize="characters" maxlength="20"
+        pattern="[A-Za-z0-9_-]{1,20}" placeholder="예: C-012"
+        style="min-height:48px;padding:0 12px;border:1.5px solid var(--ef-line);border-radius:8px;font:inherit;font-size:18px;width:10em">
+      <button type="button" class="ef-btn ef-btn-primary" id="ef-save">결과 저장</button>
+    </div>
+    <p class="ef-feedback" id="ef-save-status" role="status" style="text-align:left"></p>`;
+  const meta = document.getElementById("pro-meta");
+  panel.insertBefore(box, meta.nextSibling);
+  const input = box.querySelector("#ef-subject");
+  const button = box.querySelector("#ef-save");
+  const status = box.querySelector("#ef-save-status");
+  let savedKey = null;
+
+  fetch("/api/ef/me", { credentials: "same-origin", cache: "no-store" })
+    .then((r) => (r.ok ? r.json() : { canSave: false }))
+    .then((j) => { box.hidden = !j.canSave; })
+    .catch(() => {});
+
+  const say = (kind, html) => { status.dataset.kind = kind; status.innerHTML = html; };
+  button.addEventListener("click", async () => {
+    const data = getData();
+    const code = input.value.trim();
+    if (!data || !data.trials.length) return say("retry", "저장할 시행 기록이 없습니다.");
+    if (savedKey === data.sessionKey) return say("good", "이 회기는 이미 저장했습니다.");
+    if (!CODE_RE.test(code)) return say("retry", "대상자 코드는 영문·숫자·-·_ 1~20자로 입력해 주세요.");
+    button.disabled = true;
+    say("", "저장하는 중…");
+    try {
+      const res = await fetch("/api/ef/sessions", {
+        method: "POST", credentials: "same-origin",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ task, subjectCode: code, summary: data.summary, trials: data.trials, device: data.device, startedAt: data.startedAt }),
+      });
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok) return say("retry", escapeHtml(j.error || "저장하지 못했습니다."));
+      savedKey = data.sessionKey;
+      say("good", `저장했습니다. <a href="/assess/ef?code=${encodeURIComponent(code)}" target="_top">${escapeHtml(code)} 추이 보기</a>`);
+    } catch {
+      say("retry", "네트워크 문제로 저장하지 못했습니다. 다시 시도해 주세요.");
+    } finally {
+      button.disabled = false;
+    }
+  });
+}
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+}

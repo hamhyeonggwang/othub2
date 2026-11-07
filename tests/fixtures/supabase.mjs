@@ -1,6 +1,8 @@
 // Local-only fake backend. Never forward requests or load production credentials.
 import { createServer } from "node:http";
 const views = [];
+// 실행기능 과제 저장 요청 기록 (테스트에서 /__ef 로 확인)
+const efSaved = [];
 // Representative public-content shapes only; no production or patient records.
 const base = {
   description: null,
@@ -219,6 +221,37 @@ const server = createServer(async (request, response) => {
               created_at: `2026-01-0${5 - id}T00:00:00Z`,
               updated_at: "2026-01-05T00:00:00Z",
             }))
+          : [],
+      ),
+    );
+  if (url.pathname === "/__ef") return response.end(JSON.stringify(efSaved));
+  if (url.pathname === "/rest/v1/othub_ef_sessions" && validScenario && request.method === "POST") {
+    let body = "";
+    for await (const chunk of request) body += chunk;
+    const row = JSON.parse(body);
+    efSaved.push({ table: "sessions", row });
+    response.statusCode = 201;
+    return response.end(JSON.stringify({ id: "22222222-2222-4222-8222-22222222222" + efSaved.length }));
+  }
+  if (url.pathname === "/rest/v1/othub_ef_trials" && validScenario && request.method === "POST") {
+    let body = "";
+    for await (const chunk of request) body += chunk;
+    efSaved.push({ table: "trials", row: JSON.parse(body) });
+    response.statusCode = 201;
+    return response.end("");
+  }
+  if (url.pathname === "/rest/v1/othub_ef_sessions" && validScenario)
+    return response.end(
+      JSON.stringify(
+        ["therapist", "admin"].includes(scenario)
+          ? [
+              ...[3, 2, 1].map((i) => ({
+                id: `33333333-3333-4333-8333-33333333333${i}`, subject_code: "C-001", task: "nback",
+                summary: { highestLevel: i, aborted: false }, started_at: `2026-11-0${i}T01:00:00Z`,
+              })),
+              { id: "44444444-4444-4444-8444-444444444441", subject_code: "C-001", task: "corsi", summary: { span: 5 }, started_at: "2026-11-02T02:00:00Z" },
+              { id: "44444444-4444-4444-8444-444444444442", subject_code: "B-7", task: "stroop", summary: { interferenceMs: 120 }, started_at: "2026-11-03T02:00:00Z" },
+            ]
           : [],
       ),
     );

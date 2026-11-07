@@ -1,0 +1,18 @@
+.ef-rec-task { margin-bottom: 40px; }
+.ef-rec-chart { margin: 0 0 16px; max-width: 640px; }
+.ef-rec-chart svg { width: 100%; height: auto; background: #fff; border: 1px solid #d9d3c4; border-radius: 12px; }
+.ef-rec-chart .axis { stroke: #cfc8b8; stroke-width: 1; }
+.ef-rec-chart .line { fill: none; stroke: #0f5e63; stroke-width: 2.5; }
+.ef-rec-chart .dot { fill: #0f5e63; }
+.ef-rec-chart .val { font-size: 14px; font-weight: 700; fill: #111814; }
+.ef-rec-chart .date { font-size: 12px; fill: #4a554f; }
+.ef-rec-chart figcaption { margin-top: 8px; font-size: 14px; color: #4a554f; }
+.ef-rec-empty { color: #4a554f; }
+.ef-rec-table-wrap { overflow-x: auto; }
+.ef-rec-table { width: 100%; max-width: 760px; border-collapse: collapse; font-size: 16px; }
+.ef-rec-table th, .ef-rec-table td { padding: 12px 8px; border-bottom: 1px solid #d9d3c4; text-align: left; }
+.ef-rec-table a { display: inline-flex; min-height: 44px; align-items: center; color: #0f5e63; font-weight: 700; }
+.ef-rec-delete { min-height: 44px; padding: 0 16px; border: 1.5px solid #8a4b08; border-radius: 8px; background: #fff; color: #8a4b08; font: inherit; font-weight: 700; cursor: pointer; }
+.ef-rec-delete:disabled { opacity: .6; }
+.ef-rec-error { margin-left: 8px; color: #8a4b08; font-size: 14px; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }

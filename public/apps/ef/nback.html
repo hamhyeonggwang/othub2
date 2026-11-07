@@ -57,7 +57,7 @@
     <div class="ef-startbar">
       <button type="button" class="ef-btn ef-btn-primary" id="start">연습 시작</button>
     </div>
-    <p class="ef-note">훈련과 관찰을 위한 도구예요. 표준화 검사가 아니며, 결과는 이 기기 화면에만 있고 저장되지 않아요.</p>
+    <p class="ef-note">훈련과 관찰을 위한 도구예요. 표준화 검사가 아니며, 결과는 이 기기 화면에만 있어요. 치료사 회원은 대상자 코드로 저장해 회기별 변화를 볼 수 있어요.</p>
   </section>
 
   <!-- 2. 과제 -->
@@ -99,7 +99,7 @@
       <div class="ef-table-wrap"><table class="ef-table" id="pro-table"></table></div>
       <p class="ef-note" id="pro-meta"></p>
       <div class="ef-row"><button type="button" class="ef-btn" id="csv">시행 기록 CSV 내려받기</button></div>
-      <p class="ef-note">CSV에는 이름 같은 개인정보가 들어가지 않습니다. 이 화면을 닫으면 기록은 사라집니다.</p>
+      <p class="ef-note">CSV에는 이름 같은 개인정보가 들어가지 않습니다. 저장하지 않으면 이 화면을 닫을 때 기록이 사라집니다.</p>
     </div>
   </section>
 </main>
@@ -109,7 +109,7 @@ import {
   createRng, nbackSequence, signalDetection, nextLevel, mean,
   presentOnNextFrame, waitUntil, bindResponse, speak, deviceInfo, downloadCSV, sessionId,
 } from "./engine.js";
-import { announce, primeVoice, bindVoiceToggle } from "./ui.js";
+import { announce, primeVoice, bindVoiceToggle, setupSave } from "./ui.js";
 
 /* 설정값: 문헌 패러다임을 참고한 초기값이며 파일럿에서 보정한다 (설계서 4.1, 가정 A5).
    ?timing=fast 는 자동 테스트용으로 시간을 줄인다. */
@@ -322,6 +322,13 @@ function finish() {
     <tbody>${rows || '<tr><td colspan="9">완료한 블록이 없습니다</td></tr>'}</tbody>`;
   const tested = state.blocks.filter((b) => b.phase === "test");
   const highest = tested.length ? Math.max(...tested.map((b) => b.level)) : "–";
+  state.summary = {
+    mode: state.mode, startLevel: state.startLevel, aborted: state.aborted,
+    highestLevel: tested.length ? highest : null,
+    meanDprime: tested.length ? tested.reduce((s, b) => s + b.dprime, 0) / tested.length : null,
+    blocks: state.blocks.map(({ phase, block, level, trials, hits, misses, falseAlarms, correctRejections, accuracy, dprime, meanHitRT }) =>
+      ({ phase, block, level, trials, hits, misses, falseAlarms, correctRejections, accuracy, dprime, meanHitRT })),
+  };
   const d = state.device || {};
   $("pro-meta").textContent =
     `모드 ${state.mode === "verbal" ? "글자" : "위치"} · 시작 ${state.startLevel}단계 · 본 과제 최고 단계 ${highest} · ` +
@@ -351,6 +358,11 @@ $("csv").addEventListener("click", () => {
     ...t, screen: d.screen, refresh_hz: d.refresh_hz, touch: d.touch ? 1 : 0, user_agent: d.user_agent,
   })));
 });
+/* 치료사 기록 저장: 인증 치료사에게만 저장 상자가 보인다 */
+setupSave("nback", () => state.startedAt && state.trials.length ? {
+  sessionKey: state.session, summary: state.summary ?? {}, trials: state.trials,
+  device: state.device ?? {}, startedAt: state.startedAt.toISOString(),
+} : null);
 </script>
 </body>
 </html>

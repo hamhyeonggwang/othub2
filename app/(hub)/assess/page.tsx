@@ -52,6 +52,16 @@ export default async function AssessHomePage() {
           ))}
         </div>
 
+        <h3 className="feed-section-title">실행기능 훈련 과제</h3>
+        <div className="assess-session-list" style={{ marginBottom: 40 }}>
+          <Link className="assess-session-card" href="/assess/ef">
+            <div>
+              <strong>실행기능 과제 기록</strong>
+              <span>N-back, Corsi, Stroop, 하트와 꽃, 카드 나누기 — 대상자별 회기 추이</span>
+            </div>
+          </Link>
+        </div>
+
         <h3 className="feed-section-title">저장된 세션 ({sessions.length})</h3>
         <div className="assess-session-list">
           {sessions.length === 0 && (
