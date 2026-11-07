@@ -334,7 +334,22 @@
   border: 0;
 }
 
+/* 전체화면 API가 없는 브라우저용 대체 모드: 화면을 꽉 채운다 */
+.app-frame-wrap.is-pseudo-fullscreen {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  aspect-ratio: auto;
+  border-radius: 0;
+  border: 0;
+  box-shadow: none;
+}
+
 .app-fullscreen-btn {
+  min-height: 44px;
   position: absolute;
   top: 14px;
   right: 14px;
