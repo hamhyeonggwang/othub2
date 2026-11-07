@@ -117,7 +117,7 @@
   border-radius: 10px;
   background: rgba(220, 38, 38, 0.08);
   color: #b91c1c;
-  font-size: 13px;
+  font-size: 14px;
 }
 
 .auth-success {
@@ -268,4 +268,12 @@
   display: flex;
   justify-content: center;
   min-height: 44px;
+}
+.auth-notice {
+  margin-bottom: 16px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: #ecf6ef;
+  color: #1f5132;
+  font-size: 14px;
 }
