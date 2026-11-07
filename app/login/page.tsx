@@ -15,9 +15,9 @@ export const metadata: Metadata = {
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string; next?: string }>;
+  searchParams: Promise<{ error?: string; next?: string; withdrawn?: string }>;
 }) {
-  const { error, next } = await searchParams;
+  const { error, next, withdrawn } = await searchParams;
   const returnPath = safeReturnPath(next);
   const pathname = returnPath.split(/[?#]/)[0];
   const isAssessGated =
@@ -94,6 +94,11 @@ export default async function LoginPage({
             <div className="login-access-note">
               <strong>관리자 계정으로 로그인해 주세요</strong>
               <p>관리자 대시보드는 권한이 부여된 계정만 접근할 수 있습니다.</p>
+            </div>
+          )}
+          {withdrawn === "1" && (
+            <div className="auth-notice" role="status">
+              탈퇴가 완료되었습니다. OTHub에 저장된 정보를 모두 삭제했습니다.
             </div>
           )}
           <LoginForm error={error} next={returnPath} />
